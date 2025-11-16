@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: agendaai_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agendaai
+      POSTGRES_PASSWORD: agendaai
+      POSTGRES_DB: agendaai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
