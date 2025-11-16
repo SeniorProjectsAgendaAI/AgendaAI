@@ -2,7 +2,7 @@
 AgendaAI is an intelligent scheduling assistant designed to centralize academic and personal tasks across multiple platforms.
 
 ## Tech Stack
-
+Preface: Docker must be installed on your local device and open to run all tasks
 ### Backend
 - **FastAPI**: Modern Python web framework
 - **PostgreSQL**: Database with SQLAlchemy ORM
