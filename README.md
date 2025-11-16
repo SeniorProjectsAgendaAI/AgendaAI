@@ -59,36 +59,40 @@ git clone https://github.com/SeniorProjectsAgendaAI/AgendaAI.git
 cd AgendaAI
 ```
 
-2. **Setup PostgreSQL database**
+2. **Setup environment variables**
+```bash
+cp .env.example .env
+```
+   The default `.env.example` is configured for Docker. If using your own PostgreSQL, edit `.env`:
+   ```
+   DATABASE_URL=postgresql+psycopg://username:password@localhost:5432/database_name
+   ```
+
+3. **Setup PostgreSQL database**
 
    **Option A: Using Docker (Recommended)**
    ```bash
    cd infra
    docker-compose up -d
+   cd ..
    ```
-   This will start a PostgreSQL container with the default credentials.
+   This will start a PostgreSQL container with credentials matching the default `.env.example`.
 
    **Option B: Use your own PostgreSQL instance**
    
-   Setup environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and configure your database connection:
-   ```
-   DATABASE_URL=postgresql+psycopg://username:password@localhost:5432/database_name
-   ```
+   Make sure PostgreSQL is running and the `DATABASE_URL` in `.env` is correct.
 
-3. **Install backend dependencies**
+4. **Install backend dependencies**
 ```bash
 cd backend
 uv sync  # or: pip install -r requirements.txt
 ```
 
-4. **Install frontend dependencies**
+5. **Install frontend dependencies**
 ```bash
 cd frontend
 npm install
+cd ..
 ```
 
 ### Running the Project
