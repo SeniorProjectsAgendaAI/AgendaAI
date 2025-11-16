@@ -2,9 +2,43 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Start Database (Docker)",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "options": {
+        "cwd": "${workspaceFolder}/infra"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "Stop Database (Docker)",
+      "type": "shell",
+      "command": "docker compose down",
+      "options": {
+        "cwd": "${workspaceFolder}/infra"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
       "label": "Start Backend",
       "type": "shell",
-      "command": "source .venv/bin/activate && uvicorn app.main:app --reload",
+      "command": "source .venv/bin/activate && uv run uvicorn app.main:app --reload",
       "options": {
         "cwd": "${workspaceFolder}/backend"
       },
@@ -22,6 +56,20 @@
           "endsPattern": "^.*Uvicorn running on.*$"
         }
       },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "Stop Backend",
+      "type": "shell",
+      "command": "pkill -f uvicorn",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -64,10 +112,34 @@
       }
     },
     {
+      "label": "Stop Frontend",
+      "type": "shell",
+      "command": "pkill -f react-scripts",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
       "label": "Start Full Stack",
       "dependsOn": [
+        "Start Database (Docker)",
         "Start Backend",
         "Start Frontend"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Full Stack",
+      "dependsOn": [
+        "Stop Frontend",
+        "Stop Backend",
+        "Stop Database (Docker)"
       ],
       "problemMatcher": []
     }
