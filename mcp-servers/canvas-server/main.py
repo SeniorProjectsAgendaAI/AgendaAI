@@ -19,10 +19,9 @@ CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 if not CANVAS_TOKEN or not CANVAS_URL:
     raise ValueError("CANVAS_URL and CANVAS_TOKEN must be set in environment variables.")
 
-#set up the cavnas app
+#set up the canvas app
 canvas = Canvas(CANVAS_URL, CANVAS_TOKEN)
-app = Server(name="canvas-server", description="A MCP server for interacting with the Canvas LMS.")
-
+app = Server("canvas-server")
 
 @app.list_tools()
 async def list_tools():
@@ -101,11 +100,43 @@ async def list_tools():
         ),
     ]
 
+@app.call_tool()
+async def call_tool(name: str, arguments:dict) -> list[TextContent]:
+#This tool handels tool calls from the LLM
 
+    try:
+        if name == "get_courses":
+            courses = canvas.get_courses(enrollment_state="active")
+            course_list = []
+            for course in courses:
+                course_list.append({
+                    "id": course.id,
+                    "name": course.name,
+                    "course_code":getattr(course, "course_code", "N/A")     
+                })
+            return [TextContent(
+                type="text",
+                text=json.dumps(course_list, indent=2)
+            )]
+        
+        elif name == "get_assignments":
+            course_id = arguments["course_id"]
+            course = canvas.get_course(course_id)
+            assignments = course.get_assignments()
+            
+            assignment_list = []
+            for assignment in assignments:
+                assignment_list.append({
+                    "id": assignment.id,
+                    "name": assignment.name,
+                    "due_at": getattr(assignment, 'due_at', None),
+                    "points_possible": getattr(assignment, 'points_possible', None),
+                    "submission_types": getattr(assignment, 'submission_types', []),
+                    "has_submitted": getattr(assignment, 'has_submitted_submissions', False)
+                })
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps(assignment_list, indent=2)
+            )]
 
-def main():
-    print("Hello from canvas-server!")
-
-
-if __name__ == "__main__":
-    main()
