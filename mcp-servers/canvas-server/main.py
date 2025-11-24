@@ -127,8 +127,8 @@ async def call_tool(name: str, arguments:dict) -> list[TextContent]:
             assignment_list = []
             for assignment in assignments:
                 assignment_list.append({
-                    "id": assignment.id,
-                    "name": assignment.name,
+                    "id": getattr(assignment, 'id', None),
+                    "title": getattr(assignment, 'name', 'Untitled'),
                     "due_at": getattr(assignment, 'due_at', None),
                     "points_possible": getattr(assignment, 'points_possible', None),
                     "submission_types": getattr(assignment, 'submission_types', []),
@@ -140,3 +140,111 @@ async def call_tool(name: str, arguments:dict) -> list[TextContent]:
                 text=json.dumps(assignment_list, indent=2)
             )]
 
+        elif name == "get_upcoming_assignments":
+            days = arguments.get("days", 7)
+            from datetime import timezone
+            now = datetime.now(timezone.utc)
+            cutoff_date = now + timedelta(days=days)
+            
+            upcoming = []
+            courses = canvas.get_courses(enrollment_state='active')
+            
+            for course in courses:
+                try:
+                    assignments = course.get_assignments()
+                    for assignment in assignments:
+                        due_at = getattr(assignment, 'due_at', None)
+                        if due_at:
+                            due_date = datetime.fromisoformat(due_at.replace('Z', '+00:00'))
+                            #Compare timezone-aware datetimes
+                            if now <= due_date <= cutoff_date:
+                                upcoming.append({
+                                    "course_name": course.name,
+                                    "course_id": course.id,
+                                    "assignment_name": assignment.name,
+                                    "assignment_id": assignment.id,
+                                    "due_at": due_at,
+                                    "points_possible": getattr(assignment, 'points_possible', None)
+                                })
+                except Exception as e:
+                    continue
+            
+            #sort the due dates
+            upcoming.sort(key=lambda x: x['due_at'])
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps(upcoming, indent=2)
+            )]
+
+        elif name == "get_announcements":
+            course_id = arguments["course_id"]
+            limit = arguments.get("limit", 10)
+            
+            course = canvas.get_course(course_id)
+            announcements = course.get_discussion_topics(only_announcements=True)
+            
+            announcement_list = []
+            count = 0
+            for announcement in announcements:
+                if count >= limit:
+                    break
+                announcement_list.append({
+                    "id": announcement.id,
+                    "title": announcement.title,
+                    "posted_at": getattr(announcement, 'posted_at', None),
+                    "message": getattr(announcement, 'message', '')[:200] + '...' 
+                })
+                count += 1
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps(announcement_list, indent=2)
+            )]
+        elif name == "get_grades":
+            course_id = arguments["course_id"]
+            course = canvas.get_course(course_id)
+            user = canvas.get_current_user()
+            
+            enrollments = course.get_enrollments(user_id=user.id)
+            grades = []
+            
+            for enrollment in enrollments:
+                #Access the grades dict from enrollment object
+                grades_dict = getattr(enrollment, 'grades', {})
+                grades.append({
+                    "course_name": course.name,
+                    "current_score": grades_dict.get('current_score'),
+                    "current_grade": grades_dict.get('current_grade'),
+                    "final_score": grades_dict.get('final_score'),
+                    "final_grade": grades_dict.get('final_grade')
+                })
+            
+            return [TextContent(
+                type="text",
+                text=json.dumps(grades, indent=2)
+            )]
+        else:
+            return [TextContent(
+                    type="text",
+                    text=f"Unknown tool: {name}"
+                )]
+    except Exception as e:
+        return [TextContent(
+            type="text",
+            text=f"Error executing {name}: {str(e)}"
+        )]
+
+async def main():
+    #Start the MCP server using stdio
+    async with stdio_server() as (read_stream, write_stream):
+        await app.run(
+            read_stream,
+            write_stream,
+            app.create_initialization_options()
+        )
+
+if __name__ == "__main__":
+
+    import asyncio  
+    asyncio.run(main())
