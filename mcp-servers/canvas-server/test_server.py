@@ -140,7 +140,7 @@ async def test_get_announcements(course_id):
         target_courses = []
         for course in courses:
             if any(x in course['name'] or x in course['course_code'] 
-                for x in ["CS 422", "CS 425", "CPE 400"]):
+                for x in ["CS 422", "CS 425", "CPE 400"]): #specific to the user biniam gashaw
                     target_courses.append((course['id'], course['name']))
         
         if not target_courses:
@@ -148,7 +148,7 @@ async def test_get_announcements(course_id):
             return False
         
         total_announcements = 0
-        for cid, cname in target_courses[:2]:  # Test first 2 courses
+        for cid, cname in target_courses[:2]:  #Test first 2 courses
             result = await call_tool("get_announcements", {
                 "course_id": str(cid),
                 "limit": 3
@@ -158,7 +158,7 @@ async def test_get_announcements(course_id):
             
             print(f"\n {cname}: {len(announcements_data)} announcements")
             if announcements_data:
-                for announcement in announcements_data[:2]:  # Show first 2
+                for announcement in announcements_data[:2]:  #show first 2
                     print(f"   - {announcement['title']}")
                     print(f"     Posted: {announcement['posted_at']}")
         
@@ -241,7 +241,7 @@ async def run_all_tests():
         print("\n Connection failed - aborting remaining tests")
         return results
     
-    #Test 2: Get courses (needed for subsequent tests)
+    #Test 2: Get courses 
     course_id = await test_get_courses()
     results["get_courses"] = course_id is not None
     
