@@ -1,250 +1,156 @@
-#Gmail MCP Server Main Module and Tool Listing
-
 import os
+import json
+import asyncio
+from typing import List
+
 from dotenv import load_dotenv
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
-from canvasapi import Canvas
-from datetime import datetime, timedelta
-import json
 
-#load env variables from .env file in same directory
 load_dotenv()
 
-#get the env variables
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GMAIL_TOKEN_PATH = os.getenv("GMAIL_TOKEN_PATH")
+GMAIL_TOKEN_PATH = os.getenv("GMAIL_TOKEN_PATH", "gmail_token.json")
+GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
-if not GOOGLE_CLIENT_SECRET or not GMAIL_TOKEN_PATH:
-    raise ValueError("GOOGLE_CLIENT_SECRET and GMAIL_TOKEN_PATH must be set in environment variables.")
+def get_gmail_service():
+    if not os.path.exists(GMAIL_TOKEN_PATH):
+        raise RuntimeError(
+            f"Gmail token file not found at {GMAIL_TOKEN_PATH}. "
+            "Run your Google OAuth flow and save the authorized_user JSON there."
+        )
+    creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_PATH, scopes=GMAIL_SCOPES)
+    return build("gmail", "v1", credentials=creds)
 
-#set up the canvas app
-canvas = Canvas(CANVAS_URL, CANVAS_TOKEN)
-app = Server("canvas-server")
+app = Server("gmail-server")
 
 @app.list_tools()
-async def list_tools():
-    #This lists the tools available in this server for the LLM to use
+async def list_tools() -> List[Tool]:
     return [
         Tool(
-            name= "get_courses",
-            description="Get a list of courses the user is enrolled in.",
+            name="list_unread_emails",
+            description="List recent unread emails (subject, from, snippet).",
             inputSchema={
-                "type" : "object",
-                "properties" : {},
-                "required" : []
-            }
+                "type": "object",
+                "properties": {
+                    "max_results": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50,
+                        "default": 10,
+                    }
+                },
+                "required": [],
+            },
         ),
         Tool(
-            name= "get_assignments",
-            description="Get a list of assignments for a specfic course. It Returns assignmetn details including due dates, points, and submission status.",
+            name="search_emails",
+            description="Search Gmail with a query string (e.g. 'from:prof assignment').",
             inputSchema={
-                "type" : "object",
-                "properties" : {
-                    "course_id" : {
-                        "type" : "string",
-                        "description" : "The Canvas course ID"
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"},
+                    "max_results": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50,
+                        "default": 10,
                     },
                 },
-                "required" : ["course_id"]
-            }
-        ),
-        Tool(
-            name="get_upcoming_assignments",
-            description="Get all upcoming assignments across all courses within the next 7 days",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "days": {
-                        "type": "integer",
-                        "description": "Number of days to look ahead (default: 7)",
-                        "default": 7
-                    }
-                },
-                "required": []
-            }
-        ),
-        Tool(
-            name="get_announcements",
-            description="Get recent announcements for a specific course",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "course_id": {
-                        "type": "string",
-                        "description": "The Canvas course ID"
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of announcements to retrieve (default: 10)",
-                        "default": 10
-                    }
-                },
-                "required": ["course_id"]
-            }
-        ),
-        Tool(
-            name="get_grades",
-            description="Get grades and scores for a specific course",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "course_id": {
-                        "type": "string",
-                        "description": "The Canvas course ID"
-                    }
-                },
-                "required": ["course_id"]
-            }
+                "required": ["query"],
+            },
         ),
     ]
 
 @app.call_tool()
-async def call_tool(name: str, arguments:dict) -> list[TextContent]:
-#This tool handels tool calls from the LLM
-
+async def call_tool(name: str, arguments: dict):
     try:
-        if name == "get_courses":
-            courses = canvas.get_courses(enrollment_state="active")
-            course_list = []
-            for course in courses:
-                course_list.append({
-                    "id": course.id,
-                    "name": course.name,
-                    "course_code":getattr(course, "course_code", "N/A")     
-                })
-            return [TextContent(
-                type="text",
-                text=json.dumps(course_list, indent=2)
-            )]
-        
-        elif name == "get_assignments":
-            course_id = arguments["course_id"]
-            course = canvas.get_course(course_id)
-            assignments = course.get_assignments()
-            
-            assignment_list = []
-            for assignment in assignments:
-                assignment_list.append({
-                    "id": getattr(assignment, 'id', None),
-                    "title": getattr(assignment, 'name', 'Untitled'),
-                    "due_at": getattr(assignment, 'due_at', None),
-                    "points_possible": getattr(assignment, 'points_possible', None),
-                    "submission_types": getattr(assignment, 'submission_types', []),
-                    "has_submitted": getattr(assignment, 'has_submitted_submissions', False)
-                })
-            
-            return [TextContent(
-                type="text",
-                text=json.dumps(assignment_list, indent=2)
-            )]
+        service = get_gmail_service()
 
-        elif name == "get_upcoming_assignments":
-            days = arguments.get("days", 7)
-            from datetime import timezone
-            now = datetime.now(timezone.utc)
-            cutoff_date = now + timedelta(days=days)
-            
-            upcoming = []
-            courses = canvas.get_courses(enrollment_state='active')
-            
-            for course in courses:
-                try:
-                    assignments = course.get_assignments()
-                    for assignment in assignments:
-                        due_at = getattr(assignment, 'due_at', None)
-                        if due_at:
-                            due_date = datetime.fromisoformat(due_at.replace('Z', '+00:00'))
-                            #Compare timezone-aware datetimes
-                            if now <= due_date <= cutoff_date:
-                                upcoming.append({
-                                    "course_name": course.name,
-                                    "course_id": course.id,
-                                    "assignment_name": assignment.name,
-                                    "assignment_id": assignment.id,
-                                    "due_at": due_at,
-                                    "points_possible": getattr(assignment, 'points_possible', None)
-                                })
-                except Exception as e:
-                    continue
-            
-            #sort the due dates
-            upcoming.sort(key=lambda x: x['due_at'])
-            
-            return [TextContent(
-                type="text",
-                text=json.dumps(upcoming, indent=2)
-            )]
+        if name == "list_unread_emails":
+            max_results = int(arguments.get("max_results", 10))
+            resp = (
+                service.users()
+                .messages()
+                .list(userId="me", labelIds=["UNREAD"], maxResults=max_results)
+                .execute()
+            )
+            messages = resp.get("messages", [])
+            out = []
+            for meta in messages:
+                msg = (
+                    service.users()
+                    .messages()
+                    .get(
+                        userId="me",
+                        id=meta["id"],
+                        format="metadata",
+                        metadataHeaders=["Subject", "From"],
+                    )
+                    .execute()
+                )
+                headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
+                out.append(
+                    {
+                        "id": msg["id"],
+                        "subject": headers.get("Subject"),
+                        "from": headers.get("From"),
+                        "snippet": msg.get("snippet"),
+                    }
+                )
+            return [TextContent(type="text", text=json.dumps(out, indent=2))]
 
-        elif name == "get_announcements":
-            course_id = arguments["course_id"]
-            limit = arguments.get("limit", 10)
-            
-            course = canvas.get_course(course_id)
-            announcements = course.get_discussion_topics(only_announcements=True)
-            
-            announcement_list = []
-            count = 0
-            for announcement in announcements:
-                if count >= limit:
-                    break
-                announcement_list.append({
-                    "id": announcement.id,
-                    "title": announcement.title,
-                    "posted_at": getattr(announcement, 'posted_at', None),
-                    "message": getattr(announcement, 'message', '')[:200] + '...' 
-                })
-                count += 1
-            
-            return [TextContent(
-                type="text",
-                text=json.dumps(announcement_list, indent=2)
-            )]
-        elif name == "get_grades":
-            course_id = arguments["course_id"]
-            course = canvas.get_course(course_id)
-            user = canvas.get_current_user()
-            
-            enrollments = course.get_enrollments(user_id=user.id)
-            grades = []
-            
-            for enrollment in enrollments:
-                #Access the grades dict from enrollment object
-                grades_dict = getattr(enrollment, 'grades', {})
-                grades.append({
-                    "course_name": course.name,
-                    "current_score": grades_dict.get('current_score'),
-                    "current_grade": grades_dict.get('current_grade'),
-                    "final_score": grades_dict.get('final_score'),
-                    "final_grade": grades_dict.get('final_grade')
-                })
-            
-            return [TextContent(
-                type="text",
-                text=json.dumps(grades, indent=2)
-            )]
-        else:
-            return [TextContent(
-                    type="text",
-                    text=f"Unknown tool: {name}"
-                )]
+        if name == "search_emails":
+            query = arguments["query"]
+            max_results = int(arguments.get("max_results", 10))
+            resp = (
+                service.users()
+                .messages()
+                .list(userId="me", q=query, maxResults=max_results)
+                .execute()
+            )
+            messages = resp.get("messages", [])
+            out = []
+            for meta in messages:
+                msg = (
+                    service.users()
+                    .messages()
+                    .get(
+                        userId="me",
+                        id=meta["id"],
+                        format="metadata",
+                        metadataHeaders=["Subject", "From", "Date"],
+                    )
+                    .execute()
+                )
+                headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
+                out.append(
+                    {
+                        "id": msg["id"],
+                        "subject": headers.get("Subject"),
+                        "from": headers.get("From"),
+                        "date": headers.get("Date"),
+                        "snippet": msg.get("snippet"),
+                    }
+                )
+            return [TextContent(type="text", text=json.dumps(out, indent=2))]
+
+        return [TextContent(type="text", text=f"Unknown tool: {name}")]
     except Exception as e:
         return [TextContent(
             type="text",
             text=f"Error executing {name}: {str(e)}"
         )]
 
-async def main():
-    #Start the MCP server using stdio
+async def _run():
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(
-            read_stream,
-            write_stream,
-            app.create_initialization_options()
-        )
+        await app.run(read_stream, write_stream, app.create_initialization_options())
+
+def main():
+    asyncio.run(_run())
 
 if __name__ == "__main__":
-
-    import asyncio  
-    asyncio.run(main())
+    main()
