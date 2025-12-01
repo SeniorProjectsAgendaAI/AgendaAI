@@ -11,9 +11,13 @@ export const auth = defineAuth({
       },
       callbackUrls: [
         'http://localhost:3000/', 
+        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
+        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com'
       ],
       logoutUrls: [
         'http://localhost:3000/',
+        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
+        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com'
       ],
     },
   },
