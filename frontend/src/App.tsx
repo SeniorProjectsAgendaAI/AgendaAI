@@ -1,21 +1,22 @@
-import { useEffect, useState } from "react";
+import {
+  Authenticator,
+  withAuthenticator,
+  WithAuthenticatorProps,
+} from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 
-function App() {
-  const [health, setHealth] = useState("Checking API...");
-
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/health")
-      .then((res) => res.json())
-      .then((data) => setHealth(data.status))
-      .catch(() => setHealth("API not reachable"));
-  }, []);
-
+function App({ signOut, user }: WithAuthenticatorProps) {
   return (
     <div>
-      <h1>AgendaAI</h1>
-      <p>Backend health: {health}</p>
+      <header className="App-header">
+        <h1>AgendaAI</h1>
+        <main>
+          <h1>Hello {user?.username}</h1>
+          <button onClick={signOut}>Sign out</button>
+        </main>
+      </header>
     </div>
   );
 }
 
-export default App;
+export default withAuthenticator(App);
