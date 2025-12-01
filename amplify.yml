@@ -1,19 +1,20 @@
 version: 1
-applications:
-  - frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-            - cd .. && amplifyPush --simple
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: build
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-    appRoot: frontend
+backend:
+  phases:
+    build:
+      commands:
+        - cd frontend && npm ci --cache .npm --prefer-offline
+        - cd frontend && npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+frontend:
+  phases:
+    build:
+      commands:
+        - cd frontend && npm run build
+  artifacts:
+    baseDirectory: frontend/build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - frontend/.npm/**/*
+      - frontend/node_modules/**/*
