@@ -1,12 +1,16 @@
 [project]
 name = "google-calendar-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "MCP server for Google Calendar integration"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "google-api-python-client>=2.187.0",
-    "google-auth-httplib2>=0.2.1",
-    "google-auth-oauthlib>=1.2.3",
     "mcp[cli]>=1.21.1",
+    "python-dotenv>=1.0.0",
+    "google-api-python-client>=2.149.0",
+    "google-auth>=2.36.0",
+    "google-auth-oauthlib>=1.2.0",
 ]
+
+[project.scripts]
+google-calendar-server = "main:main"
