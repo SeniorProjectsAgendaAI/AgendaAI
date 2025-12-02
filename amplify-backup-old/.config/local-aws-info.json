@@ -1,7 +1,0 @@
-{
-  "prod": {
-    "configLevel": "project",
-    "useProfile": false,
-    "awsConfigFilePath": "/home/aannkooss/.amplify/awscloudformation/fogTi5xLUY"
-  }
-}
