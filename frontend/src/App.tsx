@@ -1,22 +1,46 @@
-import {
-  Authenticator,
-  withAuthenticator,
-  WithAuthenticatorProps,
-} from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AxiosResponse } from "axios";
 
-function App({ signOut, user }: WithAuthenticatorProps) {
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import api from "./services/api";
+
+
+const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
+  const [health, setHealth] = useState("Checking API...");
+
+  useEffect(() => {
+    api.get("/health")
+      .then((res: AxiosResponse) => setHealth(res.data.status))
+      .catch(() => setHealth("API not reachable"));
+  }, []);
+
   return (
     <div>
-      <header className="App-header">
-        <h1>AgendaAI</h1>
-        <main>
-          <h1>Hello {user?.username}</h1>
-          <button onClick={signOut}>Sign out</button>
-        </main>
-      </header>
+      <h1>AgendaAI</h1>
+      <p>Welcome, {user?.signInDetails?.loginId}</p>
+      <p>Backend health: {health}</p>
+      <button onClick={signOut}>Logout</button>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Authenticator socialProviders={['google']}>
+      {({ signOut, user }) => (
+        <Router>
+          <Routes>
+            <Route
+              path="/"
+              element={<Home signOut={signOut} user={user} />}
+            />
+          </Routes>
+        </Router>
+      )}
+    </Authenticator>
   );
 }
 
-export default withAuthenticator(App);
+export default App;
