@@ -31,8 +31,6 @@ jest.mock(
           return React.createElement(Component, { ...props, ...mockAuthProps });
         };
       },
-      // Export empty type placeholder (not used at runtime, only for TypeScript)
-      WithAuthenticatorProps: {},
     };
   },
   { virtual: true }
