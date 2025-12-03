@@ -1,9 +1,11 @@
 [project]
 name = "canvas-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "MCP server for Canvas LMS integration"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "mcp[cli]>=1.21.1",
+    "canvasapi>=3.3.0",
+    "python-dotenv>=1.0.0",
 ]
