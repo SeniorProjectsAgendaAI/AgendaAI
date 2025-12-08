@@ -54,9 +54,6 @@ const TaskPanel = () => {
     return (
         <div>
             <div className="taskPanel">
-                <h1>AgendaAI</h1>
-                <p>Mcp Calendar Webapp</p>
-                {/* Trying to see if it gives illusion of only changing center? */}
                 {/*<Sidebar />*/ }
             
                 <ul className="taskList">
