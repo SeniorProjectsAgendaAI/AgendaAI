@@ -1,0 +1,17 @@
+.calendarDisplay {
+  flex: 1;
+  padding: 20px;
+}
+
+.calendarButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.calendarViewDisplay {
+  background: #fff;
+  border: 1px solid #ddd;
+  height: 80vh;
+  padding: 20px;
+}

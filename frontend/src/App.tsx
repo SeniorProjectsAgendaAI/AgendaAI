@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AxiosResponse } from "axios";
 import Dashboard from "./Dashboard";
 import TaskPanel from "./TaskPanel";
+import CalendarView from "./Calendarview";
 import { Link } from "react-router-dom";
 
 
@@ -33,6 +34,9 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       <Link to="/taskpanel">
         <button>Go to Task Panel</button>
       </Link>
+      <Link to="/calendarview">
+        <button>Go to Calendar View</button>
+      </Link>
     </div>
     
   );
@@ -55,6 +59,10 @@ function App() {
             <Route
               path="/taskpanel"
               element={<TaskPanel />}
+            />
+            <Route
+              path="/calendarview"
+              element={<CalendarView />}
             />
           </Routes>
         </Router>
