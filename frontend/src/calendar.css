@@ -1,9 +1,5 @@
-.calendarContainer {
-  height: 100vh;
-  background: #fafafa;
-}
-
-.calendarView {
+.calendarDisplay {
+  flex: 1;
   padding: 20px;
 }
 
@@ -16,10 +12,6 @@
 .calendarViewDisplay {
   background: #fff;
   border: 1px solid #ddd;
+  height: 80vh;
   padding: 20px;
-}
-
-.timeSlot {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
 }
