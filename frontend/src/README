@@ -1,0 +1,10 @@
+The componentsare not currently organized seperate form pages in folders but the current components are:
+Calendarview.tsx & calendar.css
+Sidebar.tsx & sidebar.css
+TaskPanel.tsx & taskpanel.css
+
+index.tsx & index.css
+
+While the pages so far are:
+App.tsx & App.css
+Dashboard.tsx & dashboard.css
