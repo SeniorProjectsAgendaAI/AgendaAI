@@ -6,18 +6,16 @@ import TaskPanel from "./TaskPanel";
 import CalendarView from "./Calendarview";
 import { Link } from "react-router-dom";
 
-
-import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
+import { Authenticator } from "@aws-amplify/ui-react";
+import "@aws-amplify/ui-react/styles.css";
 import api from "./services/api";
-
 
 const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
   const [health, setHealth] = useState("Checking API...");
-  
 
   useEffect(() => {
-    api.get("/health")
+    api
+      .get("/health")
       .then((res: AxiosResponse) => setHealth(res.data.status))
       .catch(() => setHealth("API not reachable"));
   }, []);
@@ -38,32 +36,19 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
         <button>Go to Calendar View</button>
       </Link>
     </div>
-    
   );
 };
 
 function App() {
   return (
-    <Authenticator socialProviders={['google']}>
+    <Authenticator socialProviders={["google"]}>
       {({ signOut, user }) => (
         <Router>
           <Routes>
-            <Route
-              path="/"
-              element={<Home signOut={signOut} user={user} />}
-            />
-            <Route
-              path="/dashboard"
-              element={<Dashboard />}
-            />
-            <Route
-              path="/taskpanel"
-              element={<TaskPanel />}
-            />
-            <Route
-              path="/calendarview"
-              element={<CalendarView />}
-            />
+            <Route path="/" element={<Home signOut={signOut} user={user} />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/taskpanel" element={<TaskPanel />} />
+            <Route path="/calendarview" element={<CalendarView />} />
           </Routes>
         </Router>
       )}

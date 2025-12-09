@@ -1,0 +1,96 @@
+.dayViewContainer {
+  display: flex;
+  height: 100vh;
+  background: #000000;
+}
+
+.dayViewContent {
+  flex: 1;
+  background: #fafafa;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.dayViewHeader {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dayViewHeader h2 {
+  margin: 0 0 15px 0;
+}
+
+.dateNavigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dateNavigation button {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dateNavigation button:hover {
+  background: #f0f0f0;
+}
+
+.currentDate {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.daySchedule {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.timeColumn {
+  width: 100px;
+  border-right: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+.timeSlot {
+  height: 80px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  color: #666;
+}
+
+.eventsColumn {
+  flex: 1;
+}
+
+.hourBlock {
+  height: 80px;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+  padding: 5px;
+}
+
+.eventBlock {
+  background: #4a90e2;
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.eventTitle {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.eventTime {
+  font-size: 12px;
+  opacity: 0.9;
+}
