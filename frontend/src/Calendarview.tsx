@@ -5,6 +5,7 @@ import {NavLink} from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "./calendar.css";
 
+
 const CalendarView = () => {
     // state allows month, week, day view, efaults to month
     const [calendarView, setCalendarView] = useState<"month" | "week" | "day">("month");
