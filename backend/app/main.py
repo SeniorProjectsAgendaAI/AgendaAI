@@ -34,6 +34,8 @@ def startup_event():
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/",
+    "https://*.amplifyapp.com"
 ]
 
 app.add_middleware(
