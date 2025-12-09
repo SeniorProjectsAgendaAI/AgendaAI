@@ -1,7 +1,7 @@
 import React from "react";
 import app from "./App";
 import Sidebar from "./Sidebar";
-//import Calendarview from "./Calendarview";
+import Calendarview from "./Calendarview";
 import TaskPanel from "./TaskPanel";
 import "./dashboard.css";
 
@@ -14,7 +14,7 @@ const Dashboard = () => {
           <Sidebar />
 
           <div className="centerDash">
-            {/* <Calendarview /> */}
+            <Calendarview  />
           </div>
           <TaskPanel />
         </div>

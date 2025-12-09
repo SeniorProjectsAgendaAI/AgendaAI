@@ -11,10 +11,11 @@ const Sidebar = () => {
             Dashboard
         </NavLink>
         <NavLink to="/taskpanel" className="navigationItem">
-            Task Panel
+            BLANK
         </NavLink>
-        <NavLink to="/dashboard" className="navigationItem">
-            Dashboard
+        {/* Currently the taskpannel is used as a filler to show the bleu square changes for navigations */}
+        <NavLink to="/taskpanel" className="navigationItem">
+            BLANK
         </NavLink>
     </div>
     );

@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AxiosResponse } from "axios";
 import Dashboard from "./Dashboard";
 import TaskPanel from "./TaskPanel";
+import DayView from "./DayView";
+import WeekView from "./WeekView";
+import MonthView from "./MonthView";
 import CalendarView from "./Calendarview";
 import { Link } from "react-router-dom";
 
@@ -37,6 +40,9 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       <Link to="/calendarview">
         <button>Go to Calendar View</button>
       </Link>
+      <Link to="/dayview">
+        <button>Go to Day View</button>
+      </Link>
     </div>
     
   );
@@ -63,6 +69,18 @@ function App() {
             <Route
               path="/calendarview"
               element={<CalendarView />}
+            />
+            <Route
+              path="/dayview"
+              element={<DayView />}
+            />
+            <Route
+              path="/weekview"
+              element={<WeekView />}
+            />
+            <Route
+              path="/monthview"
+              element={<MonthView />}
             />
           </Routes>
         </Router>
