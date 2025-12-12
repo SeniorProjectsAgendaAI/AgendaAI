@@ -1,0 +1,11 @@
+.dashboardGroup {
+    display: flex;
+    height:100vh;
+    background: #000000;
+}
+
+.centerDash {
+    flex: 1;
+    background: #fafafa;
+
+}

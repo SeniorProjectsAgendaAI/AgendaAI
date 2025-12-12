@@ -1,0 +1,18 @@
+The componentsare not currently organized seperate form pages in folders but the current components are:
+Calendarview.tsx & calendar.css
+Sidebar.tsx & sidebar.css
+TaskPanel.tsx & taskpanel.css
+
+Template based:
+MonthView.tsx & monthview.css
+WeekView.tsx & weekview.css
+DayView.tsx & dayview.css
+
+index.tsx & index.css
+
+While the pages so far are:
+App.tsx & App.css
+Dashboard.tsx & dashboard.css
+
+some of the visual themes come from this repository:
+http://bjankord.github.io/Style-Guide-Boilerplate
