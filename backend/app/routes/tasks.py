@@ -29,7 +29,7 @@ def create_task(
     return new_task
 
 
-# READ (all tasks for the current user)
+# tasks for current user
 @router.get("/", response_model=list[TaskResponse])
 def get_tasks(
     db: Session = Depends(get_db),
@@ -38,7 +38,7 @@ def get_tasks(
     return db.query(models.Task).filter(models.Task.user_id == user.id).all()
 
 
-# UPDATE
+# update task
 @router.put("/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int,
@@ -68,7 +68,7 @@ def update_task(
     return task
 
 
-# DELETE
+# delete tasks
 @router.delete("/{task_id}")
 def delete_task(
     task_id: int,
