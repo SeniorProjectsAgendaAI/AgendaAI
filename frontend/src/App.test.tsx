@@ -11,4 +11,5 @@ test('renders AgendaAI main app', () => {
   render(<App />);
 
   expect(true).toBe(true);
+  
 });
