@@ -1,3 +1,7 @@
+#Gmail MCP Server Gmail Module and Tool Listing
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
+#Sources: https://modelcontextprotocol.io/docs/develop/build-server
 import os
 import json
 import asyncio
@@ -10,6 +14,7 @@ from googleapiclient.discovery import build
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
+
 
 load_dotenv()
 

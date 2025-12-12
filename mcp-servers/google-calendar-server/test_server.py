@@ -2,6 +2,10 @@
 Test script for Google Calendar MCP Server
 Tests API connectivity and MCP tools
 """
+
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
+
 import asyncio
 import json
 from datetime import datetime, timezone
