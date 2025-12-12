@@ -9,6 +9,7 @@ from app.services.auth_utils import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
+#register a new user after checking if email is already in use and hashing their password
 
 @router.post("/register")
 def register_user(user: dict, db: Session = Depends(get_db)):
@@ -33,6 +34,8 @@ def register_user(user: dict, db: Session = Depends(get_db)):
 
     return {"message": "User registered", "user_id": new_user.id}
 
+
+#authenticate a user and return their access token if credentials are valid
 
 @router.post("/login")
 def login(user: dict, db: Session = Depends(get_db)):
