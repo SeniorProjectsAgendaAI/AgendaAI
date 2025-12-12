@@ -1,7 +1,9 @@
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
 
 #Sources:
 #  https://ai.google.dev/gemini-api/docs/function-calling
-#  https://modelcontextprotocol.io/
+#  https://modelcontextprotocol.io/docs/develop/build-client
 #  https://github.com/google/generative-ai-python
 
 
