@@ -10,7 +10,7 @@ const WeekView: React.FC = () => {
   const firstDayOfWeek = new Date(today);
   firstDayOfWeek.setDate(today.getDate() - today.getDay());
 
-  // Generate the 7 days of the week
+  // marray that holds weekdays
   const days = Array.from({ length: 7 }, (_, i) => {
     const day = new Date(firstDayOfWeek);
     day.setDate(firstDayOfWeek.getDate() + i);

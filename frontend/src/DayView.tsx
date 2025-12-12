@@ -1,4 +1,4 @@
-//bini work
+//bini work + template
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import "./dayview.css";
