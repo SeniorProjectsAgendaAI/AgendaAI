@@ -60,13 +60,11 @@ jobs:
         working-directory: frontend
         run: npm test -- --watch=false
 
+      - name: Create mock amplify_outputs.json
+        working-directory: frontend/src
+        run: |
+          echo '{}' > amplify_outputs.json
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
-
-      - name: Generate dummy amplify_outputs.json
-        run: echo "{}" > frontend/src/amplify_outputs.json
-
-      - name: Build
-        run: npm run build
-        working-directory: ./frontend
