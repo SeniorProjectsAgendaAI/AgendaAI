@@ -1,3 +1,8 @@
+// Author: Ankush Joshi 
+// CS425: Senior Projects
+
+// resource.ts: responsible for configuring authentication resources using AWS Amplify's backend framework.
+
 import { defineAuth, secret } from '@aws-amplify/backend';
 
 export const auth = defineAuth({
