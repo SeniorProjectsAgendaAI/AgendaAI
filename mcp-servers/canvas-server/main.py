@@ -1,4 +1,8 @@
-#Canvas MCP Server Main Module and Tool Listing
+#Canvas MCP Server Canvas Module and Tool Listing
+
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
+#Sources: https://modelcontextprotocol.io/docs/develop/build-server
 
 import os
 from dotenv import load_dotenv

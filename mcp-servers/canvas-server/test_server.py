@@ -5,6 +5,9 @@ Disclaimer*" This test script is customized and tailored to Biniam Gashaw's clas
 
 """
 
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
+
 import asyncio
 import json
 from main import canvas, app

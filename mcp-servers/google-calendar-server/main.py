@@ -1,3 +1,8 @@
+#Google Calendar MCP Server Google Calendar Module and Tool Listing
+#Author: Biniam Gashaw
+#Class: CS425: Software Engineering
+#Sources: https://modelcontextprotocol.io/docs/develop/build-server
+
 import os
 import json
 import asyncio
