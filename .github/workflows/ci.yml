@@ -63,3 +63,9 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+      - name: Generate dummy amplify_outputs.json for build
+        run: echo "{}" > frontend/src/amplify_outputs.json
+
+      - name: Build
+        run: npm run build
