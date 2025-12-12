@@ -43,28 +43,28 @@ jobs:
           # replace with your real tests later
           uv run python -m compileall app
 
-frontend:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version:  "20"
+      - uses: actions/setup-node@v4
+        with:
+          node-version:  "20"
 
-    - name:  Install frontend deps
-      working-directory: frontend
-      run: npm ci
+      - name:  Install frontend deps
+        working-directory: frontend
+        run: npm ci
 
-    - name: Run frontend tests
-      working-directory: frontend
-      run: npm test -- --watch=false
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --watch=false
 
-    - name: Create mock amplify_outputs.json
-      working-directory: frontend/src
-      run: |
-        echo '{}' > amplify_outputs.json
+      - name: Create mock amplify_outputs.json
+        working-directory: frontend/src
+        run: |
+          echo '{}' > amplify_outputs.json
 
-    - name: Build frontend
-      working-directory: frontend
-      run: npm run build
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
