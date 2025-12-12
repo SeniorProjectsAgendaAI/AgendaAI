@@ -11,7 +11,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-# IMPORTANT: correct import path
 from app.database.database import Base
 
 
@@ -23,7 +22,6 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # One-to-many relationship
     tasks = relationship(
         "Task",
         back_populates="user",
@@ -41,5 +39,4 @@ class Task(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Link back to User
     user = relationship("User", back_populates="tasks")

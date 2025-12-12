@@ -3,9 +3,7 @@ from app.database import models, schemas
 from app.security import hash_password
 
 
-# --------------------
-# USER CRUD
-# --------------------
+#function for creating a new user and retrieving user account
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_pw = hash_password(user.password)
@@ -28,9 +26,7 @@ def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-# --------------------
-# TASK CRUD
-# --------------------
+#function for creating, retrieving, and deleting a user's tasks
 
 def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     db_task = models.Task(
