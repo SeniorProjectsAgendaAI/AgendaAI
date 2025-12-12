@@ -1,5 +1,3 @@
-# app/services/auth_utils.py
-
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
@@ -15,6 +13,8 @@ from app.database.models import User
 from app.services.security import verify_password
 
 load_dotenv()
+
+#config values for JWT tokens and validation
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
