@@ -14,7 +14,8 @@ interface Task
     time: string;
     priority: number;
 }
-
+//(Alex) i implimented everything except the editing part
+// bini did the editing and deletion part of this code.
 
 const TaskPanel = () => {
     //creating a list of Task s called "tasks", all by default empty
