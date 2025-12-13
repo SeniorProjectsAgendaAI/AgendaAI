@@ -50,15 +50,20 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version:  "20"
 
-      - name: Install frontend deps
+      - name:  Install frontend deps
         working-directory: frontend
         run: npm ci
 
       - name: Run frontend tests
         working-directory: frontend
         run: npm test -- --watch=false
+
+      - name: Create mock amplify_outputs.json
+        working-directory: frontend/src
+        run: |
+          echo '{}' > amplify_outputs.json
 
       - name: Build frontend
         working-directory: frontend
