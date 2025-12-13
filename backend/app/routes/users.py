@@ -1,3 +1,4 @@
+#James Acacio - Routes for user operations such as retrieving current user info
 from fastapi import APIRouter, Depends
 
 from app.database import models
