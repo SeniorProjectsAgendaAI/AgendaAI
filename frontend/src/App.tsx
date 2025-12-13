@@ -47,10 +47,10 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
     
   );
 };
-
+// (Ankush) implemented socialProviders prop for Google OAuth as well as the login page UI for users to be able to login via Google OAuth or email/password
 function App() {
   return (
-    <Authenticator socialProviders={['google']}>
+    <Authenticator socialProviders={['google']}>  
       {({ signOut, user }) => (
         <Router>
           <Routes>

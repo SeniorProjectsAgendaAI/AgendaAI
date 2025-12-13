@@ -1,8 +1,9 @@
-// frontend/src/setupTests.ts
+// Author: Ankush 
+// This file is used to set up the testing environment for Jest and the Testing Library
+
 import '@testing-library/jest-dom';
 
-// --- Existing Mocks (Keep these) ---
-// Mock Amplify UI to prevent login blocking
+
 jest.mock('@aws-amplify/ui-react', () => ({
   Authenticator: ({ children }: any) => children,
   useAuthenticator: () => ({ user: { username: 'test-user' }, signOut: jest.fn() })
@@ -10,9 +11,7 @@ jest.mock('@aws-amplify/ui-react', () => ({
 
 jest.mock('@aws-amplify/ui-react/styles.css', () => ({}), { virtual: true });
 
-// --- NEW: Mock Axios to fix "Cannot use import statement" error ---
 jest.mock('axios', () => ({
-  // Mock the 'create' method used in your api.ts
   create: () => ({
     interceptors: {
       request: { use: jest.fn(), eject: jest.fn() },
@@ -24,7 +23,6 @@ jest.mock('axios', () => ({
     delete: jest.fn(() => Promise.resolve({ data: {} })),
     defaults: { headers: { common: {} } }
   }),
-  // Mock standard methods (just in case)
   get: jest.fn(() => Promise.resolve({ data: {} })),
   post: jest.fn(() => Promise.resolve({ data: {} })),
 }));
