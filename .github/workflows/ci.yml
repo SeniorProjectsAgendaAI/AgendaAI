@@ -59,7 +59,7 @@ jobs:
       - name: Run frontend tests
         working-directory: frontend
         run: npm test -- --watch=false
-
+      # Adding a mock amplify_outputs.json to bypass build errors (Ankush)
       - name: Create mock amplify_outputs.json
         working-directory: frontend/src
         run: |

@@ -1,3 +1,6 @@
+// Author: Ankush Joshi 
+// This file initializes the React application and configures AWS Amplify 
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
