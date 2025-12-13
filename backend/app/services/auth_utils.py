@@ -1,3 +1,5 @@
+#James Acacio - Utility functions for authentication using JWT tokens
+
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
@@ -22,7 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-
+# Function to create a JWT access token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
 
@@ -33,7 +35,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
+# Dependency to get the current user from the JWT token
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
