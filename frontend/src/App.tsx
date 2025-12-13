@@ -43,11 +43,18 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       <Link to="/dayview">
         <button>Go to Day View</button>
       </Link>
+      <Link to="/weekview">
+        <button>Go to Week View</button>
+      </Link>
+      <Link to="/monthview">
+        <button>Go to Month View</button>
+      </Link>
     </div>
     
   );
 };
 // (Ankush) implemented socialProviders prop for Google OAuth as well as the login page UI for users to be able to login via Google OAuth or email/password
+// (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router 
 function App() {
   return (
     <Authenticator socialProviders={['google']}>  

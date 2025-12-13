@@ -4,7 +4,8 @@ import "./calendar.css";
 import MonthView from "./MonthView";
 import WeekCalendar from "./WeekView";
 import DayView from "./DayView";
-
+//(Alex) essentually a container to hold all of the views and allow switching with the buttons from one of our frs
+//doesnt currently adapt to events or tasks as database was not complete by day of demo
 const CalendarView = () => {
     // state allows month, week, day view, efaults to month
     const [calendarView, setCalendarView] = useState<"month" | "week" | "day">("month");
