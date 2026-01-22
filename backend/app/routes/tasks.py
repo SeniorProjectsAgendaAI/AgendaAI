@@ -1,3 +1,5 @@
+#James Acacio - Routes for managing tasks (create, read, update, delete) for authenticated users
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,7 +11,7 @@ from app.services.auth_utils import get_current_user
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-# CREATE
+# create a new task
 @router.post("/", response_model=TaskResponse)
 def create_task(
     task: TaskCreate,

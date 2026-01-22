@@ -1,7 +1,11 @@
+#James Acacio - Security service for password hashing and verification using Argon2
+
 import hashlib
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
+#helper functions for password hashing and verification
 
 def _prehash(password: str) -> str:
     """Convert any-size password to 32-byte SHA256 hash."""

@@ -1,3 +1,5 @@
+#James Acacio - Simple endpoint used to verify database connectivity and query execution
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
