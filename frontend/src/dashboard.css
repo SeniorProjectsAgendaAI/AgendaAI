@@ -1,0 +1,13 @@
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/ */
+/*(Alex) used the flex system to organize the 3 pannel format*/
+.dashboardGroup {
+    display: flex;
+    height:100vh;
+    background: #000000;
+}
+
+.centerDash {
+    flex: 1;
+    background: #fafafa;
+
+}

@@ -1,0 +1,28 @@
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
+/*(Alex) standard padding and experimenting with heights mnaually*/
+.calendarcontainer {
+  height: 100vh;
+  background: #fafafa;
+}
+
+.calendarView {
+  padding:20px;
+}
+
+.calendarButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.calendarViewDisplay {
+  background: #fff;
+  border: 1px solid #ddd;
+  height: 80vh;
+  padding: 20px;
+}
+
+.timeSlot {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}

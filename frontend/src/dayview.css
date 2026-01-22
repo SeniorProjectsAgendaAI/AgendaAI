@@ -1,0 +1,47 @@
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
+.dayViewContainer {
+  display: flex;
+  height: 100vh;
+  background: #000000;
+}
+
+.dayViewContent {
+  flex: 1;
+  background: #fafafa;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.dayViewHeader {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dayViewHeader h2 {
+  margin: 0 0 15px 0;
+}
+
+.dateNavigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dateNavigation button {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dateNavigation button:hover {
+  background: #f0f0f0;
+}
+
+.currentDate {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
