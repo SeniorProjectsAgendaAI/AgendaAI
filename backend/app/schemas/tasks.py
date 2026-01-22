@@ -1,9 +1,11 @@
+#James Acacio - schemas for Task creation, update, and response 
+
 from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 
-
+#
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
