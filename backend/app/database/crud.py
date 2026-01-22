@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 from app.database import models, schemas
-from app.security import hash_password
+from app.services.security import hash_password
 
 
 #function for creating a new user and hashing the provided password
@@ -34,7 +34,7 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     db_task = models.Task(
         title=task.title,
         description=task.description,
-        owner_id=user_id
+        user_id=user_id
     )
     db.add(db_task)
     db.commit()
@@ -43,13 +43,13 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
 
 #Retrieve all tasks belonging to a specific user
 def get_tasks(db: Session, user_id: int):
-    return db.query(models.Task).filter(models.Task.owner_id == user_id).all()
+    return db.query(models.Task).filter(models.Task.user_id == user_id).all()
 
 #user can delete a task 
 def delete_task(db: Session, task_id: int, user_id: int):
     task = db.query(models.Task).filter(
         models.Task.id == task_id,
-        models.Task.owner_id == user_id
+        models.Task.user_id == user_id
     ).first()
 
     if task:
