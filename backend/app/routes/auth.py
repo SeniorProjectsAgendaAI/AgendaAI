@@ -48,6 +48,9 @@ def login(user: dict, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=400, detail="Invalid email or password")
 
+    if not db_user.hashed_password:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
     if not verify_password(password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid email or password")
 

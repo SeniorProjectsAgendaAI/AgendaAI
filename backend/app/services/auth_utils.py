@@ -6,13 +6,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 import os
+import json
+from functools import lru_cache
+from urllib.request import urlopen
 
 from dotenv import load_dotenv
 
 from app.database.session import get_db
 from app.database.models import User
-
-from app.services.security import verify_password
 
 load_dotenv()
 
@@ -21,6 +22,10 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+
+COGNITO_REGION = os.getenv("COGNITO_REGION")
+COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
+COGNITO_APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -35,6 +40,54 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def _get_cognito_issuer() -> str | None:
+    if not COGNITO_REGION or not COGNITO_USER_POOL_ID:
+        return None
+    return f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+
+@lru_cache(maxsize=1)
+def _get_cognito_jwks() -> dict:
+    issuer = _get_cognito_issuer()
+    if not issuer:
+        raise RuntimeError("Cognito issuer is not configured")
+    with urlopen(f"{issuer}/.well-known/jwks.json") as response:
+        return json.load(response)
+
+def _verify_cognito_token(token: str) -> dict:
+    issuer = _get_cognito_issuer()
+    if not issuer or not COGNITO_APP_CLIENT_ID:
+        raise JWTError("Cognito settings missing")
+
+    headers = jwt.get_unverified_header(token)
+    kid = headers.get("kid")
+    if not kid:
+        raise JWTError("Token header missing kid")
+
+    jwks = _get_cognito_jwks()
+    key = next((k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
+    if not key:
+        raise JWTError("Matching JWKS key not found")
+
+    claims = jwt.decode(
+        token,
+        key,
+        algorithms=["RS256"],
+        issuer=issuer,
+        options={"verify_aud": False},
+    )
+
+    token_use = claims.get("token_use")
+    if token_use == "id":
+        if claims.get("aud") != COGNITO_APP_CLIENT_ID:
+            raise JWTError("Invalid Cognito audience")
+    elif token_use == "access":
+        if claims.get("client_id") != COGNITO_APP_CLIENT_ID:
+            raise JWTError("Invalid Cognito client_id")
+    else:
+        raise JWTError("Unsupported Cognito token_use")
+
+    return claims
+
 # Dependency to get the current user from the JWT token
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -46,19 +99,41 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # First, try local HS256 token validation.
+    if SECRET_KEY:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id is not None:
+                user = db.query(User).filter(User.id == user_id).first()
+                if user:
+                    return user
+        except JWTError:
+            pass
+
+    # Next, try Cognito validation (RS256).
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-
-        if user_id is None:
-            raise credentials_exception
-
+        claims = _verify_cognito_token(token)
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not user:
+    cognito_sub = claims.get("sub")
+    email = claims.get("email")
+    if not cognito_sub or not email:
         raise credentials_exception
+
+    user = db.query(User).filter(User.cognito_sub == cognito_sub).first()
+    if not user:
+        existing_by_email = db.query(User).filter(User.email == email).first()
+        if existing_by_email and not existing_by_email.cognito_sub:
+            existing_by_email.cognito_sub = cognito_sub
+            db.commit()
+            db.refresh(existing_by_email)
+            return existing_by_email
+
+        user = User(email=email, cognito_sub=cognito_sub)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     return user

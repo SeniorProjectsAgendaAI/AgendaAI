@@ -35,7 +35,7 @@ class TaskResponse(TaskBase):
     id: int
     completed: bool
     created_at: datetime
-    owner_id: int
+    user_id: int
 
     class Config:
         from_attributes = True
