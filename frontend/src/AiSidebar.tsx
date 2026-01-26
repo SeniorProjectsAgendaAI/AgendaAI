@@ -53,7 +53,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
     setMessages((prev) => [...prev, userMessage]);
 
-    // Placeholder AI response
+    //Placeholder AI response
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
