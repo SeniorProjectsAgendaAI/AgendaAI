@@ -57,7 +57,7 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
 // (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router 
 function App() {
   return (
-    <Authenticator socialProviders={['google']}>  
+    <Authenticator socialProviders={['google', 'amazon']}>  
       {({ signOut, user }) => (
         <Router>
           <Routes>

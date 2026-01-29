@@ -14,6 +14,12 @@ export const auth = defineAuth({
         clientSecret: secret('GOOGLE_CLIENT_SECRET'),
         scopes: ['email', 'profile', 'openid'],
       },
+
+      loginWithAmazon: {
+        clientId: secret('AMAZON_CLIENT_ID'),
+        clientSecret: secret('AMAZON_CLIENT_SECRET'),
+        scopes: ['profile']
+      }, 
       callbackUrls: [
         'http://localhost:3000/', 
         // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
@@ -22,7 +28,7 @@ export const auth = defineAuth({
         // Dev Amplify Console domain
         'https://dev.d2i3jqbsdy4snq.amplifyapp.com/',
         // Dashboard domain 
-        'https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/'
+        'https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/',
       ],
       logoutUrls: [
         'http://localhost:3000/',
