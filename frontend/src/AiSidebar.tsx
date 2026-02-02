@@ -1,9 +1,11 @@
 //Biniam Gashaw
 //AI Sidebar Component for interacting with AI assistant
 //Reference: https://coreui.io/react/docs/templates/admin-dashboard/
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import { fetchAuthSession } from "aws-amplify/auth";
+import api from "./services/api";
 import "./aisidebar.css";
 
 //markdown-to-HTML converter
@@ -37,6 +39,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(true);
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
+  const [searchParams] = useSearchParams();
 
   const handleToggle = () => {
     if (onToggle) {
@@ -56,6 +59,78 @@ const AISidebar: React.FC<AISidebarProps> = ({
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] =
+    useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+
+  useEffect(() => {
+    checkGoogleCalendarConnection();
+
+    // Handle OAuth callback
+    if (searchParams.get("google_calendar_connected") === "true") {
+      checkGoogleCalendarConnection();
+    }
+  }, [searchParams]);
+
+  const getAuthToken = async (): Promise<string | null> => {
+    try {
+      const session = await fetchAuthSession();
+      return session.tokens?.idToken?.toString() ?? null;
+    } catch (error) {
+      console.error("Failed to get auth token:", error);
+      return null;
+    }
+  };
+
+  const checkGoogleCalendarConnection = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/google-calendar/status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsGoogleCalendarConnected(response.data.connected);
+    } catch (error) {
+      console.error("Failed to check Google Calendar connection:", error);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
+
+  const handleConnectGoogleCalendar = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/google-calendar/authorize", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error("Failed to initiate Google Calendar connection:", error);
+    }
+  };
+
+  const handleDisconnectGoogleCalendar = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      await api.delete("/oauth/google-calendar/disconnect", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsGoogleCalendarConnected(false);
+    } catch (error) {
+      console.error("Failed to disconnect Google Calendar:", error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -73,9 +148,24 @@ const AISidebar: React.FC<AISidebarProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8001/chat", {
-        message: currentInput,
-      });
+      const token = await getAuthToken();
+      if (!token) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "Please log in to use the AI assistant.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await axios.post(
+        "http://localhost:8001/chat",
+        { message: currentInput },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -126,6 +216,30 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
       {(isOpen || fullScreen) && (
         <>
+          <div className="connections-section">
+            <h4>Connected Services</h4>
+            <div className="connection-item">
+              <span>Google Calendar</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isGoogleCalendarConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectGoogleCalendar}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  className="connect-btn"
+                  onClick={handleConnectGoogleCalendar}
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="messages-container">
             {messages.map((msg) => (
               <div
