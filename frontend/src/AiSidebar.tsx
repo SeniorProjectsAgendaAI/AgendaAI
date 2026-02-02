@@ -1,6 +1,21 @@
+//Biniam Gashaw
+//AI Sidebar Component for interacting with AI assistant
+//Reference: https://coreui.io/react/docs/templates/admin-dashboard/
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import "./aisidebar.css";
+
+//markdown-to-HTML converter
+const formatMessage = (text: string) => {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") //Bold
+    .replace(/^\* (.+)$/gm, "<li>$1</li>") //Bullet points
+    .replace(/<li>/g, "<ul><li>")
+    .replace(/<\/li>/g, "</li></ul>") //Wrap lists
+    .replace(/<\/ul><ul>/g, "") //Merge consecutive lists
+    .replace(/\n/g, "<br/>"); //Line breaks
+};
 
 interface Message {
   id: string;
@@ -40,9 +55,10 @@ const AISidebar: React.FC<AISidebarProps> = ({
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -52,19 +68,35 @@ const AISidebar: React.FC<AISidebarProps> = ({
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputMessage;
+    setInputMessage("");
+    setIsLoading(true);
 
-    //Placeholder AI response
-    setTimeout(() => {
+    try {
+      const response = await axios.post("http://localhost:8001/chat", {
+        message: currentInput,
+      });
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "This is a placeholder response. AI integration coming next!",
+        text: response.data.response,
         isUser: false,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
-    }, 500);
-
-    setInputMessage("");
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text:
+          error.response?.data?.detail ||
+          "Agent server not running. Start it with: cd mcp-servers/agent && uvicorn server:app --reload --port 8001",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,7 +133,15 @@ const AISidebar: React.FC<AISidebarProps> = ({
                 className={`message ${msg.isUser ? "user" : "ai"}`}
               >
                 <div className="message-content">
-                  <p>{msg.text}</p>
+                  {msg.isUser ? (
+                    <p>{msg.text}</p>
+                  ) : (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: formatMessage(msg.text),
+                      }}
+                    />
+                  )}
                 </div>
                 <span className="message-time">
                   {msg.timestamp.toLocaleTimeString([], {
@@ -111,6 +151,13 @@ const AISidebar: React.FC<AISidebarProps> = ({
                 </span>
               </div>
             ))}
+            {isLoading && (
+              <div className="message ai">
+                <div className="message-content">
+                  <p>Thinking...</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="input-container">
@@ -121,8 +168,11 @@ const AISidebar: React.FC<AISidebarProps> = ({
               placeholder="Ask about Canvas, Gmail, or Calendar..."
               rows={2}
             />
-            <button onClick={handleSendMessage} disabled={!inputMessage.trim()}>
-              Send
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isLoading}
+            >
+              {isLoading ? "Sending..." : "Send"}
             </button>
           </div>
         </>

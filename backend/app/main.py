@@ -1,16 +1,15 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-
 # DB init
 from app.database.database import init_db
 
 # Routes
 from app.routes.auth import router as auth_router
-from app.routes.users import router as user_router
-from app.routes.tasks import router as task_router
 from app.routes.db_test import router as db_test_router
 from app.routes.health import router as health_router
+from app.routes.tasks import router as task_router
+from app.routes.users import router as user_router
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -35,7 +34,7 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/",
-    "https://*.amplifyapp.com"
+    "https://*.amplifyapp.com",
 ]
 
 app.add_middleware(
