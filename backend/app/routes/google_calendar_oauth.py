@@ -1,4 +1,5 @@
 #Google Calendar OAuth routes for multi-user authorization
+#Reference :https://developers.google.com/identity/protocols/oauth2
 import os
 import secrets
 from datetime import datetime, timedelta

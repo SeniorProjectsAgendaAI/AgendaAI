@@ -33,8 +33,7 @@ class AgendaAIAgent:
         self.model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
         self.tool_map = {}
         self.tools = []
-        self.current_user_gcal_token = None  #Will be set per-request
-
+        self.current_user_gcal_token = None  
     async def connect(self, name: str, script_path: str, env_vars: dict = None):
         """Connect to an MCP server via stdio."""
         import os
