@@ -2,17 +2,24 @@
 #FastAPI server for AgendaAI Agent
 #Run with: uvicorn server:app --reload --port 8001, this should be automated with task.json
 
+import json
+import os
+from functools import lru_cache
+from urllib.request import urlopen
+
 from client import AgendaAIAgent
+from database import get_user_google_calendar_token
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from jose import JWTError, jwt
 from pydantic import BaseModel
 
 load_dotenv()
 
 app = FastAPI(title="AgendaAI Agent API")
 
-# CORS
+#CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -20,6 +27,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#Cognito config
+COGNITO_REGION = os.getenv("COGNITO_REGION")
+COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
+COGNITO_APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID")
 
 
 class ChatRequest(BaseModel):
@@ -34,6 +46,80 @@ class ChatResponse(BaseModel):
 _agent = None
 _chat_session = None
 _gemini_tools = []
+
+
+def _get_cognito_issuer() -> str:
+    if not COGNITO_REGION or not COGNITO_USER_POOL_ID:
+        return None
+    return f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+
+
+@lru_cache(maxsize=1)
+def _get_cognito_jwks() -> dict:
+    issuer = _get_cognito_issuer()
+    if not issuer:
+        raise RuntimeError("Cognito issuer is not configured")
+    with urlopen(f"{issuer}/.well-known/jwks.json") as response:
+        return json.load(response)
+
+
+def verify_cognito_token(token: str) -> dict:
+    """Verify Cognito JWT token and return claims."""
+    issuer = _get_cognito_issuer()
+    if not issuer or not COGNITO_APP_CLIENT_ID:
+        raise JWTError("Cognito settings missing")
+
+    headers = jwt.get_unverified_header(token)
+    kid = headers.get("kid")
+    if not kid:
+        raise JWTError("Token header missing kid")
+
+    jwks = _get_cognito_jwks()
+    key = next((k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
+    if not key:
+        raise JWTError("Matching JWKS key not found")
+
+    claims = jwt.decode(
+        token,
+        key,
+        algorithms=["RS256"],
+        issuer=issuer,
+        options={"verify_aud": False, "verify_at_hash": False},
+    )
+
+    token_use = claims.get("token_use")
+    if token_use == "id":
+        if claims.get("aud") != COGNITO_APP_CLIENT_ID:
+            raise JWTError("Invalid Cognito audience")
+    elif token_use == "access":
+        if claims.get("client_id") != COGNITO_APP_CLIENT_ID:
+            raise JWTError("Invalid Cognito client_id")
+    else:
+        raise JWTError("Unsupported Cognito token_use")
+
+    return claims
+
+
+async def get_current_user(authorization: str = Header(None)) -> str:
+    """Dependency to extract cognito_sub from JWT token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401, detail="Missing or invalid authorization header"
+        )
+
+    token = authorization.replace("Bearer ", "")
+    try:
+        claims = verify_cognito_token(token)
+        cognito_sub = claims.get("sub")
+        if not cognito_sub:
+            raise HTTPException(
+                status_code=401, detail="Invalid token: missing sub claim"
+            )
+        return cognito_sub
+    except JWTError as e:
+        raise HTTPException(
+            status_code=401, detail=f"Token validation failed: {str(e)}"
+        )
 
 
 @app.on_event("startup")
@@ -98,9 +184,19 @@ def _convert_type(json_type: str):
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user)):
     #Send message to AI agent with MCP tool calling
     import google.generativeai as genai
+
+    # Get google calendar token
+    gcal_token = get_user_google_calendar_token(cognito_sub)
+    if gcal_token:
+        print(f"[Agent] Using Google Calendar token for user {cognito_sub}")
+
+        _agent.current_user_gcal_token = gcal_token
+    else:
+        print(f"[Agent] No Google Calendar token found for user {cognito_sub}")
+        _agent.current_user_gcal_token = None
 
     try:
         #Send message with tools
@@ -132,24 +228,43 @@ async def chat(request: ChatRequest):
                 print(f"   Arguments: {args}")
 
                 try:
+                    #Set Google Calendar token in temp file if this is a google_calendar tool
+                    if (
+                        tool_name.startswith("google_calendar:")
+                        and _agent.current_user_gcal_token
+                    ):
+                        import tempfile
+
+                        token_file = "/tmp/agendaai_gcal_runtime_token.json"
+                        with open(token_file, "w") as f:
+                            json.dump(_agent.current_user_gcal_token, f)
+                        print(f"   [Using user's Google Calendar token]")
+
                     session, actual_tool_name = _agent.tool_map[tool_name]
                     result = await session.call_tool(actual_tool_name, args)
                     result_text = result.content[0].text
+
+                    #Clear the runtime token file after use
+                    if tool_name.startswith("google_calendar:"):
+                        try:
+                            os.remove("/tmp/agendaai_gcal_runtime_token.json")
+                        except:
+                            pass
 
                     #Print readable, formatted result
                     print(f"   Retrieved information")
                     if len(result_text) > 300:
                         #Show first 300 chars with formatting
-                        lines = result_text[:300].split('\n')
+                        lines = result_text[:300].split("\n")
                         print(f"   Here's what was found:")
-                        for line in lines[:5]:  
+                        for line in lines[:5]:
                             print(f"      {line[:80]}")
                         if len(lines) > 5 or len(result_text) > 300:
                             print(f"      ... (more content available)")
                     else:
                         #Show full result if short
                         print(f"   Here's what was found:")
-                        for line in result_text.split('\n')[:10]:
+                        for line in result_text.split("\n")[:10]:
                             print(f"      {line}")
 
                     #Truncate long results
@@ -172,7 +287,7 @@ async def chat(request: ChatRequest):
 
                     traceback.print_exc()
 
-                    # Return error to model
+                    #Return error to model
                     function_responses.append(
                         genai.protos.Part(
                             function_response=genai.protos.FunctionResponse(
