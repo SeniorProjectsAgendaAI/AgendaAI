@@ -1,27 +1,46 @@
-#Gmail MCP Server Gmail Module and Tool Listing
-#Author: Biniam Gashaw
-#Class: CS425: Software Engineering
-#Sources: https://modelcontextprotocol.io/docs/develop/build-server
-import os
-import json
+# Gmail MCP Server Gmail Module and Tool Listing
+# Author: Biniam Gashaw
+# Class: CS425: Software Engineering
+# Sources: https://modelcontextprotocol.io/docs/develop/build-server
 import asyncio
+import json
+import os
 from typing import List
 
 from dotenv import load_dotenv
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-
+from mcp.types import TextContent, Tool
 
 load_dotenv()
 
 GMAIL_TOKEN_PATH = os.getenv("GMAIL_TOKEN_PATH", "gmail_token.json")
+GMAIL_RUNTIME_TOKEN_PATH = "/tmp/agendaai_gmail_runtime_token.json"
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
+
 def get_gmail_service():
+    #check if runtime token file exists 
+    if os.path.exists(GMAIL_RUNTIME_TOKEN_PATH):
+        try:
+            with open(GMAIL_RUNTIME_TOKEN_PATH, "r") as f:
+                token_data = json.load(f)
+            creds = Credentials(
+                token=token_data["access_token"],
+                refresh_token=token_data.get("refresh_token"),
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=os.getenv("GOOGLE_CLIENT_ID"),
+                client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+                scopes=token_data.get("scopes", GMAIL_SCOPES),
+            )
+            print("[Gmail MCP] Using runtime token from agent")
+            return build("gmail", "v1", credentials=creds)
+        except Exception as e:
+            print(f"[Gmail MCP] Failed to use runtime token: {e}")
+
+    # Fallback
     if not os.path.exists(GMAIL_TOKEN_PATH):
         raise RuntimeError(
             f"Gmail token file not found at {GMAIL_TOKEN_PATH}. "
@@ -30,7 +49,9 @@ def get_gmail_service():
     creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_PATH, scopes=GMAIL_SCOPES)
     return build("gmail", "v1", credentials=creds)
 
+
 app = Server("gmail-server")
+
 
 @app.list_tools()
 async def list_tools() -> List[Tool]:
@@ -70,6 +91,7 @@ async def list_tools() -> List[Tool]:
         ),
     ]
 
+
 @app.call_tool()
 async def call_tool(name: str, arguments: dict):
     try:
@@ -97,7 +119,10 @@ async def call_tool(name: str, arguments: dict):
                     )
                     .execute()
                 )
-                headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
+                headers = {
+                    h["name"]: h["value"]
+                    for h in msg.get("payload", {}).get("headers", [])
+                }
                 out.append(
                     {
                         "id": msg["id"],
@@ -131,7 +156,10 @@ async def call_tool(name: str, arguments: dict):
                     )
                     .execute()
                 )
-                headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
+                headers = {
+                    h["name"]: h["value"]
+                    for h in msg.get("payload", {}).get("headers", [])
+                }
                 out.append(
                     {
                         "id": msg["id"],
@@ -145,17 +173,17 @@ async def call_tool(name: str, arguments: dict):
 
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
     except Exception as e:
-        return [TextContent(
-            type="text",
-            text=f"Error executing {name}: {str(e)}"
-        )]
+        return [TextContent(type="text", text=f"Error executing {name}: {str(e)}")]
+
 
 async def _run():
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 
+
 def main():
     asyncio.run(_run())
+
 
 if __name__ == "__main__":
     main()
