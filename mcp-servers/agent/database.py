@@ -1,4 +1,4 @@
-#Database utilities for agent to fetch user OAuth tokens
+# Database utilities for agent to fetch user OAuth tokens
 import os
 
 from cryptography.fernet import Fernet
@@ -65,6 +65,34 @@ def get_user_google_calendar_token(cognito_sub: str) -> dict:
             .filter(
                 ConnectedAccount.user_id == cognito_sub,
                 ConnectedAccount.provider == "google_calendar",
+            )
+            .first()
+        )
+
+        if not account:
+            return None
+
+        return {
+            "access_token": account.access_token,
+            "refresh_token": account.refresh_token,
+            "expires_at": (
+                account.expires_at.isoformat() if account.expires_at else None
+            ),
+            "scopes": account.scopes.split(",") if account.scopes else [],
+        }
+    finally:
+        db.close()
+
+
+def get_user_gmail_token(cognito_sub: str) -> dict:
+    """Get Gmail access token for a user."""
+    db = SessionLocal()
+    try:
+        account = (
+            db.query(ConnectedAccount)
+            .filter(
+                ConnectedAccount.user_id == cognito_sub,
+                ConnectedAccount.provider == "gmail",
             )
             .first()
         )

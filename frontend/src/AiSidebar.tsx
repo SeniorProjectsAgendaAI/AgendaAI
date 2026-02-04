@@ -305,10 +305,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
                   Disconnect
                 </button>
               ) : (
-                <button
-                  className="connect-btn"
-                  onClick={handleConnectGmail}
-                >
+                <button className="connect-btn" onClick={handleConnectGmail}>
                   Connect
                 </button>
               )}
