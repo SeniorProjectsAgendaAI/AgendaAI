@@ -61,14 +61,19 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] =
     useState(false);
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
 
   useEffect(() => {
     checkGoogleCalendarConnection();
+    checkGmailConnection();
 
     // Handle OAuth callback
     if (searchParams.get("google_calendar_connected") === "true") {
       checkGoogleCalendarConnection();
+    }
+    if (searchParams.get("gmail_connected") === "true") {
+      checkGmailConnection();
     }
   }, [searchParams]);
 
@@ -129,6 +134,56 @@ const AISidebar: React.FC<AISidebarProps> = ({
       setIsGoogleCalendarConnected(false);
     } catch (error) {
       console.error("Failed to disconnect Google Calendar:", error);
+    }
+  };
+
+  const checkGmailConnection = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/gmail/status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsGmailConnected(response.data.connected);
+    } catch (error) {
+      console.error("Failed to check Gmail connection:", error);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
+
+  const handleConnectGmail = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/gmail/authorize", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error("Failed to initiate Gmail connection:", error);
+    }
+  };
+
+  const handleDisconnectGmail = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      await api.delete("/oauth/gmail/disconnect", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsGmailConnected(false);
+    } catch (error) {
+      console.error("Failed to disconnect Gmail:", error);
     }
   };
 
@@ -233,6 +288,26 @@ const AISidebar: React.FC<AISidebarProps> = ({
                 <button
                   className="connect-btn"
                   onClick={handleConnectGoogleCalendar}
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+            <div className="connection-item">
+              <span>Gmail</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isGmailConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectGmail}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  className="connect-btn"
+                  onClick={handleConnectGmail}
                 >
                   Connect
                 </button>
