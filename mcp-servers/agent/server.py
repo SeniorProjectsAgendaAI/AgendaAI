@@ -8,7 +8,7 @@ from functools import lru_cache
 from urllib.request import urlopen
 
 from client import AgendaAIAgent
-from database import get_user_google_calendar_token
+from database import get_user_gmail_token, get_user_google_calendar_token
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -169,7 +169,7 @@ async def shutdown():
 
 
 def _convert_type(json_type: str):
-    #Convert JSON Schema type to Gemini type.
+
     import google.generativeai as genai
 
     type_mapping = {
@@ -188,15 +188,23 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
     #Send message to AI agent with MCP tool calling
     import google.generativeai as genai
 
-    # Get google calendar token
+
     gcal_token = get_user_google_calendar_token(cognito_sub)
+    gmail_token = get_user_gmail_token(cognito_sub)
+
     if gcal_token:
         print(f"[Agent] Using Google Calendar token for user {cognito_sub}")
-
         _agent.current_user_gcal_token = gcal_token
     else:
         print(f"[Agent] No Google Calendar token found for user {cognito_sub}")
         _agent.current_user_gcal_token = None
+
+    if gmail_token:
+        print(f"[Agent] Using Gmail token for user {cognito_sub}")
+        _agent.current_user_gmail_token = gmail_token
+    else:
+        print(f"[Agent] No Gmail token found for user {cognito_sub}")
+        _agent.current_user_gmail_token = None
 
     try:
         #Send message with tools
@@ -218,7 +226,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
             if not function_calls:
                 return ChatResponse(response=response.text)
 
-            #Execute function calls
+            #function calls
             function_responses = []
             for function_call in function_calls:
                 tool_name = function_call.name
@@ -240,21 +248,36 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                             json.dump(_agent.current_user_gcal_token, f)
                         print(f"   [Using user's Google Calendar token]")
 
+                    # Set Gmail token in temp file if this is a gmail tool
+                    if (
+                        tool_name.startswith("gmail:")
+                        and _agent.current_user_gmail_token
+                    ):
+                        token_file = "/tmp/agendaai_gmail_runtime_token.json"
+                        with open(token_file, "w") as f:
+                            json.dump(_agent.current_user_gmail_token, f)
+                        print(f"   [Using user's Gmail token]")
+
                     session, actual_tool_name = _agent.tool_map[tool_name]
                     result = await session.call_tool(actual_tool_name, args)
                     result_text = result.content[0].text
 
-                    #Clear the runtime token file after use
+                    # Clear the runtime token files after use
                     if tool_name.startswith("google_calendar:"):
                         try:
                             os.remove("/tmp/agendaai_gcal_runtime_token.json")
                         except:
                             pass
+                    if tool_name.startswith("gmail:"):
+                        try:
+                            os.remove("/tmp/agendaai_gmail_runtime_token.json")
+                        except:
+                            pass
 
-                    #Print readable, formatted result
+                    # Print readable, formatted result
                     print(f"   Retrieved information")
                     if len(result_text) > 300:
-                        #Show first 300 chars with formatting
+                        # Show first 300 chars with formatting
                         lines = result_text[:300].split("\n")
                         print(f"   Here's what was found:")
                         for line in lines[:5]:
@@ -262,12 +285,12 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                         if len(lines) > 5 or len(result_text) > 300:
                             print(f"      ... (more content available)")
                     else:
-                        #Show full result if short
+                        # Show full result if short
                         print(f"   Here's what was found:")
                         for line in result_text.split("\n")[:10]:
                             print(f"      {line}")
 
-                    #Truncate long results
+                    # Truncate long results
                     max_result_length = 8000
                     if len(result_text) > max_result_length:
                         result_text = (
@@ -287,7 +310,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
 
                     traceback.print_exc()
 
-                    #Return error to model
+                    # Return error to model
                     function_responses.append(
                         genai.protos.Part(
                             function_response=genai.protos.FunctionResponse(
