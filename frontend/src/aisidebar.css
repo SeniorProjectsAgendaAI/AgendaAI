@@ -83,6 +83,65 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+.connections-section {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connections-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.connection-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.connection-item span {
+  font-size: 0.9rem;
+}
+
+.connection-status {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.connect-btn,
+.disconnect-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.connect-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.connect-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.disconnect-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.disconnect-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
 .ai-sidebar.fullscreen .messages-container {
   max-width: 1200px;
   margin: 0 auto;

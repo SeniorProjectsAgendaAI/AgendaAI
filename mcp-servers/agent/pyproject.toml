@@ -5,9 +5,11 @@ description = "Unified MCP agent that connects to Canvas, Gmail, and Google Cale
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "google-generativeai>=0.8.0",
-    "mcp>=1.0.0",
-    "python-dotenv>=1.0.0",
+  "google-generativeai>=0.8.0",
+  "mcp>=1.0.0",
+  "python-dotenv>=1.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
 ]
 
 [project.scripts]
