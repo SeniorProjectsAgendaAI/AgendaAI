@@ -2,7 +2,7 @@
 
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
@@ -31,3 +31,22 @@ def init_db():
 
     print("Initializing database tables...")
     Base.metadata.create_all(bind=engine)
+    _migrate_users_table_for_cognito()
+
+
+def _migrate_users_table_for_cognito() -> None:
+    inspector = inspect(engine)
+    table_names = inspector.get_table_names()
+    if "users" not in table_names:
+        return
+
+    columns = {column["name"]: column for column in inspector.get_columns("users")}
+    with engine.begin() as conn:
+        if "cognito_sub" not in columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN cognito_sub VARCHAR NULL"))
+        hashed_password_col = columns.get("hashed_password")
+        if hashed_password_col and not hashed_password_col.get("nullable", True):
+            conn.execute(text("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL"))
+        conn.execute(
+            text("CREATE INDEX IF NOT EXISTS ix_users_cognito_sub ON users (cognito_sub)")
+        )
