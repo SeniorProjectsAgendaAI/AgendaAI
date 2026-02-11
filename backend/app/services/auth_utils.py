@@ -6,7 +6,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 import os
 import json
 from pathlib import Path
@@ -159,24 +158,14 @@ def get_current_user(
     if user:
         return user
 
-    existing_by_email = (
-        db.query(User)
-        .filter(func.lower(User.email) == normalized_email)
-        .first()
-    )
+    existing_by_email = db.query(User).filter(User.email == normalized_email).first()
     if existing_by_email:
-        if existing_by_email.cognito_sub != cognito_sub:
-            existing_by_email.cognito_sub = cognito_sub
-            try:
-                db.commit()
-            except IntegrityError:
-                db.rollback()
-                user = db.query(User).filter(User.cognito_sub == cognito_sub).first()
-                if user:
-                    return user
-                raise credentials_exception
-            db.refresh(existing_by_email)
-        return existing_by_email
+        if existing_by_email.cognito_sub == cognito_sub:
+            return existing_by_email
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already in use by a different account. Use that provider or a different email.",
+        )
 
     user = User(email=normalized_email, cognito_sub=cognito_sub)
     db.add(user)
@@ -184,14 +173,10 @@ def get_current_user(
         db.commit()
     except IntegrityError:
         db.rollback()
-        user = (
-            db.query(User)
-            .filter((User.cognito_sub == cognito_sub) | (func.lower(User.email) == normalized_email))
-            .first()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already in use by a different account. Use that provider or a different email.",
         )
-        if not user:
-            raise credentials_exception
-        return user
     db.refresh(user)
 
     return user
