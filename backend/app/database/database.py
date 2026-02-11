@@ -42,6 +42,12 @@ def _migrate_users_table_for_cognito() -> None:
 
     columns = {column["name"]: column for column in inspector.get_columns("users")}
     with engine.begin() as conn:
+        if "created_at" not in columns:
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()"
+                )
+            )
         if "cognito_sub" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN cognito_sub VARCHAR NULL"))
         hashed_password_col = columns.get("hashed_password")
