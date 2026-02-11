@@ -3,6 +3,7 @@ import app from "./App";
 import {NavLink} from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "./taskpanel.css";
+import api from "./services/api";
 //currently there is no mcp integration with task creations all manual because the database doesnt currently support tasks
 //task making by alex, editing +deletion by bini
 //basically making a task its own object ish
@@ -14,6 +15,34 @@ interface Task
     time: string;
     priority: number;
 }
+
+interface ApiTask {
+    id: number;
+    title: string;
+    description?: string | null;
+    completed: boolean;
+    user_id: number;
+    created_at: string;
+}
+
+const parseTaskDescription = (description?: string | null) => {
+    if (!description) {
+        return { date: "", time: "", priority: 1 };
+    }
+    try {
+        const parsed = JSON.parse(description);
+        return {
+            date: parsed.date ?? "",
+            time: parsed.time ?? "",
+            priority: parsed.priority ?? 1,
+        };
+    } catch {
+        return { date: "", time: "", priority: 1 };
+    }
+};
+
+const buildTaskDescription = (date: string, time: string, priority: number) =>
+    JSON.stringify({ date, time, priority });
 //(Alex) i implimented everything except the editing part
 // bini did the editing and deletion part of this code.
 
@@ -35,7 +64,29 @@ const TaskPanel = () => {
     const [editTaskTime, setEditTaskTime] = React.useState("");
     const [editTaskPriority, setEditTaskPriority] = React.useState(1);
 
-    const addTask = () => {
+    React.useEffect(() => {
+        const loadTasks = async () => {
+            try {
+                const res = await api.get<ApiTask[]>("/tasks/");
+                const mapped = res.data.map((task) => {
+                    const meta = parseTaskDescription(task.description);
+                    return {
+                        id: task.id,
+                        name: task.title,
+                        date: meta.date,
+                        time: meta.time,
+                        priority: meta.priority,
+                    };
+                });
+                setTasks(mapped);
+            } catch (err) {
+                console.error("Failed to load tasks", err);
+            }
+        };
+        loadTasks();
+    }, []);
+
+    const addTask = async () => {
         //const task = prompt("Type task name, date, and priority"); DONT NEED ANYMORE
         //if one of the spaces are empty we dont addd in the task (basically requiring all feilds)
         if (!newTaskName || !newTaskDate || !newTaskTime || !newTaskPriority)    
@@ -43,15 +94,25 @@ const TaskPanel = () => {
             alert("All 4 fields are required, Thank you!");
             return;
         }
-        //uses date now for the id so that theyre never the same, im sure there is another easier way idk
-        const newTask: Task = {
-            id: Date.now(),
-            name: newTaskName,
-            date: newTaskDate,
-            time: newTaskTime,
-            priority: newTaskPriority,
-        };
-        setTasks([...tasks, newTask]);
+        try {
+            const res = await api.post<ApiTask>("/tasks/", {
+                title: newTaskName,
+                description: buildTaskDescription(newTaskDate, newTaskTime, newTaskPriority),
+            });
+            const meta = parseTaskDescription(res.data.description);
+            const newTask: Task = {
+                id: res.data.id,
+                name: res.data.title,
+                date: meta.date,
+                time: meta.time,
+                priority: meta.priority,
+            };
+            setTasks((prev) => [...prev, newTask]);
+        } catch (err) {
+            console.error("Failed to create task", err);
+            alert("Failed to create task.");
+            return;
+        }
         //reset ttask box 
         setNewTaskName("");
         setNewTaskDate("");
@@ -62,8 +123,14 @@ const TaskPanel = () => {
 
     };
 
-    const deleteTask = (taskId: number) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
+    const deleteTask = async (taskId: number) => {
+        try {
+            await api.delete(`/tasks/${taskId}`);
+            setTasks((prev) => prev.filter((task) => task.id !== taskId));
+        } catch (err) {
+            console.error("Failed to delete task", err);
+            alert("Failed to delete task.");
+        }
     };
 
     const startEditTask = (task: Task) => {
@@ -74,26 +141,35 @@ const TaskPanel = () => {
     setEditTaskPriority(task.priority);
     };
 
-    const saveEditTask = (taskId: number) => {
+    const saveEditTask = async (taskId: number) => {
         if (!editTaskName || !editTaskDate || !editTaskTime || !editTaskPriority) {
         alert("All 4 fields are required, Thank you!");
         return;
     }
-
-    setTasks(
-        tasks.map((task) =>
-            task.id === taskId
-            ? {
-                ...task,
-                name: editTaskName,
-                date: editTaskDate,
-                time: editTaskTime,
-                priority: editTaskPriority,
-            }
-            : task,
-        ),
-    );
-    setEditingTaskId(null);
+    try {
+        const res = await api.put<ApiTask>(`/tasks/${taskId}`, {
+            title: editTaskName,
+            description: buildTaskDescription(editTaskDate, editTaskTime, editTaskPriority),
+        });
+        const meta = parseTaskDescription(res.data.description);
+        setTasks((prev) =>
+            prev.map((task) =>
+                task.id === taskId
+                ? {
+                    ...task,
+                    name: res.data.title,
+                    date: meta.date,
+                    time: meta.time,
+                    priority: meta.priority,
+                }
+                : task,
+            ),
+        );
+        setEditingTaskId(null);
+    } catch (err) {
+        console.error("Failed to update task", err);
+        alert("Failed to update task.");
+    }
     };
 
     const cancelEdit = () => {
