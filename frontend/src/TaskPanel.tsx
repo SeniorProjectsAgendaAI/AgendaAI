@@ -67,7 +67,7 @@ const TaskPanel = () => {
     React.useEffect(() => {
         const loadTasks = async () => {
             try {
-                const res = await api.get<ApiTask[]>("/tasks");
+                const res = await api.get<ApiTask[]>("/tasks/");
                 const mapped = res.data.map((task) => {
                     const meta = parseTaskDescription(task.description);
                     return {
@@ -95,7 +95,7 @@ const TaskPanel = () => {
             return;
         }
         try {
-            const res = await api.post<ApiTask>("/tasks", {
+            const res = await api.post<ApiTask>("/tasks/", {
                 title: newTaskName,
                 description: buildTaskDescription(newTaskDate, newTaskTime, newTaskPriority),
             });
