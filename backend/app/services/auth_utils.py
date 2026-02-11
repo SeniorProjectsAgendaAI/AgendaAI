@@ -12,10 +12,13 @@ from pathlib import Path
 from functools import lru_cache
 from urllib.request import urlopen
 
-from dotenv import load_dotenv
-
-from app.database.session import get_db
 from app.database.models import User
+from app.database.session import get_db
+from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 
 load_dotenv()
 
@@ -60,21 +63,26 @@ if not (COGNITO_REGION and COGNITO_USER_POOL_ID and COGNITO_APP_CLIENT_ID):
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-# Function to create a JWT access token
+
+#Function to create a JWT access token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
 
     expire = datetime.utcnow() + (
-        expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta
+        if expires_delta
+        else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode["exp"] = expire
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+
 def _get_cognito_issuer() -> str | None:
     if not COGNITO_REGION or not COGNITO_USER_POOL_ID:
         return None
     return f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+
 
 @lru_cache(maxsize=1)
 def _get_cognito_jwks() -> dict:
@@ -83,6 +91,7 @@ def _get_cognito_jwks() -> dict:
         raise RuntimeError("Cognito issuer is not configured")
     with urlopen(f"{issuer}/.well-known/jwks.json") as response:
         return json.load(response)
+
 
 def _verify_cognito_token(token: str) -> dict:
     issuer = _get_cognito_issuer()
@@ -119,10 +128,10 @@ def _verify_cognito_token(token: str) -> dict:
 
     return claims
 
-# Dependency to get the current user from the JWT token
+
+#Dependency to get the current user from the JWT token
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -130,7 +139,7 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    # First, try local HS256 token validation.
+    #local HS256 token validation.
     if SECRET_KEY:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -139,18 +148,24 @@ def get_current_user(
                 user = db.query(User).filter(User.id == user_id).first()
                 if user:
                     return user
-        except JWTError:
+        except JWTError as e:
+            print(f"Local JWT validation failed: {e}")
             pass
 
-    # Next, try Cognito validation (RS256).
+    #Cognito validation (RS256).
     try:
         claims = _verify_cognito_token(token)
-    except JWTError:
+        print(
+            f"Cognito token validated successfully. Sub: {claims.get('sub')}, Email: {claims.get('email')}"
+        )
+    except JWTError as e:
+        print(f"Cognito validation failed: {e}")
         raise credentials_exception
 
     cognito_sub = claims.get("sub")
     email = claims.get("email")
     if not cognito_sub or not email:
+        print(f"Missing cognito_sub or email in claims: {claims}")
         raise credentials_exception
 
     normalized_email = email.strip().lower()
