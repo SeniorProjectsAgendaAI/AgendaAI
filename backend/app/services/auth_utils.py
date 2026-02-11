@@ -73,7 +73,7 @@ def _verify_cognito_token(token: str) -> dict:
         key,
         algorithms=["RS256"],
         issuer=issuer,
-        options={"verify_aud": False},
+        options={"verify_aud": False, "verify_at_hash": False},
     )
 
     token_use = claims.get("token_use")
