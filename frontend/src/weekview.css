@@ -1,4 +1,4 @@
-/* Week View Styles — consistent with dayview.css */
+/* Week View Styles */
 
 .weekViewContainer {
   display: flex;
@@ -13,7 +13,7 @@
   overflow-y: auto;
 }
 
-/* Header */
+
 .weekViewHeader {
   display: flex;
   flex-direction: column;
@@ -59,7 +59,7 @@
   margin-top: 40px;
 }
 
-/* 7-column grid */
+
 .weekGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -80,7 +80,6 @@
   box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.25);
 }
 
-/* Day header inside each column */
 .weekDayHeader {
   display: flex;
   align-items: center;
@@ -114,7 +113,6 @@
   font-size: 13px;
 }
 
-/* Task list inside each day */
 .weekDayTasks {
   flex: 1;
   padding: 6px 8px;
@@ -130,7 +128,7 @@
   margin-top: 10px;
 }
 
-/* Individual task chip */
+
 .weekTask {
   display: flex;
   align-items: center;
