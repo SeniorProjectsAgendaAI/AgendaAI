@@ -9,8 +9,11 @@ import "./dashboard.css";
 const Dashboard = () => {
   return (
     <div>
-      <h1>AgendaAI</h1>
-      <p>Mcp Calendar Webapp</p>
+      <div className="dashboardHeader">
+        <h1>AgendaAI</h1>
+        <p>Mcp Calendar Webapp</p>
+      </div>
+    
       {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
       <div className="dashboardGroup">
         <Sidebar />

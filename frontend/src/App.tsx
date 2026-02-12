@@ -26,7 +26,7 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
   }, []);
 
   return (
-    <div>
+    <div className="App">
       <h1>AgendaAI</h1>
       <p>Welcome, {user?.signInDetails?.loginId}</p>
       <p>Backend health: {health}</p>
