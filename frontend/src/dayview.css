@@ -13,6 +13,9 @@
 }
 
 .dayViewHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #ddd;
@@ -20,6 +23,8 @@
 
 .dayViewHeader h2 {
   margin: 0 0 15px 0;
+  width: 100%;
+  text-align: center;
 }
 
 .dateNavigation {

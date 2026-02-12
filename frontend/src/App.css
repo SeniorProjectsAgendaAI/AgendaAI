@@ -39,12 +39,19 @@
     transform: rotate(360deg);
   }
 }
-.App {
-  width: 180px;
-  background: #000000;
-  background-color: #000000;
-  height: 10dvh;
-  padding: 20px;
-  display: flex;
-  gap: 15px;
+
+.back-button {
+  background-color: #2d2d2d;
+  color: white;
+  border: 1px solid #555;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background-color: #444;
 }

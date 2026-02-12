@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import "./dayview.css";
+import BackButton from "./components/BackButton";
 import api from "./services/api";
 
 //Day view consist of all the events that correspond to that day
@@ -175,6 +176,9 @@ const DayView = () => {
      
       <div className="dayViewContent">
         <div className="dayViewHeader">
+          <div className="back-button-wrapper">
+            <BackButton />
+          </div>
           <h2>Day View</h2>
           <div className="dateNavigation">
             <button onClick={goToPreviousDay}>← Previous</button>
