@@ -177,17 +177,12 @@ def get_current_user(
     if existing_by_email:
         if existing_by_email.cognito_sub == cognito_sub:
             return existing_by_email
-        # If the existing user has no cognito_sub yet, link this Cognito
-        # identity to the existing local account (migration scenario).
-        if existing_by_email.cognito_sub is None:
-            existing_by_email.cognito_sub = cognito_sub
-            db.commit()
-            db.refresh(existing_by_email)
-            return existing_by_email
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email is already in use by a different account. Use that provider or a different email.",
-        )
+        # The Cognito sub changed (e.g. sandbox was recreated) or was never
+        # set.  Since Cognito already verified the email, re-link the account.
+        existing_by_email.cognito_sub = cognito_sub
+        db.commit()
+        db.refresh(existing_by_email)
+        return existing_by_email
 
     user = User(email=normalized_email, cognito_sub=cognito_sub)
     db.add(user)
