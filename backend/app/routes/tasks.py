@@ -9,6 +9,7 @@ from app.schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
 from app.services.auth_utils import get_current_user
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
+ALLOWED_TASK_STATUSES = {"todo", "in_progress", "done"}
 
 
 # create a new task
@@ -18,9 +19,18 @@ def create_task(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    if task.status and task.status not in ALLOWED_TASK_STATUSES:
+        raise HTTPException(status_code=400, detail="Invalid task status")
+
     new_task = models.Task(
         title=task.title,
         description=task.description,
+        tag=task.tag,
+        color=task.color,
+        priority=task.priority,
+        status=task.status or "todo",
+        due_date=task.due_date,
+        due_time=task.due_time,
         user_id=user.id,
     )
 
@@ -61,6 +71,20 @@ def update_task(
         task.title = updates.title
     if updates.description is not None:
         task.description = updates.description
+    if updates.tag is not None:
+        task.tag = updates.tag
+    if updates.color is not None:
+        task.color = updates.color
+    if updates.priority is not None:
+        task.priority = updates.priority
+    if updates.status is not None:
+        if updates.status not in ALLOWED_TASK_STATUSES:
+            raise HTTPException(status_code=400, detail="Invalid task status")
+        task.status = updates.status
+    if updates.due_date is not None:
+        task.due_date = updates.due_date
+    if updates.due_time is not None:
+        task.due_time = updates.due_time
     if updates.completed is not None:
         task.completed = updates.completed
 

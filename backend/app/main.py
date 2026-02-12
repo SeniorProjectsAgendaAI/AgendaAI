@@ -9,6 +9,7 @@ from app.database.database import init_db
 # Routes
 from app.routes.auth import router as auth_router
 from app.routes.db_test import router as db_test_router
+from app.routes.events import router as event_router
 from app.routes.gmail_oauth import router as gmail_oauth_router
 from app.routes.google_calendar_oauth import router as google_calendar_oauth_router
 from app.routes.health import router as health_router
@@ -54,6 +55,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(task_router)
+app.include_router(event_router)
 app.include_router(db_test_router)
 app.include_router(health_router)
 app.include_router(google_calendar_oauth_router)
