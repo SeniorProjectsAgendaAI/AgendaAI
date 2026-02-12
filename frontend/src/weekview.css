@@ -154,6 +154,11 @@
   border-left-color: #27ae60;
 }
 
+.weekTask.week-event {
+  background: #e8f4fd;
+  border-left-color: #1f8bd1;
+}
+
 .weekTask.taskCompleted {
   opacity: 0.5;
   text-decoration: line-through;
