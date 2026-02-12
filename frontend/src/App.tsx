@@ -8,6 +8,7 @@ import WeekView from "./WeekView";
 import MonthView from "./MonthView";
 import CalendarView from "./Calendarview";
 import AISidebar from "./AiSidebar";
+import Profile from "./Profile";
 import { Link } from "react-router-dom";
 
 import { Authenticator } from "@aws-amplify/ui-react";
@@ -51,6 +52,9 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       <Link to="/aisidebar">
         <button>Go to the AgendaAI Assistant</button>
       </Link>
+      <Link to="/profile">
+        <button>Go to Profile</button>
+      </Link>
     </div>
   );
 };
@@ -69,6 +73,7 @@ function App() {
             <Route path="/dayview" element={<DayView />} />
             <Route path="/weekview" element={<WeekView />} />
             <Route path="/monthview" element={<MonthView />} />
+            <Route path="/profile" element={<Profile />} />
             <Route
               path="/aisidebar"
               element={<AISidebar fullScreen={true} />}
