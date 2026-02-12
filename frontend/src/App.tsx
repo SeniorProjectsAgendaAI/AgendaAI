@@ -8,6 +8,7 @@ import WeekView from "./WeekView";
 import MonthView from "./MonthView";
 import CalendarView from "./Calendarview";
 import AISidebar from "./AiSidebar";
+import Profile from "./Profile";
 import { Link } from "react-router-dom";
 
 import { Authenticator } from "@aws-amplify/ui-react";
@@ -25,7 +26,7 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
   }, []);
 
   return (
-    <div>
+    <div className="App">
       <h1>AgendaAI</h1>
       <p>Welcome, {user?.signInDetails?.loginId}</p>
       <p>Backend health: {health}</p>
@@ -50,6 +51,9 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       </Link>
       <Link to="/aisidebar">
         <button>Go to the AgendaAI Assistant</button>
+      </Link>
+      <Link to="/profile">
+        <button>Go to Profile</button>
       </Link>
     </div>
   );
