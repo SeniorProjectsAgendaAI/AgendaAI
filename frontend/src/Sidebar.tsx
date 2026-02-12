@@ -15,8 +15,8 @@ const Sidebar = () => {
         <NavLink to="/aisidebar" className="navigationItem">
             Ai Agent
         </NavLink>
-        <NavLink to="/taskpanel" className="navigationItem">
-            BLANK
+        <NavLink to="/profile" className="navigationItem">
+            Profile
         </NavLink>
         
         <button className="navigationItem" onClick={signOut}>
