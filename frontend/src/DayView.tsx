@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import "./dayview.css";
+import BackButton from "./components/BackButton";
 
 interface Event {
   id: number;
@@ -9,6 +10,15 @@ interface Event {
   time: string;
   duration: number;
 }
+
+// const CreateEvent = () => {
+//   return (
+//     <div className="page-container">
+//       <BackButton />
+//       <h1> Create New Event </h1>
+//     </div>
+//   );
+// };
 
 const DayView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -50,6 +60,9 @@ const DayView = () => {
       {/* <Sidebar /> */}
       <div className="dayViewContent">
         <div className="dayViewHeader">
+          <div className="back-button-wrapper">
+            <BackButton />
+          </div>
           <h2>Day View</h2>
           <div className="dateNavigation">
             <button onClick={goToPreviousDay}>← Previous</button>

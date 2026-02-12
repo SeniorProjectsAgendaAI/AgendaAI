@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AxiosResponse } from "axios";
 import Dashboard from "./Dashboard";
 import TaskPanel from "./TaskPanel";
@@ -60,21 +60,19 @@ function App() {
   return (
     <Authenticator socialProviders={['google', 'amazon']}>  
       {({ signOut, user }) => (
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home signOut={signOut} user={user} />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/taskpanel" element={<TaskPanel />} />
-            <Route path="/calendarview" element={<CalendarView />} />
-            <Route path="/dayview" element={<DayView />} />
-            <Route path="/weekview" element={<WeekView />} />
-            <Route path="/monthview" element={<MonthView />} />
-            <Route
-              path="/aisidebar"
-              element={<AISidebar fullScreen={true} />}
-            />
-          </Routes>
-        </Router>
+        <Routes>
+          <Route path="/" element={<Home signOut={signOut} user={user} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/taskpanel" element={<TaskPanel />} />
+          <Route path="/calendarview" element={<CalendarView />} />
+          <Route path="/dayview" element={<DayView />} />
+          <Route path="/weekview" element={<WeekView />} />
+          <Route path="/monthview" element={<MonthView />} />
+          <Route
+            path="/aisidebar"
+            element={<AISidebar fullScreen={true} />}
+          />
+        </Routes>
       )}
     </Authenticator>
   );

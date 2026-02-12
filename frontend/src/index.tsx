@@ -8,6 +8,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Amplify } from 'aws-amplify';
 import '@aws-amplify/ui-react/styles.css';
+import { BrowserRouter } from 'react-router-dom';
 
 import outputs from './amplify_outputs.json';
 
@@ -18,7 +19,9 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
 

@@ -177,8 +177,7 @@ def get_current_user(
     if existing_by_email:
         if existing_by_email.cognito_sub == cognito_sub:
             return existing_by_email
-        # The Cognito sub changed (e.g. sandbox was recreated) or was never
-        # set.  Since Cognito already verified the email, re-link the account.
+        # If email is already connected to a different cognito sub, replace that sub with the new instead of creating a new user. 
         existing_by_email.cognito_sub = cognito_sub
         db.commit()
         db.refresh(existing_by_email)
