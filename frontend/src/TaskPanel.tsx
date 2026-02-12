@@ -464,6 +464,7 @@ const TaskPanel = () => {
 
     return (
         <div>
+            <BackButton />
             <div className="taskPanel">
                 <h3 className="panelTitle">Tasks & Events</h3>
                 <div className="panelSwitch">

@@ -17,22 +17,47 @@ interface ApiTask{
   id:number; 
   title:string;
   description?:string | null;
+  tag?: string | null;
+  color?: string | null;
+  priority?: number | null;
+  status?: string | null;
+  due_date?: string | null;
+  due_time?: string | null;
   completed:boolean;
 }
 
-// Extending previous api task for easier handling
-interface Task extends Omit<ApiTask, 'title' | 'description'>{
-  name:string;
-  date:string;
-  time:string;
-  priority:number;
+interface ApiEvent {
+  id: number;
+  title: string;
+  description?: string | null;
+  start_at: string;
+  end_at: string;
+  color?: string | null;
+  location?: string | null;
+  status?: string | null;
+  all_day?: boolean | null;
+  recurrence?: string | null;
 }
 
-const parseDescription = (desc?: string | null) => {
+// Unified item shown on the week grid
+interface WeekItem {
+  id: number;
+  type: "task" | "event";
+  name: string;
+  date: string;
+  time: string;
+  priority: number;
+  completed: boolean;
+  color?: string;
+}
+
+const parseLegacyDescription = (desc?: string | null) => {
+  if (!desc) return { date: "", time: "", priority: 1 };
   try {
-    return JSON.parse(desc || '{}');
+    const parsed = JSON.parse(desc);
+    return { date: parsed.date ?? "", time: parsed.time ?? "", priority: parsed.priority ?? 1 };
   } catch {
-    return {};
+    return { date: "", time: "", priority: 1 };
   }
 };
 
@@ -52,7 +77,7 @@ const formatDateKey = (date: Date): string => {
 
 const WeekView: React.FC = () => {
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [items, setItems] = useState<WeekItem[]>([]);
   const [loading, setLoading] = useState(true);
 
 
@@ -67,49 +92,79 @@ const WeekView: React.FC = () => {
   );
 
 
-// load tasks from API 
+// load tasks and events from API 
   useEffect(() => {
-    const loadTasks = async () => {
+    const loadAll = async () => {
       setLoading(true);
       try {
-        const res = await api.get<ApiTask[]>("/tasks/");
-        const mapped: Task[] = res.data.map((t) => {
-          const meta = parseDescription(t.description);
+        const [tasksRes, eventsRes] = await Promise.all([
+          api.get<ApiTask[]>("/tasks/"),
+          api.get<ApiEvent[]>("/events/"),
+        ]);
+
+        // Map tasks → WeekItem
+        const mappedTasks: WeekItem[] = tasksRes.data.map((t) => {
+          const legacy = parseLegacyDescription(t.description);
+          const date = t.due_date ?? legacy.date;
+          const time = t.due_time?.slice(0, 5) ?? legacy.time;
           return {
             id: t.id,
+            type: "task",
             name: t.title,
-            date: meta.date,
-            time: meta.time,
-            priority: meta.priority,
+            date,
+            time,
+            priority: t.priority ?? legacy.priority,
             completed: t.completed,
+            color: t.color ?? undefined,
           };
         });
-        setTasks(mapped);
+
+        // Map events → WeekItem (extract date & time from start_at)
+        const mappedEvents: WeekItem[] = eventsRes.data.map((e) => {
+          const start = new Date(e.start_at);
+          const y = start.getFullYear();
+          const m = String(start.getMonth() + 1).padStart(2, "0");
+          const d = String(start.getDate()).padStart(2, "0");
+          const hh = String(start.getHours()).padStart(2, "0");
+          const mm = String(start.getMinutes()).padStart(2, "0");
+          return {
+            id: e.id,
+            type: "event",
+            name: e.title,
+            date: `${y}-${m}-${d}`,
+            time: `${hh}:${mm}`,
+            priority: 0, // events don't have priority
+            completed: false,
+            color: e.color ?? undefined,
+          };
+        });
+
+        setItems([...mappedTasks, ...mappedEvents]);
       } catch (err) {
-        console.error("Failed to load tasks", err);
+        console.error("Failed to load tasks/events", err);
       } finally {
         setLoading(false);
       }
     };
-    loadTasks();
+    loadAll();
   }, []);
 
 
-  // grouping tasks by date
-  const tasksByDate = useMemo(() => {
-    const map: Record<string, Task[]> = {};
-    tasks.forEach((task) => {
-      if (task.date) {
-        if (!map[task.date]) map[task.date] = [];
-        map[task.date].push(task);
+  // grouping items by date
+  const itemsByDate = useMemo(() => {
+    const map: Record<string, WeekItem[]> = {};
+    items.forEach((item) => {
+      if (item.date) {
+        if (!map[item.date]) map[item.date] = [];
+        map[item.date].push(item);
       }
     });
-    // soprting tasks by time
+    // sorting items by time
     Object.values(map).forEach((arr) =>
       arr.sort((a, b) => a.time.localeCompare(b.time))
     );
     return map;
-  }, [tasks]);
+  }, [items]);
 
   // functions to navigate between weeks 
   const goToPreviousWeek = () => {
@@ -179,7 +234,7 @@ const WeekView: React.FC = () => {
           <div className="weekGrid">
             {days.map((day) => {
               const key = formatDateKey(day);
-              const dayTasks = tasksByDate[key] || [];
+              const dayItems = itemsByDate[key] || [];
               const isToday = key === todayKey;
 
 
@@ -199,18 +254,21 @@ const WeekView: React.FC = () => {
 
 
                   <div className="weekDayTasks">
-                    {dayTasks.length === 0 ? (
+                    {dayItems.length === 0 ? (
                       <span className="noTasks">—</span>
                     ) : (
-                      dayTasks.map((task) => (
+                      dayItems.map((item) => (
                         <div
-                          key={task.id}
-                          className={`weekTask priority-${priorityLabel(task.priority)} ${
-                            task.completed ? "taskCompleted" : ""
+                          key={`${item.type}-${item.id}`}
+                          className={`weekTask ${item.type === "task" ? `priority-${priorityLabel(item.priority)}` : "week-event"} ${
+                            item.completed ? "taskCompleted" : ""
                           }`}
+                          style={item.type === "event" && item.color ? { borderLeftColor: item.color } : undefined}
                         >
-                          <span className="weekTaskTime">{task.time}</span>
-                          <span className="weekTaskName">{task.name}</span>
+                          <span className="weekTaskTime">{item.time}</span>
+                          <span className="weekTaskName">
+                            {item.type === "event" ? "📅 " : ""}{item.name}
+                          </span>
                         </div>
                       ))
                     )}
