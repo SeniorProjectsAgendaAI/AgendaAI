@@ -15,11 +15,11 @@ export const auth = defineAuth({
         scopes: ['email', 'profile', 'openid'],
       },
 
-      loginWithAmazon: {
-        clientId: secret('AMAZON_CLIENT_ID'),
-        clientSecret: secret('AMAZON_CLIENT_SECRET'),
-        scopes: ['profile']
-      }, 
+      // loginWithAmazon: {
+      //   clientId: secret('AMAZON_CLIENT_ID'),
+      //   clientSecret: secret('AMAZON_CLIENT_SECRET'),
+      //   scopes: ['profile']
+      // }, 
       callbackUrls: [
         'http://localhost:3000/', 
         // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
