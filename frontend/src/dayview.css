@@ -1,8 +1,10 @@
 /*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
 .dayViewContainer {
   display: flex;
-  height: 100vh;
-  background: #000000;
+  flex-direction: column;
+  height: auto;
+  min-height: 100vh;
+  background: transparent;
 }
 
 .dayViewContent {
@@ -10,6 +12,8 @@
   background: #fafafa;
   padding: 20px;
   overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  box-sizing: border-box;
 }
 
 .dayViewHeader {
@@ -51,7 +55,6 @@
   color: #333;
 }
 
-
 .loadingMessage {
   text-align: center;
   padding: 40px;
@@ -59,7 +62,103 @@
   color: #666;
 }
 
+/* Events Summary Section */
+.eventsSummary {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
+.eventsSummary h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.eventsSummary p {
+  margin: 0 0 15px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eventItem {
+  background: #f0f8ff;
+  border-left: 4px solid #2196f3;
+  padding: 15px;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.eventItem:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.eventItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 15px;
+}
+
+.eventItemTitle {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1976d2;
+}
+
+.eventItemTime {
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.eventItemDescription {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.eventItemDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: #777;
+}
+
+.eventLocation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.eventStatus {
+  padding: 2px 8px;
+  background: #e8f5e9;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #2e7d32;
+}
+
+.eventRecurrence {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #9c27b0;
+}
+
+/* Task Summary Section */
 .taskSummary {
   background: #fff;
   border-radius: 8px;
@@ -185,9 +284,9 @@
 /* Day Schedule Grid */
 .daySchedule {
   display: flex;
-  background: #fff;
+  background: transparent;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -195,7 +294,7 @@
   flex-shrink: 0;
   width: 100px;
   border-right: 1px solid #e0e0e0;
-  background: #fafafa;
+  background: transparent;
 }
 
 .timeSlot {
@@ -228,23 +327,45 @@
 
 .eventBlock {
   background: #e3f2fd;
-  border-left: 3px solid #2196f3;
-  padding: 8px;
+  border-left: 4px solid #2196f3;
+  padding: 10px;
   border-radius: 4px;
   font-size: 13px;
   flex: 0 0 auto;
-  max-width: 200px;
+  max-width: 250px;
+  margin-bottom: 5px;
 }
 
-.eventTitle {
+.eventBlockTitle {
   font-weight: 600;
   color: #1976d2;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
-.eventTime {
+.eventBlockTime {
   color: #666;
   font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.eventBlockLocation {
+  color: #555;
+  font-size: 11px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.eventBlockDescription {
+  color: #666;
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.3;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .taskBlock {
@@ -279,4 +400,33 @@
   color: #f57c00;
   font-size: 10px;
   font-weight: 600;
+}
+
+/* Edit Forms */
+.taskEditor,
+.eventEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.editInput {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
 }
