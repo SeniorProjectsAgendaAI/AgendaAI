@@ -3,6 +3,8 @@
 .calendarcontainer {
   height: 100vh;
   background: #fafafa;
+  position: relative;
+  padding: 20px;
 }
 
 .calendarView {

@@ -7,10 +7,12 @@ from cryptography.fernet import Fernet
 from sqlalchemy import (
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
     String,
+    Time,
     Text,
 )
 from sqlalchemy.orm import relationship
@@ -52,6 +54,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
+    events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
     connected_accounts = relationship(
         "ConnectedAccount", back_populates="user", cascade="all, delete-orphan"
     )
@@ -82,8 +85,34 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    tag = Column(String, nullable=True)
+    color = Column(String, nullable=True)
+    priority = Column(Integer, nullable=True, default=1)
+    status = Column(String, nullable=False, default="todo")
+    due_date = Column(Date, nullable=True)
+    due_time = Column(Time, nullable=True)
     completed = Column(Boolean, default=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="tasks")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    start_at = Column(DateTime, nullable=False)
+    end_at = Column(DateTime, nullable=False)
+    all_day = Column(Boolean, nullable=False, default=False)
+    recurrence = Column(String, nullable=False, default="none")
+    color = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="scheduled")
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="events")

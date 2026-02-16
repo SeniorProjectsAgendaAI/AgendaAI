@@ -2,7 +2,8 @@
 .sidebar {
   width: 180px;
   background: #000000;
-  height: 100vh;
+  height: 90dvh; /* dynamic viewport height*/
+  box-sizing: border-box; /* include padding in the height to prevent overflow */
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -22,4 +23,9 @@
 .navigationItem.active {
   background: #4a90e2;
   color: white;
+}
+
+/* push logout to bottom of sidebar */
+.logout {
+  margin-top: auto;
 }

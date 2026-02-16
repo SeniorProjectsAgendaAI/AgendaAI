@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AxiosResponse } from "axios";
 import Dashboard from "./Dashboard";
 import TaskPanel from "./TaskPanel";
@@ -8,6 +8,7 @@ import WeekView from "./WeekView";
 import MonthView from "./MonthView";
 import CalendarView from "./Calendarview";
 import AISidebar from "./AiSidebar";
+import Profile from "./Profile";
 import { Link } from "react-router-dom";
 
 import { Authenticator } from "@aws-amplify/ui-react";
@@ -25,7 +26,7 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
   }, []);
 
   return (
-    <div>
+    <div className="App">
       <h1>AgendaAI</h1>
       <p>Welcome, {user?.signInDetails?.loginId}</p>
       <p>Backend health: {health}</p>
@@ -51,6 +52,9 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
       <Link to="/aisidebar">
         <button>Go to the AgendaAI Assistant</button>
       </Link>
+      <Link to="/profile">
+        <button>Go to Profile</button>
+      </Link>
     </div>
   );
 };
@@ -58,23 +62,21 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
 // (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router
 function App() {
   return (
-    <Authenticator socialProviders={["google"]}>
+    <Authenticator socialProviders={['google', 'amazon']}>  
       {({ signOut, user }) => (
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home signOut={signOut} user={user} />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/taskpanel" element={<TaskPanel />} />
-            <Route path="/calendarview" element={<CalendarView />} />
-            <Route path="/dayview" element={<DayView />} />
-            <Route path="/weekview" element={<WeekView />} />
-            <Route path="/monthview" element={<MonthView />} />
-            <Route
-              path="/aisidebar"
-              element={<AISidebar fullScreen={true} />}
-            />
-          </Routes>
-        </Router>
+        <Routes>
+          <Route path="/" element={<Home signOut={signOut} user={user} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/taskpanel" element={<TaskPanel />} />
+          <Route path="/calendarview" element={<CalendarView />} />
+          <Route path="/dayview" element={<DayView />} />
+          <Route path="/weekview" element={<WeekView />} />
+          <Route path="/monthview" element={<MonthView />} />
+          <Route
+            path="/aisidebar"
+            element={<AISidebar fullScreen={true} />}
+          />
+        </Routes>
       )}
     </Authenticator>
   );

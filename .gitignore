@@ -120,3 +120,6 @@ lerna-debug.log*
 *.temp
 tmp/
 temp/
+
+# Amplify 
+src/amplify_outputs.json

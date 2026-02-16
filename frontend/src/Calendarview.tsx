@@ -4,6 +4,7 @@ import "./calendar.css";
 import MonthView from "./MonthView";
 import WeekCalendar from "./WeekView";
 import DayView from "./DayView";
+import BackButton from "./components/BackButton";
 //(Alex) essentually a container to hold all of the views and allow switching with the buttons from one of our frs
 //doesnt currently adapt to events or tasks as database was not complete by day of demo
 const CalendarView = () => {
@@ -13,6 +14,9 @@ const CalendarView = () => {
 
     return (
         <div className="calendarContainer">
+            <div className="back-button-wrapper">
+                <BackButton />
+            </div>
             <div className="calendarView">
                 <div className="calendarButtons">
                     {/* buttons to switch views*/}

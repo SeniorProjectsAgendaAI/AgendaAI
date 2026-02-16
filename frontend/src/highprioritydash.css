@@ -1,0 +1,30 @@
+/* Author: Biniam Gashaw */
+/* CS425: Senior Projects */
+
+.highPriorityDash {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.dashHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+
+.dashHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dashContent {
+  padding: 10px;
+  min-height: 100px;
+}
