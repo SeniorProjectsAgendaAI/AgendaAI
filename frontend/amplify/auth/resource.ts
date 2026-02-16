@@ -22,6 +22,7 @@ export const auth = defineAuth({
       }, 
       callbackUrls: [
         'http://localhost:3000/', 
+        'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
         // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
         'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
         'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com',
@@ -32,6 +33,7 @@ export const auth = defineAuth({
       ],
       logoutUrls: [
         'http://localhost:3000/',
+        'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
          // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
         'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
         'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com',
