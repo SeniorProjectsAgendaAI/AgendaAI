@@ -16,6 +16,9 @@
   margin-bottom: 16px;
 }
 
+.starIcon {
+  font-size: 20px;
+}
 
 .dashHeader h3 {
   margin: 0;
@@ -27,4 +30,69 @@
 .dashContent {
   padding: 10px;
   min-height: 100px;
+}
+
+.loadingText,
+.emptyText {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.dashItems {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashItem {
+  background: #f9f9f9;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #4caf50;
+  transition: all 0.2s;
+}
+
+.dashItem:hover {
+  background: #f0f0f0;
+  transform: translateX(2px);
+}
+
+.dashItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashItemIcon {
+  font-size: 16px;
+}
+
+.dashItemTitle {
+  font-weight: 500;
+  color: #333;
+  font-size: 15px;
+}
+
+.dashItemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashItemDate {
+  font-size: 13px;
+  color: #666;
+}
+
+.dashItemPriority {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
 }

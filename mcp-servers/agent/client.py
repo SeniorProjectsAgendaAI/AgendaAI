@@ -13,7 +13,6 @@ from contextlib import AsyncExitStack
 from datetime import datetime
 
 import google.generativeai as genai
-import pytz
 from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
