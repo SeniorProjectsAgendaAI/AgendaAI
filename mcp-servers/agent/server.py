@@ -188,7 +188,6 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
     #Send message to AI agent with MCP tool calling
     import google.generativeai as genai
 
-
     gcal_token = get_user_google_calendar_token(cognito_sub)
     gmail_token = get_user_gmail_token(cognito_sub)
 
@@ -258,7 +257,24 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                             json.dump(_agent.current_user_gmail_token, f)
                         print(f"   [Using user's Gmail token]")
 
-                    session, actual_tool_name = _agent.tool_map[tool_name]
+                    #AI tool fallback
+                    if tool_name in _agent.tool_map:
+                        session, actual_tool_name = _agent.tool_map[tool_name]
+                    else:
+                        
+                        found = False
+                        for prefix in ["google_calendar:", "gmail:", "canvas:"]:
+                            prefixed_name = f"{prefix}{tool_name}"
+                            if prefixed_name in _agent.tool_map:
+                                session, actual_tool_name = _agent.tool_map[
+                                    prefixed_name
+                                ]
+                                tool_name = prefixed_name  
+                                found = True
+                                break
+                        if not found:
+                            raise KeyError(f"Tool '{tool_name}' not found in tool_map")
+
                     result = await session.call_tool(actual_tool_name, args)
                     result_text = result.content[0].text
 

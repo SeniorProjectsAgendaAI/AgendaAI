@@ -6,11 +6,11 @@
 #  https://modelcontextprotocol.io/docs/develop/build-client
 #  https://github.com/google/generative-ai-python
 
-
 import asyncio
 import json
 import os
 from contextlib import AsyncExitStack
+from datetime import datetime
 
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -30,10 +30,56 @@ class AgendaAIAgent:
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in environment variables")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
+
+        #Get current local time for system prompt
+        local_tz = datetime.now().astimezone().tzinfo
+        current_time = datetime.now(local_tz).strftime("%Y-%m-%d %H:%M:%S %Z")
+        day_of_week = datetime.now(local_tz).strftime("%A")
+
+        system_prompt = f"""You are AgendaAI, an intelligent personal assistant specialized in academic and professional task management. You have access to the user's Canvas LMS, Gmail, and Google Calendar.
+
+CURRENT CONTEXT:
+- Current Date & Time: {current_time} ({day_of_week})
+- You are helping a student/professional manage their academic coursework, emails, and schedule
+
+YOUR CAPABILITIES:
+1. **Canvas LMS**: Access courses, assignments, grades, announcements, modules, and submission details
+2. **Gmail**: Read, search, send, and manage emails
+3. **Google Calendar**: View, create, update, and delete calendar events
+
+YOUR ROLE:
+- Proactively help users stay organized and on top of their responsibilities
+- Provide clear, actionable information about deadlines, assignments, and schedules
+- When users ask about "today", "tomorrow", "this week", or relative dates, calculate from the current time above
+- Always consider timezone and provide specific dates/times when discussing deadlines
+- Prioritize urgent items and upcoming deadlines
+- Be concise but thorough in responses
+
+BEST PRACTICES:
+- When listing assignments or events, sort by due date/time by default
+- For date queries without specific times, assume the user means their local timezone
+- If an assignment is overdue, mention it clearly
+- When sending emails or creating calendar events, confirm details before execution
+- Suggest creating calendar events for important deadlines if they're not already scheduled
+- Cross-reference information (e.g., check if an assignment deadline has a calendar event)
+- Use natural language for dates (e.g., "tomorrow at 3 PM" instead of just timestamps)
+
+HANDLING REQUESTS:
+- Break down complex requests into logical steps
+- Use available tools to gather complete information before responding
+- If you need to perform actions (send email, create event), explain what you'll do first
+- Provide summaries for large amounts of data
+- Ask for clarification only when truly necessary
+
+Remember: You're here to reduce the user's cognitive load and help them succeed academically and professionally."""
+
+        self.model = genai.GenerativeModel(
+            model_name="models/gemini-2.5-flash", system_instruction=system_prompt
+        )
         self.tool_map = {}
         self.tools = []
-        self.current_user_gcal_token = None  
+        self.current_user_gcal_token = None
+
     async def connect(self, name: str, script_path: str, env_vars: dict = None):
         """Connect to an MCP server via stdio."""
         import os
@@ -42,13 +88,13 @@ class AgendaAIAgent:
         script_file = Path(script_path).resolve()
         server_dir = script_file.parent
 
-        #Build environment variables
+        # Build environment variables
         env = os.environ.copy()
         if env_vars:
             env.update(env_vars)
 
         # cd into directory first, then run uv
-        #this routes to the correct virtual environment for each server.
+        # this routes to the correct virtual environment for each server.
         transport = await self.exit_stack.enter_async_context(
             stdio_client(
                 StdioServerParameters(
@@ -97,7 +143,7 @@ class AgendaAIAgent:
         print("Ask about Canvas, Gmail, or Google Calendar")
         print("type 'quit' or 'exit' to end the session with the AI\n")
 
-        #Convert MCP tools to Gemini function
+        # Convert MCP tools to Gemini function
         gemini_tools = []
         for tool in self.tools:
             gemini_tools.append(
@@ -120,7 +166,7 @@ class AgendaAIAgent:
                 )
             )
 
-        #Start the AI chat session ONCE (reuse across messages) instead of constantly remaking the chat
+        # Start the AI chat session ONCE (reuse across messages) instead of constantly remaking the chat
         chat = self.model.start_chat(enable_automatic_function_calling=False)
 
         while True:
