@@ -1,3 +1,11 @@
+# Ankush Joshi 
+# Dockerfile for the backend FastAPI application
+
+# Resources / Documentation I used to help me build this file:
+#   https://docs.docker.com/build/concepts/dockerfile/
+#   https://builder.aws.com/content/2m6G7FMIFMvJWhvCNmCOgm2VKoA/creating-a-dockerfile
+
+
 # using the official python runtime as parent image
 FROM python:3.14-slim
 
