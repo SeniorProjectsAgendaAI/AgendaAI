@@ -24,12 +24,13 @@ export const auth = defineAuth({
         'http://localhost:3000/', 
         'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
         'https://dev.d2i3jqbsdy4snq.amplifyapp.com/',
+        'https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com/',
       ],
       logoutUrls: [
         'http://localhost:3000/',
         'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
         'https://dev.d2i3jqbsdy4snq.amplifyapp.com/',
-
+        'https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com/',
       ],
     },
   },
