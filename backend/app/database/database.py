@@ -7,21 +7,37 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
 
-# Load database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
-
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
+
+# These are initialized lazily via _ensure_engine() so the app
+# doesn't crash at import time when DATABASE_URL is not yet available.
+engine = None
+SessionLocal = None
+
+
+def _get_database_url() -> str:
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise ValueError("DATABASE_URL environment variable is not set")
+    # Normalise Heroku / AWS-style postgres:// to SQLAlchemy-compatible form.
+    # Use psycopg (v3) driver explicitly.
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
+def _ensure_engine():
+    global engine, SessionLocal
+    if engine is None:
+        engine = create_engine(_get_database_url())
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 # Dependency to get DB session
 def get_db():
+    _ensure_engine()
     db = SessionLocal()
     try:
         yield db
@@ -32,6 +48,7 @@ def get_db():
 def init_db():
     from app.database import models  
 
+    _ensure_engine()
     print("Initializing database tables...")
     Base.metadata.create_all(bind=engine)
     _migrate_users_table_for_cognito()

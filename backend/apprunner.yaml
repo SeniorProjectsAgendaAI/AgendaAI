@@ -1,23 +1,14 @@
-# version: 1.0
-# runtime: python3
-# build:
-#   commands:
-#     build:
-#       - python3 -m pip install uv
-#       - python3 -m uv sync --frozen --no-dev --python 3.11
-# run:
-#   command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-#   network:
-#     port: 8000
-
 version: 1.0
-runtime: python3
+runtime: python311
 build:
   commands:
     build:
       - pip install uv
-      - uv pip install --system .
+      - uv pip install --system --no-cache .
 run:
-  command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+  command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
+  env:
+    - name: PORT
+      value: "8000"
