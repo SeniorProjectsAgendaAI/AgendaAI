@@ -9,8 +9,11 @@ load_dotenv()
 
 # Load database URL from environment variable
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is missing in .env")
+# if not DATABASE_URL:
+#     raise ValueError("DATABASE_URL is missing in .env")
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
