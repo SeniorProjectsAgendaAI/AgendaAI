@@ -8,7 +8,7 @@ build:
       # Use --system to install into the App Runner environment
       - uv pip install --system .
 run:
-  command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+  command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8080
   network:
     port: 8080
   # DO NOT add PORT to the env section; it is a reserved variable.
