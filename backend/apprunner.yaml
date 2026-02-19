@@ -10,6 +10,6 @@ build:
 run:
   command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
   network:
-    port: 8000
+    port: 8080
   # DO NOT add PORT to the env section; it is a reserved variable.
   # App Runner sets it automatically based on the 'network' section above.
