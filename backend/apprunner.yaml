@@ -4,10 +4,11 @@ build:
   commands:
     build:
       - python3 -m pip install uv
+      - uv pip install --system .
 run:
-  pre-run:
-    - python3 -m pip install uv
-    - uv pip install --system .
   command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8080
   network:
     port: 8080
+  secrets:
+    - name: SECRET_KEY
+      value-from: "arn:aws:secretsmanager:us-east-2:004596742471:secret:AgendaAi/Production/SecretKey-JfjD0N"
