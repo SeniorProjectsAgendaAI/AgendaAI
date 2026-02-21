@@ -6,6 +6,7 @@ applications:
         preBuild:
           commands:
             - npm ci
+            - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --outputs-out-dir src
         build:
           commands:
             - npm run build
