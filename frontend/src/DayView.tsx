@@ -1,7 +1,6 @@
 //bini work + template
 //Reference: https://mui.com/x/react-date-pickers/date-calendar/
 import React, { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
 import "./dayview.css";
 import BackButton from "./components/BackButton";
 import api from "./services/api";
@@ -36,7 +35,7 @@ interface ApiEvent {
   recurrence?: string | null;
 }
 
-//Local task interface as a refernce
+//Local task interface
 interface Task {
   id: number;
   name: string;
@@ -46,7 +45,7 @@ interface Task {
   completed: boolean;
 }
 
-//Local event interface with full details
+//Local event interface
 interface Event {
   id: number;
   title: string;
@@ -61,7 +60,6 @@ interface Event {
   recurrence?: string;
 }
 
-//parse task description to match the task panel
 const parseTaskDescription = (description?: string | null) => {
   if (!description) {
     return { date: "", time: "", priority: 1 };
@@ -78,7 +76,6 @@ const parseTaskDescription = (description?: string | null) => {
   }
 };
 
-//Convert 24-hour time to 12-hour format with AM/PM
 const formatTime12Hour = (time24: string): string => {
   if (!time24) return "";
   const [hourStr, minute] = time24.split(":");
@@ -96,14 +93,12 @@ const DayView = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editTaskName, setEditTaskName] = useState("");
   const [editTaskDate, setEditTaskDate] = useState("");
   const [editTaskTime, setEditTaskTime] = useState("");
   const [editTaskPriority, setEditTaskPriority] = useState(1);
 
- 
   const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [editEventTitle, setEditEventTitle] = useState("");
   const [editEventDescription, setEditEventDescription] = useState("");
@@ -114,109 +109,80 @@ const DayView = () => {
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  //Get task from the database
   const loadTasks = async () => {
-    try {
-      const res = await api.get<ApiTask[]>("/tasks/");
-      console.log("Raw tasks from API:", res.data);
-      const mapped = res.data.map((task) => {
-
-        let date = task.due_date || "";
-        let time = task.due_time?.slice(0, 5) || ""; 
-        let priority = task.priority || 1;
-
-
-        if (!date) {
-          const meta = parseTaskDescription(task.description);
-          date = meta.date;
-          time = meta.time;
-          priority = meta.priority;
-        }
-
-        console.log(
-          `Task ${task.id} (${task.title}): date=${date}, time=${time}, priority=${priority}`,
-        );
-
-        return {
-          id: task.id,
-          name: task.title,
-          date,
-          time,
-          priority,
-          completed: task.completed,
-        };
-      });
-      console.log("Mapped tasks:", mapped);
-      setTasks(mapped);
-    } catch (err) {
-      console.error("Failed to load tasks", err);
-    }
+    const res = await api.get<ApiTask[]>("/tasks/");
+    const mapped = res.data.map((task) => {
+      const meta = parseTaskDescription(task.description);
+      return {
+        id: task.id,
+        name: task.title,
+        date: task.due_date ?? meta.date,
+        time: task.due_time?.slice(0, 5) ?? meta.time,
+        priority: task.priority ?? meta.priority,
+        completed: task.completed,
+      };
+    });
+    setTasks(mapped);
   };
 
-  //Load events from the database
   const loadEvents = async () => {
-    try {
-      const res = await api.get<ApiEvent[]>("/events/");
-      console.log("Raw events from API:", res.data);
-      const mapped = res.data.map((event) => {
-        const start = new Date(event.start_at);
-        const end = new Date(event.end_at);
+    const res = await api.get<ApiEvent[]>("/events/");
+    const mapped = res.data.map((event) => {
+      const start = new Date(event.start_at);
+      const end = new Date(event.end_at);
 
-        const year = start.getFullYear();
-        const month = String(start.getMonth() + 1).padStart(2, "0");
-        const day = String(start.getDate()).padStart(2, "0");
-        const dateStr = `${year}-${month}-${day}`;
+      const year = start.getFullYear();
+      const month = String(start.getMonth() + 1).padStart(2, "0");
+      const day = String(start.getDate()).padStart(2, "0");
+      const dateStr = `${year}-${month}-${day}`;
 
-        const startHH = String(start.getHours()).padStart(2, "0");
-        const startMM = String(start.getMinutes()).padStart(2, "0");
-        const startTime = `${startHH}:${startMM}`;
+      const startHH = String(start.getHours()).padStart(2, "0");
+      const startMM = String(start.getMinutes()).padStart(2, "0");
+      const startTime = `${startHH}:${startMM}`;
 
-        const endHH = String(end.getHours()).padStart(2, "0");
-        const endMM = String(end.getMinutes()).padStart(2, "0");
-        const endTime = `${endHH}:${endMM}`;
+      const endHH = String(end.getHours()).padStart(2, "0");
+      const endMM = String(end.getMinutes()).padStart(2, "0");
+      const endTime = `${endHH}:${endMM}`;
 
-        return {
-          id: event.id,
-          title: event.title,
-          description: event.description ?? undefined,
-          startTime,
-          endTime,
-          date: dateStr,
-          color: event.color ?? undefined,
-          location: event.location ?? undefined,
-          status: event.status ?? undefined,
-          allDay: event.all_day ?? false,
-          recurrence: event.recurrence ?? undefined,
-        };
-      });
-      console.log("Mapped events:", mapped);
-      setEvents(mapped);
-    } catch (err) {
-      console.error("Failed to load events", err);
-    }
+      return {
+        id: event.id,
+        title: event.title,
+        description: event.description ?? undefined,
+        startTime,
+        endTime,
+        date: dateStr,
+        color: event.color ?? undefined,
+        location: event.location ?? undefined,
+        status: event.status ?? undefined,
+        allDay: event.all_day ?? false,
+        recurrence: event.recurrence ?? undefined,
+      };
+    });
+    setEvents(mapped);
   };
 
-  //Load both tasks and events
   const loadAll = async () => {
-    setLoading(true);
-    await Promise.all([loadTasks(), loadEvents()]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      await Promise.all([loadTasks(), loadEvents()]);
+    } catch (err) {
+      console.error("Failed to load tasks/events", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadAll();
-  }, [currentDate]);
+  }, []);
 
-  //Filter tasks for the current date
   const getTasksForDate = (date: Date): Task[] => {
-
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    const dateStr = `${year}-${month}-${day}`; //Format: YYYY-MM-DD
+    const dateStr = `${year}-${month}-${day}`;
     return tasks.filter((task) => task.date === dateStr);
   };
-
 
   const getEventsForDate = (date: Date): Event[] => {
     const year = date.getFullYear();
@@ -251,7 +217,6 @@ const DayView = () => {
     setCurrentDate(new Date());
   };
 
-  //Delete a task if unwanted
   const deleteTask = async (taskId: number) => {
     if (!window.confirm("Are you sure you want to delete this task?")) {
       return;
@@ -265,7 +230,6 @@ const DayView = () => {
     }
   };
 
-  //task completion
   const toggleComplete = async (taskId: number, currentCompleted: boolean) => {
     try {
       await api.put(`/tasks/${taskId}`, {
@@ -282,7 +246,6 @@ const DayView = () => {
     }
   };
 
-  //Start editing a task
   const startEditTask = (task: Task) => {
     setEditingTaskId(task.id);
     setEditTaskName(task.name);
@@ -291,7 +254,6 @@ const DayView = () => {
     setEditTaskPriority(task.priority);
   };
 
-  //Save task edits
   const saveEditTask = async (taskId: number) => {
     try {
       await api.put(`/tasks/${taskId}`, {
@@ -320,7 +282,6 @@ const DayView = () => {
     }
   };
 
-  // Delete an event
   const deleteEvent = async (eventId: number) => {
     if (!window.confirm("Are you sure you want to delete this event?")) {
       return;
@@ -334,7 +295,6 @@ const DayView = () => {
     }
   };
 
-  //Start editing an event
   const startEditEvent = (event: Event) => {
     setEditingEventId(event.id);
     setEditEventTitle(event.title);
@@ -345,7 +305,6 @@ const DayView = () => {
     setEditEventColor(event.color || "#2196f3");
   };
 
-  //Save event edits
   const saveEditEvent = async (eventId: number) => {
     try {
       const event = events.find((e) => e.id === eventId);
@@ -385,7 +344,6 @@ const DayView = () => {
     }
   };
 
-  //match tasks to current date on the calendar
   const todayTasks = getTasksForDate(currentDate);
   const todayEvents = getEventsForDate(currentDate);
 
@@ -410,7 +368,6 @@ const DayView = () => {
           <div className="loadingMessage">Loading tasks...</div>
         ) : (
           <>
-           
             {todayEvents.length > 0 && (
               <div className="eventsSummary">
                 <h3>Events for {formatDate(currentDate)}</h3>
@@ -440,34 +397,26 @@ const DayView = () => {
                           />
                           <textarea
                             value={editEventDescription}
-                            onChange={(e) =>
-                              setEditEventDescription(e.target.value)
-                            }
+                            onChange={(e) => setEditEventDescription(e.target.value)}
                             placeholder="Description"
                             className="editInput"
                           />
                           <input
                             type="time"
                             value={editEventStartTime}
-                            onChange={(e) =>
-                              setEditEventStartTime(e.target.value)
-                            }
+                            onChange={(e) => setEditEventStartTime(e.target.value)}
                             className="editInput"
                           />
                           <input
                             type="time"
                             value={editEventEndTime}
-                            onChange={(e) =>
-                              setEditEventEndTime(e.target.value)
-                            }
+                            onChange={(e) => setEditEventEndTime(e.target.value)}
                             className="editInput"
                           />
                           <input
                             type="text"
                             value={editEventLocation}
-                            onChange={(e) =>
-                              setEditEventLocation(e.target.value)
-                            }
+                            onChange={(e) => setEditEventLocation(e.target.value)}
                             placeholder="Location"
                             className="editInput"
                           />
@@ -478,16 +427,10 @@ const DayView = () => {
                             className="editInput"
                           />
                           <div className="editActions">
-                            <button
-                              className="taskActionBtn completeBtn"
-                              onClick={() => saveEditEvent(event.id)}
-                            >
+                            <button className="taskActionBtn completeBtn" onClick={() => saveEditEvent(event.id)}>
                               Save
                             </button>
-                            <button
-                              className="taskActionBtn deleteBtn"
-                              onClick={() => setEditingEventId(null)}
-                            >
+                            <button className="taskActionBtn deleteBtn" onClick={() => setEditingEventId(null)}>
                               Cancel
                             </button>
                           </div>
@@ -495,48 +438,24 @@ const DayView = () => {
                       ) : (
                         <>
                           <div className="eventItemHeader">
-                            <span className="eventItemTitle">
-                              {event.title}
-                            </span>
+                            <span className="eventItemTitle">{event.title}</span>
                             <span className="eventItemTime">
                               {event.allDay
                                 ? "All Day"
                                 : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
                             </span>
                           </div>
-                          {event.description && (
-                            <div className="eventItemDescription">
-                              {event.description}
-                            </div>
-                          )}
+                          {event.description && <div className="eventItemDescription">{event.description}</div>}
                           <div className="eventItemDetails">
-                            {event.location && (
-                              <span className="eventLocation">
-                                {event.location}
-                              </span>
-                            )}
-                            {event.status && (
-                              <span className="eventStatus">
-                                Status: {event.status}
-                              </span>
-                            )}
-                            {event.recurrence && (
-                              <span className="eventRecurrence">
-                                🔄 {event.recurrence}
-                              </span>
-                            )}
+                            {event.location && <span className="eventLocation">{event.location}</span>}
+                            {event.status && <span className="eventStatus">Status: {event.status}</span>}
+                            {event.recurrence && <span className="eventRecurrence">Recurring: {event.recurrence}</span>}
                           </div>
                           <div className="taskActions">
-                            <button
-                              className="taskActionBtn completeBtn"
-                              onClick={() => startEditEvent(event)}
-                            >
+                            <button className="taskActionBtn completeBtn" onClick={() => startEditEvent(event)}>
                               Edit
                             </button>
-                            <button
-                              className="taskActionBtn deleteBtn"
-                              onClick={() => deleteEvent(event.id)}
-                            >
+                            <button className="taskActionBtn deleteBtn" onClick={() => deleteEvent(event.id)}>
                               Delete
                             </button>
                           </div>
@@ -548,20 +467,15 @@ const DayView = () => {
               </div>
             )}
 
-            
             <div className="taskSummary">
-              <h3>Tasks for {formatDate(currentDate)}</h3>
+              <h3>Schedule for {formatDate(currentDate)}</h3>
               <p>
-                {todayTasks.length} task(s) scheduled •{" "}
-                {todayTasks.filter((t) => t.completed).length} completed
+                {todayTasks.length} task(s) scheduled • {todayTasks.filter((t) => t.completed).length} completed • {todayEvents.length} event(s)
               </p>
               {todayTasks.length > 0 && (
                 <div className="taskList">
                   {todayTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={`taskItem ${task.completed ? "completed" : ""}`}
-                    >
+                    <div key={task.id} className={`taskItem ${task.completed ? "completed" : ""}`}>
                       {editingTaskId === task.id ? (
                         <div className="taskEditor">
                           <input
@@ -586,25 +500,17 @@ const DayView = () => {
                           <input
                             type="number"
                             value={editTaskPriority}
-                            onChange={(e) =>
-                              setEditTaskPriority(Number(e.target.value))
-                            }
+                            onChange={(e) => setEditTaskPriority(Number(e.target.value))}
                             placeholder="Priority"
                             min={1}
                             max={10}
                             className="editInput"
                           />
                           <div className="editActions">
-                            <button
-                              className="taskActionBtn completeBtn"
-                              onClick={() => saveEditTask(task.id)}
-                            >
+                            <button className="taskActionBtn completeBtn" onClick={() => saveEditTask(task.id)}>
                               Save
                             </button>
-                            <button
-                              className="taskActionBtn deleteBtn"
-                              onClick={() => setEditingTaskId(null)}
-                            >
+                            <button className="taskActionBtn deleteBtn" onClick={() => setEditingTaskId(null)}>
                               Cancel
                             </button>
                           </div>
@@ -613,46 +519,24 @@ const DayView = () => {
                         <>
                           <div className="taskHeader">
                             <span className="taskTitle">{task.name}</span>
-                            <span className="taskTime">
-                              {formatTime12Hour(task.time)}
-                            </span>
+                            <span className="taskTime">{formatTime12Hour(task.time)}</span>
                           </div>
                           <div className="taskDetails">
-                            <span className="taskPriority">
-                              Priority: {task.priority}
-                            </span>
-                            {task.completed && (
-                              <span className="completedBadge">
-                                ✓ Completed
-                              </span>
-                            )}
+                            <span className="taskPriority">Priority: {task.priority}</span>
+                            {task.completed && <span className="completedBadge">✓ Completed</span>}
                           </div>
                           <div className="taskActions">
                             <button
                               className="taskActionBtn completeBtn"
-                              onClick={() =>
-                                toggleComplete(task.id, task.completed)
-                              }
-                              title={
-                                task.completed
-                                  ? "Mark as incomplete"
-                                  : "Mark as complete"
-                              }
+                              onClick={() => toggleComplete(task.id, task.completed)}
+                              title={task.completed ? "Mark as incomplete" : "Mark as complete"}
                             >
                               {task.completed ? "↩ Undo" : " Complete"}
                             </button>
-                            <button
-                              className="taskActionBtn completeBtn"
-                              onClick={() => startEditTask(task)}
-                              title="Edit task"
-                            >
+                            <button className="taskActionBtn completeBtn" onClick={() => startEditTask(task)} title="Edit task">
                               Edit
                             </button>
-                            <button
-                              className="taskActionBtn deleteBtn"
-                              onClick={() => deleteTask(task.id)}
-                              title="Delete task"
-                            >
+                            <button className="taskActionBtn deleteBtn" onClick={() => deleteTask(task.id)} title="Delete task">
                               Delete
                             </button>
                           </div>
@@ -681,21 +565,16 @@ const DayView = () => {
               <div className="eventsColumn">
                 {hours.map((hour) => (
                   <div key={hour} className="hourBlock">
-             
                     {todayEvents
                       .filter((event) => {
-                        if (event.allDay) return hour === 0; 
-                        const eventStartHour = parseInt(
-                          event.startTime.split(":")[0],
-                        );
-                        const eventEndHour = parseInt(
-                          event.endTime.split(":")[0],
-                        );
+                        if (event.allDay) return hour === 0;
+                        const eventStartHour = parseInt(event.startTime.split(":")[0], 10);
+                        const eventEndHour = parseInt(event.endTime.split(":")[0], 10);
                         return hour >= eventStartHour && hour <= eventEndHour;
                       })
                       .map((event) => (
                         <div
-                          key={`event-${event.id}`}
+                          key={`event-${event.id}-${hour}`}
                           className="eventBlock"
                           style={
                             event.color
@@ -712,40 +591,22 @@ const DayView = () => {
                               ? "All Day"
                               : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
                           </div>
-                          {event.location && (
-                            <div className="eventBlockLocation">
-                              {event.location}
-                            </div>
-                          )}
-                          {event.description && (
-                            <div className="eventBlockDescription">
-                              {event.description}
-                            </div>
-                          )}
+                          {event.location && <div className="eventBlockLocation">{event.location}</div>}
+                          {event.description && <div className="eventBlockDescription">{event.description}</div>}
                         </div>
                       ))}
 
-              
                     {todayTasks
                       .filter((task) => {
                         if (!task.time) return false;
-                        //Parse the time string
-                        const timeStr = task.time.trim();
-                        const taskHour = parseInt(timeStr.split(":")[0], 10);
+                        const taskHour = parseInt(task.time.trim().split(":")[0], 10);
                         return taskHour === hour;
                       })
                       .map((task) => (
-                        <div
-                          key={`task-${task.id}`}
-                          className={`taskBlock ${task.completed ? "completed" : ""}`}
-                        >
+                        <div key={`task-${task.id}`} className={`taskBlock ${task.completed ? "completed" : ""}`}>
                           <div className="taskBlockTitle">{task.name}</div>
-                          <div className="taskBlockTime">
-                            {formatTime12Hour(task.time)}
-                          </div>
-                          <div className="taskBlockPriority">
-                            P{task.priority}
-                          </div>
+                          <div className="taskBlockTime">{formatTime12Hour(task.time)}</div>
+                          <div className="taskBlockPriority">P{task.priority}</div>
                         </div>
                       ))}
                   </div>
