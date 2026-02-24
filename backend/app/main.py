@@ -21,6 +21,23 @@ from app.routes.users import router as user_router
 
 app = FastAPI()
 
+# -------- CORS CONFIG --------
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://main.d2i3jqbsdy4snq.amplifyapp.com",
+    "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
+    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -------- ROOT ROUTE --------
 @app.get("/")
@@ -43,25 +60,6 @@ def startup_event():
         
     print("Could not connect to database after 5 attempts. Exiting.")
     raise SystemExit(1)
-
-
-# -------- CORS CONFIG --------
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://main.d2i3jqbsdy4snq.amplifyapp.com",
-    "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
-    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # -------- ROUTERS --------
