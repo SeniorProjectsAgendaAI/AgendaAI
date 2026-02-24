@@ -54,7 +54,7 @@ origins = [
     "https://main.d2i3jqbsdy4snq.amplifyapp.com",
     "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
     "https://*.amplifyapp.com",
-    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com/"
+    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com"
 ]
 
 app.add_middleware(
