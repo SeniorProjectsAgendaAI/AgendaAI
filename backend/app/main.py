@@ -18,8 +18,6 @@ from app.routes.google_calendar_oauth import router as google_calendar_oauth_rou
 from app.routes.health import router as health_router
 from app.routes.tasks import router as task_router
 from app.routes.users import router as user_router
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -53,13 +51,13 @@ origins = [
     "http://127.0.0.1:3000",
     "https://main.d2i3jqbsdy4snq.amplifyapp.com",
     "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
-    "https://*.amplifyapp.com",
-    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com"
+    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
