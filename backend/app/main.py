@@ -8,6 +8,7 @@ from app.database.database import init_db
 
 # Routes
 from app.routes.auth import router as auth_router
+from app.routes.canvas_oauth import router as canvas_oauth_router
 from app.routes.db_test import router as db_test_router
 from app.routes.events import router as event_router
 from app.routes.gmail_oauth import router as gmail_oauth_router
@@ -60,3 +61,4 @@ app.include_router(db_test_router)
 app.include_router(health_router)
 app.include_router(google_calendar_oauth_router)
 app.include_router(gmail_oauth_router)
+app.include_router(canvas_oauth_router)
