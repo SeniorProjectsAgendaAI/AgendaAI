@@ -1,3 +1,6 @@
+import time 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 # Load environment variables FIRST before any other imports
@@ -15,11 +18,26 @@ from app.routes.google_calendar_oauth import router as google_calendar_oauth_rou
 from app.routes.health import router as health_router
 from app.routes.tasks import router as task_router
 from app.routes.users import router as user_router
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# -------- CORS CONFIG --------
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://main.d2i3jqbsdy4snq.amplifyapp.com",
+    "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
+    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    # allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -------- ROOT ROUTE --------
 @app.get("/")
@@ -31,24 +49,17 @@ def home():
 @app.on_event("startup")
 def startup_event():
     print("Initializing database tables...")
-    init_db()
-
-
-# -------- CORS CONFIG --------
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/",
-    "https://*.amplifyapp.com",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    for i in range(5):
+        try:
+            init_db()
+            print("Database tables initialized successfullly")
+            return 
+        except Exception as e:
+            print(f"Database connection failed (attempt {i+1}/5): {e}")
+            time.sleep(5)
+        
+    print("Could not connect to database after 5 attempts. Exiting.")
+    raise SystemExit(1)
 
 
 # -------- ROUTERS --------
