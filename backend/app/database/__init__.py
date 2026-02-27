@@ -1,1 +1,1 @@
-from .database import Base, engine
+from .database import Base, _ensure_engine, get_db

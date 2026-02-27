@@ -2,7 +2,9 @@
 // This file is used to set up the testing environment for Jest and the Testing Library
 
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from "jest-axe";
 
+expect.extend(toHaveNoViolations);
 
 jest.mock('@aws-amplify/ui-react', () => ({
   Authenticator: ({ children }: any) => children,
