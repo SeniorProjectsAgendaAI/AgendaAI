@@ -67,6 +67,7 @@
 /* black sidebar*/
 .auth-sidebar {
   flex: 1;
+  background-color: #0d0d0d;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -74,14 +75,59 @@
   color: white;
 }
 
-/* white sidebar */
 .auth-form-section {
   flex: 1.2;
-  background-color: white;
-  border-radius: 60px 0 0 60px; /* Large curved edge */
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+/* white sidebar */
+.auth-form-section [data-amplify-authenticator] {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  min-height: 80vh;
+
+  background-color: white;
+  border-radius: 40px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+  border: none !important;
+
+  --amplify-components-button-border-radius: 25px;
+  --amplify-components-fieldcontrol-border-radius: 25px;
+  --maplify-colors-brand-primary-80: #1a1a1a;
+}
+
+.custom-social-btn {
+  width: 100%;
+  color: #333;
+  border: none;
+  border-radius: 25px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  justify-content: flex-start;
+  padding-left: 20px;
+}
+
+.custom-social-btn:not(.amazon-btn):not(.google-btn){
+  background-color: #e5e5e5;
+}
+
+.custom-social-btn:hover {
+  background-color: #d4d4d4;
+} 
+
+.amazon-btn:hover{
+  background-color: #e0e0e0
+}
+
+.google-btn:hover{
+  background-color: #e0e0e0
 }
 
 /* authenticator styling */

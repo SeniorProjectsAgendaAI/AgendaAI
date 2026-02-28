@@ -11,7 +11,12 @@ import AISidebar from "./AiSidebar";
 import Profile from "./Profile";
 import { Link } from "react-router-dom";
 
-import { Authenticator, useAuthenticator, View, Heading, Text } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator, View, Heading, Text, Flex, Button, Divider, Image } from "@aws-amplify/ui-react";
+import { signInWithRedirect } from "aws-amplify/auth";
+
+import amazonLogo from './assets/amazon_logo.jpg';
+import googleLogo from './assets/Google_logo.png';
+
 import "./App.css"
 import "@aws-amplify/ui-react/styles.css";
 import api from "./services/api";
@@ -64,9 +69,42 @@ const components = {
   SignIn: {
     Header() {
       return (
-        <Heading padding='0 0 20px 0' level={2} fontWeight='bold' fontSize='1.5rem'>
+        <Heading padding='0 0 20px 0' level={2} fontWeight='bold' fontSize='2.5rem' textAlign='center'>
           Log in 
         </Heading>
+      );
+    },
+    Footer(){
+      const { toForgotPassword, toSignUp } = useAuthenticator();
+
+      return(
+        <View padding='0 2rem 2rem 2rem'>
+          <Flex justifyContent='flex-end' marginBottom='1.5rem'>
+            <Button fontWeight='normal' onClick={toForgotPassword} size='small' variation='link' color='#888'>
+              Forgot Password?
+            </Button>
+          </Flex>
+          <Divider label='Or' margin='1.5rem 0' />
+          <Flex direction='column' gap='10px'>
+            <Button onClick={toSignUp} className='custom-social-btn'>
+              Sign Up 
+            </Button>
+            <Button onClick={() => signInWithRedirect({ provider: 'Amazon' })} className='custom-social-btn amazon-btn'>
+              <Flex alignItems='center' gap='10px'>
+                <Image alt='Amazon Logo' src={amazonLogo} height='20px' />
+                Sign in with Amazon
+              </Flex>
+            </Button>
+
+            <Button onClick={() => signInWithRedirect({ provider: 'Google' })} className='custom-social-btn google-btn'>
+              <Flex alignItems='center' gap='10px'>
+                <Image alt='Google Logo' src='googleLogo' height='20px' />
+                Sign in with Google 
+              </Flex>
+            </Button>
+            
+          </Flex>
+        </View>
       );
     }
   }
@@ -86,16 +124,17 @@ const CustomLogin = () => {
         <Heading level={1} color='white' fontWeight='bold'>Welcome Back!</Heading>
       </div>  
       <div className='auth-form-section'>
-        <Authenticator components={components} socialProviders={['google', 'amazon']} />
+        <Authenticator components={components} />
       </div>
     </div>
   );
 };;
 
 const AppContent = () => {
-  const { authStatus, user, signOut } = useAuthenticator((context) => [
+  const { authStatus, user, signOut, route } = useAuthenticator((context) => [
     context.authStatus,
     context.user,
+    context.route,
   ]);
 
   if (authStatus === "configuring") {
