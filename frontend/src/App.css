@@ -55,3 +55,39 @@
 .back-button:hover {
   background-color: #444;
 }
+
+/* split layout */
+.auth-split-wrapper {
+  display: flex;
+  height: 100vh;
+  background-color: #000; /* Black Sidebar side */
+  overflow: hidden;
+}
+
+/* black sidebar*/
+.auth-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px;
+  color: white;
+}
+
+/* white sidebar */
+.auth-form-section {
+  flex: 1.2;
+  background-color: white;
+  border-radius: 60px 0 0 60px; /* Large curved edge */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* authenticator styling */
+.auth-form-section [data-amplify-authenticator] {
+  width: 100%;
+  max-width: 450px;
+  border: none;
+  box-shadow: none;
+}

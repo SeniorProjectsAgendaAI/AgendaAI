@@ -34,6 +34,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     # allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
+    allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
