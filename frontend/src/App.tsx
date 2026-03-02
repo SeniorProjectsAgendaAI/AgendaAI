@@ -62,7 +62,7 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
 // (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router
 function App() {
   return (
-    <Authenticator socialProviders={['google', 'amazon']}>  
+    <Authenticator socialProviders={["google", "amazon"]}>
       {({ signOut, user }) => (
         <Routes>
           <Route path="/" element={<Home signOut={signOut} user={user} />} />
@@ -72,10 +72,7 @@ function App() {
           <Route path="/dayview" element={<DayView />} />
           <Route path="/weekview" element={<WeekView />} />
           <Route path="/monthview" element={<MonthView />} />
-          <Route
-            path="/aisidebar"
-            element={<AISidebar fullScreen={true} />}
-          />
+          <Route path="/aisidebar" element={<AISidebar fullScreen={true} />} />
         </Routes>
       )}
     </Authenticator>
