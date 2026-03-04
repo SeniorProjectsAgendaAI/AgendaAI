@@ -220,6 +220,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
       const response = await api.get("/oauth/canvas/authorize", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Redirect to Canvas login page
       window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error("Failed to initiate Canvas connection:", error);

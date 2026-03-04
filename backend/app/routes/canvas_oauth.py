@@ -58,9 +58,13 @@ async def authorize(current_user: User = Depends(get_current_user)):
         "redirect_uri": CANVAS_REDIRECT_URI,
         "state": state,
         "scope": scope,
+        "canvas_login": "1", 
+        "force_login": "1",  
     }
 
     auth_url = f"{CANVAS_URL}/login/oauth2/auth?{urlencode(params)}"
+    
+
     return {"authorization_url": auth_url}
 
 

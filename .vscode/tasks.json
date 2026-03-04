@@ -38,7 +38,7 @@
     {
       "label": "Start Backend",
       "type": "shell",
-      "command": "source .venv/bin/activate && uv run uvicorn app.main:app --reload",
+      "command": "source .venv/bin/activate && uv run uvicorn app.main:app --reload --host 0.0.0.0",
       "options": {
         "cwd": "${workspaceFolder}/backend"
       },
