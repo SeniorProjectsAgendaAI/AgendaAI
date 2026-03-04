@@ -18,6 +18,7 @@ from app.routes.google_calendar_oauth import router as google_calendar_oauth_rou
 from app.routes.health import router as health_router
 from app.routes.tasks import router as task_router
 from app.routes.users import router as user_router
+from app.routes.canvas_oauth import router as canvas_oauth_router
 
 app = FastAPI()
 
@@ -71,3 +72,4 @@ app.include_router(db_test_router)
 app.include_router(health_router)
 app.include_router(google_calendar_oauth_router)
 app.include_router(gmail_oauth_router)
+app.include_router(canvas_oauth_router)
