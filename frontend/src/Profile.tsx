@@ -1,4 +1,4 @@
-import react from "react";
+import React from "react";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 

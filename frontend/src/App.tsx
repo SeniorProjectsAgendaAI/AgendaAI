@@ -73,6 +73,7 @@ function App() {
           <Route path="/weekview" element={<WeekView />} />
           <Route path="/monthview" element={<MonthView />} />
           <Route path="/aisidebar" element={<AISidebar fullScreen={true} />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       )}
     </Authenticator>
