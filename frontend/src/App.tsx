@@ -2,7 +2,7 @@
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import * as Label from '@radix-ui/react-label';
-import { Flex as RadixFlex, Text as RadixText, Button as RadixButton, Separator } from '@radix-ui/themes';
+import { Flex as RadixFlex, Text as RadixText, Button as RadixButton, Blockquote } from '@radix-ui/themes';
 
 import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -133,6 +133,17 @@ const components = {
         </RadixFlex>
       );
     }
+  },
+  SignUp: {
+    Header() {
+      return (
+        <RadixFlex direction='column' p='4' pb='0'>
+          <RadixText size='8' weight='bold' align='center' mb='2'>
+            Create an account
+          </RadixText>
+        </RadixFlex>
+      );
+    }
   }
 };
 
@@ -140,12 +151,21 @@ const CustomLogin = () => {
   return (
     <div className="auth-split-wrapper">
       <div className="auth-sidebar">
-        <Heading level={4} color="white">AgendaAI</Heading>
-        <View margin="auto 0">
-          <Text fontSize='2.8rem' fontStyle='italic' color='white' lineHeight='1.2'>
-            "For every minute spent in organizing, an hour is earned."  
-          </Text>
-          <Text marginTop='15px' color='gray' fontSize="1.2rem">— Benjamin Franklin</Text>
+
+        <Flex alignItems='center' gap='1rem' width="100%"> 
+          <Heading level={4} color="white">AgendaAI</Heading>
+          <div style = {{ height: '2px', backgroundColor: 'gray', flexGrow: 1, }}></div>
+        </Flex>
+
+        <View marginTop="20%" marginBottom="auto">
+          <Text fontSize='2.8rem' fontStyle='italic' fontWeight='bold' color='gray' lineHeight='1.2'>
+            "For every minute spent in organizing, an hour is earned." 
+            </Text>
+         
+          {/* <Blockquote size='9' weight='medium' color='gray-10' highContrast >
+              "For every minute spent in organizing, an hour is earned."
+          </Blockquote> */}
+          <Text marginTop='15px' color='gray' fontSize="1.2rem"> Benjamin Franklin</Text>
         </View>
         <Heading level={1} color='white' fontWeight='bold'>Welcome Back!</Heading>
       </div>  
