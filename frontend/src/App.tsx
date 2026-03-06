@@ -1,3 +1,9 @@
+
+import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
+import * as Label from '@radix-ui/react-label';
+import { Flex as RadixFlex, Text as RadixText, Button as RadixButton, Separator } from '@radix-ui/themes';
+
 import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AxiosResponse } from "axios";
@@ -65,46 +71,66 @@ const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
   );
 };
 
+const formFields = {
+  signIn: {
+    username: {
+      placeholder: 'Enter your email',
+      label: 'Email',
+      isRequired: true,
+      dialCodeList: ['+1', '+91', '+44', '+61', '+81']
+    },
+  },
+  signUp: {
+    // phone_number: {
+    //   dialCodeList: ['+1', '+91', '+44', '+61', '+81'],
+    //   placeholder: 'Enter your phone number',
+    //   label: 'Phone Number',
+    //   order: 0,
+    //   isRequired: true,
+    // },
+    email: {
+      placeholder: 'Enter your email',
+      label: 'Email',
+      order: 1,
+      isRequired: true,
+    },
+    password: {
+      placeholder: 'Create a password',
+      label: 'Password',
+      order: 2,
+      isRequired: true,
+    },
+    confirm_password: {
+      placeholder: 'Confirm your password',
+      label: 'Confirm Password',
+      order: 3,
+      isRequired: true,
+    },
+  },
+}
+
 const components = {
   SignIn: {
     Header() {
       return (
-        <Heading padding='0 0 20px 0' level={2} fontWeight='bold' fontSize='2.5rem' textAlign='center'>
-          Log in 
-        </Heading>
+        <RadixFlex direction="column" p="4" pb="0">
+          <RadixText size="8" weight="bold" align="center" mb="2">
+            Log in
+          </RadixText>
+        </RadixFlex>
       );
     },
-    Footer(){
+    Footer() {
       const { toForgotPassword, toSignUp } = useAuthenticator();
 
-      return(
-        <View padding='0 2rem 2rem 2rem'>
-          <Flex justifyContent='flex-end' marginBottom='1.5rem'>
+      return (
+        <RadixFlex direction="column" p="4" pt="0" gap="3">
+          <RadixFlex justify="end">
             <Button fontWeight='normal' onClick={toForgotPassword} size='small' variation='link' color='#888'>
               Forgot Password?
             </Button>
-          </Flex>
-          <Divider label='Or' margin='1.5rem 0' />
-          <Flex direction='column' gap='10px'>
-            <Button onClick={toSignUp} className='custom-social-btn'>
-              Sign Up 
-            </Button>
-            <Button onClick={() => signInWithRedirect({ provider: 'Amazon' })} className='custom-social-btn amazon-btn'>
-              <Flex alignItems='center' gap='10px'>
-                <Image alt='Amazon Logo' src={amazonLogo} height='20px' />
-                Sign in with Amazon
-              </Flex>
-            </Button>
-
-            <Button onClick={() => signInWithRedirect({ provider: 'Google' })} className='custom-social-btn google-btn'>
-              <Flex alignItems='center' gap='10px'>
-                <Image alt='Google Logo' src='googleLogo' height='20px' />
-                Sign in with Google 
-              </Flex>
-            </Button>
-            
-          </Flex>
-        </View>
+          </RadixFlex>
+        </RadixFlex>
       );
     }
   }
@@ -124,11 +150,15 @@ const CustomLogin = () => {
         <Heading level={1} color='white' fontWeight='bold'>Welcome Back!</Heading>
       </div>  
       <div className='auth-form-section'>
-        <Authenticator components={components} />
+        <Authenticator 
+          components={components} 
+          formFields={formFields}
+          hideSignUp={false} 
+        />
       </div>
     </div>
   );
-};;
+};
 
 const AppContent = () => {
   const { authStatus, user, signOut, route } = useAuthenticator((context) => [
@@ -164,9 +194,12 @@ const AppContent = () => {
 // (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router
 function App() {
   return (
-    <Authenticator.Provider>
-      <AppContent />
-    </Authenticator.Provider>
+    <Theme accentColor="gray" grayColor="slate" radius="large" scaling="100%">
+      <Authenticator.Provider>
+        <AppContent />
+      </Authenticator.Provider>
+    </Theme>
+
   );
 }
 export default App;
