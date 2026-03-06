@@ -1,198 +1,36 @@
-
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
-import * as Label from '@radix-ui/react-label';
-import { Flex as RadixFlex, Text as RadixText, Button as RadixButton, Blockquote } from '@radix-ui/themes';
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { AxiosResponse } from "axios";
-import Dashboard from "./Dashboard";
-import TaskPanel from "./TaskPanel";
-import DayView from "./DayView";
-import WeekView from "./WeekView";
-import MonthView from "./MonthView";
-import CalendarView from "./Calendarview";
-import AISidebar from "./AiSidebar";
-import Profile from "./Profile";
-import { Link } from "react-router-dom";
-
-import { Authenticator, useAuthenticator, View, Heading, Text, Flex, Button, Divider, Image } from "@aws-amplify/ui-react";
-import { signInWithRedirect } from "aws-amplify/auth";
-
-import amazonLogo from './assets/amazon_logo.jpg';
-import googleLogo from './assets/Google_logo.png';
-
-import "./App.css"
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import api from "./services/api";
 
-const Home = ({ signOut, user }: { signOut?: () => void; user?: any }) => {
-  const [health, setHealth] = useState("Checking API...");
+import Dashboard from "./pages/Dashboard/Dashboard";
+import TaskPanel from "./components/TaskPanel/TaskPanel";
+import DayView from "./pages/Calendar/DayView";
+import WeekView from "./pages/Calendar/WeekView";
+import MonthView from "./pages/Calendar/MonthView";
+import CalendarView from "./pages/Calendar/CalendarView";
+import AISidebar from "./components/AiSidebar/AiSidebar";
+import Profile from "./pages/Profile/Profile";
+import Home from "./pages/Home/Home";
+import Login from "./pages/Login/Login";
 
-  useEffect(() => {
-    api
-      .get("/health")
-      .then((res: AxiosResponse) => setHealth(res.data.status))
-      .catch(() => setHealth("API not reachable"));
-  }, []);
-
-  return (
-    <div className="App">
-      <h1>AgendaAI</h1>
-      <p>Welcome, {user?.signInDetails?.loginId}</p>
-      <p>Backend health: {health}</p>
-      <button onClick={signOut}>Logout</button>
-      <Link to="/dashboard">
-        <button>Go to Dashboard</button>
-      </Link>
-      <Link to="/taskpanel">
-        <button>Go to Task Panel</button>
-      </Link>
-      <Link to="/calendarview">
-        <button>Go to Calendar View</button>
-      </Link>
-      <Link to="/dayview">
-        <button>Go to Day View</button>
-      </Link>
-      <Link to="/weekview">
-        <button>Go to Week View</button>
-      </Link>
-      <Link to="/monthview">
-        <button>Go to Month View</button>
-      </Link>
-      <Link to="/aisidebar">
-        <button>Go to the AgendaAI Assistant</button>
-      </Link>
-      <Link to="/profile">
-        <button>Go to Profile</button>
-      </Link>
-    </div>
-  );
-};
-
-const formFields = {
-  signIn: {
-    username: {
-      placeholder: 'Enter your email',
-      label: 'Email',
-      isRequired: true,
-      dialCodeList: ['+1', '+91', '+44', '+61', '+81']
-    },
-  },
-  signUp: {
-    // phone_number: {
-    //   dialCodeList: ['+1', '+91', '+44', '+61', '+81'],
-    //   placeholder: 'Enter your phone number',
-    //   label: 'Phone Number',
-    //   order: 0,
-    //   isRequired: true,
-    // },
-    email: {
-      placeholder: 'Enter your email',
-      label: 'Email',
-      order: 1,
-      isRequired: true,
-    },
-    password: {
-      placeholder: 'Create a password',
-      label: 'Password',
-      order: 2,
-      isRequired: true,
-    },
-    confirm_password: {
-      placeholder: 'Confirm your password',
-      label: 'Confirm Password',
-      order: 3,
-      isRequired: true,
-    },
-  },
-}
-
-const components = {
-  SignIn: {
-    Header() {
-      return (
-        <RadixFlex direction="column" p="4" pb="0">
-          <RadixText size="8" weight="bold" align="center" mb="2">
-            Log in
-          </RadixText>
-        </RadixFlex>
-      );
-    },
-    Footer() {
-      const { toForgotPassword, toSignUp } = useAuthenticator();
-
-      return (
-        <RadixFlex direction="column" p="4" pt="0" gap="3">
-          <RadixFlex justify="end">
-            <Button fontWeight='normal' onClick={toForgotPassword} size='small' variation='link' color='#888'>
-              Forgot Password?
-            </Button>
-          </RadixFlex>
-        </RadixFlex>
-      );
-    }
-  },
-  SignUp: {
-    Header() {
-      return (
-        <RadixFlex direction='column' p='4' pb='0'>
-          <RadixText size='8' weight='bold' align='center' mb='2'>
-            Create an account
-          </RadixText>
-        </RadixFlex>
-      );
-    }
-  }
-};
-
-const CustomLogin = () => {
-  return (
-    <div className="auth-split-wrapper">
-      <div className="auth-sidebar">
-
-        <Flex alignItems='center' gap='1rem' width="100%"> 
-          <Heading level={4} color="white">AgendaAI</Heading>
-          <div style = {{ height: '2px', backgroundColor: 'gray', flexGrow: 1, }}></div>
-        </Flex>
-
-        <View marginTop="20%" marginBottom="auto">
-          <Text fontSize='2.8rem' fontStyle='italic' fontWeight='bold' color='gray' lineHeight='1.2'>
-            "For every minute spent in organizing, an hour is earned." 
-            </Text>
-         
-          {/* <Blockquote size='9' weight='medium' color='gray-10' highContrast >
-              "For every minute spent in organizing, an hour is earned."
-          </Blockquote> */}
-          <Text marginTop='15px' color='gray' fontSize="1.2rem"> Benjamin Franklin</Text>
-        </View>
-        <Heading level={1} color='white' fontWeight='bold'>Welcome Back!</Heading>
-      </div>  
-      <div className='auth-form-section'>
-        <Authenticator 
-          components={components} 
-          formFields={formFields}
-          hideSignUp={false} 
-        />
-      </div>
-    </div>
-  );
-};
+import "./styles/App.css";
 
 const AppContent = () => {
-  const { authStatus, user, signOut, route } = useAuthenticator((context) => [
+  const { authStatus, user, signOut } = useAuthenticator((context) => [
     context.authStatus,
     context.user,
     context.route,
   ]);
 
   if (authStatus === "configuring") {
-    return <CustomLogin />;
+    return <Login />;
   }
 
   if (authStatus !== 'authenticated') {
-    return <CustomLogin />;
+    return <Login />;
   }
 
   return (
@@ -210,8 +48,6 @@ const AppContent = () => {
   );
 };
 
-// (Ankush) implemented socialProviders prop for Google OAuth as well as the login page UI for users to be able to login via Google OAuth or email/password
-// (Alex) Added some buttons to allow for easier navigation to independently view components aswell as added each component to the router
 function App() {
   return (
     <Theme accentColor="gray" grayColor="slate" radius="large" scaling="100%">
@@ -219,7 +55,6 @@ function App() {
         <AppContent />
       </Authenticator.Provider>
     </Theme>
-
   );
 }
 export default App;

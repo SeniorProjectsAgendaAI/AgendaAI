@@ -2,7 +2,7 @@
 //CS425: Senior Projects
 import React, { useState, useEffect } from "react";
 import "./highprioritydash.css";
-import api from "./services/api";
+import api from "../../services/api";
 
 interface ApiTask {
   id: number;

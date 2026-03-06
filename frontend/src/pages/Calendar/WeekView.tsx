@@ -8,8 +8,8 @@ TODO:
 */
 
 import React, { useState, useEffect, useMemo } from "react";
-import BackButton from "./components/BackButton";
-import api from "./services/api";
+import BackButton from "../../components/BackButton";
+import api from "../../services/api";
 import "./weekview.css";
 
 // Type definitions and helpers
