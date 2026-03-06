@@ -39,8 +39,8 @@ const components = {
   SignIn: {
     Header() {
       return (
-        <RadixFlex direction="column" p="4" pb="0">
-          <RadixText size="8" weight="bold" align="center" mb="2">
+        <RadixFlex direction="column" pt="6" px="4" pb='1'>
+          <RadixText size="9" weight="bold" align="left" mb="2">
             Log in
           </RadixText>
         </RadixFlex>
@@ -64,7 +64,7 @@ const components = {
     Header() {
       return (
         <RadixFlex direction='column' p='4' pb='0'>
-          <RadixText size='8' weight='bold' align='center' mb='2'>
+          <RadixText size='9' weight='bold' align='left' mb='2'>
             Create an account
           </RadixText>
         </RadixFlex>
