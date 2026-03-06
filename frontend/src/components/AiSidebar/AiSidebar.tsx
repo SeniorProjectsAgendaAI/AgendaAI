@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
-import api from "./services/api";
+import api from "../../services/api";
 import "./aisidebar.css";
 
 //markdown-to-HTML converter

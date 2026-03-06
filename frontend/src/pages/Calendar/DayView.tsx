@@ -2,8 +2,8 @@
 //Reference: https://mui.com/x/react-date-pickers/date-calendar/
 import React, { useState, useEffect } from "react";
 import "./dayview.css";
-import BackButton from "./components/BackButton";
-import api from "./services/api";
+import BackButton from "../../components/BackButton";
+import api from "../../services/api";
 
 //Task from database
 interface ApiTask {
