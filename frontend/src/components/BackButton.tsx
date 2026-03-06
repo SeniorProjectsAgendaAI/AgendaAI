@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@radix-ui/themes';
 
 const BackButton: React.FC = () => {
     const navigate = useNavigate();
     return (
-        <button className='back-button' onClick={() => navigate(-1)}>
+        <Button className='back-button' onClick={() => navigate(-1)} color='gray' variant='outline' highContrast>
             ← Back
-        </button>
+        </Button>
     );
 };
 
