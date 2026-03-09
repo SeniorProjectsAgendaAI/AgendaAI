@@ -43,6 +43,11 @@
       "typescript": "^5.0.0"
     }
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@radix-ui)/)"
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",

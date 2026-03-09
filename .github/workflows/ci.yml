@@ -61,14 +61,15 @@ jobs:
         run: npm install @radix-ui/themes
 
 
-      - name: Run frontend tests
-        working-directory: frontend
-        run: npm test -- --watch=false
       # Adding a mock amplify_outputs.json to bypass build errors (Ankush)
       - name: Create mock amplify_outputs.json
         working-directory: frontend/src
         run: |
           echo '{}' > amplify_outputs.json
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --watch=false
 
       - name: Build frontend
         working-directory: frontend
