@@ -46,11 +46,15 @@ async def authorize(current_user: User = Depends(get_current_user)):
         "created_at": datetime.utcnow(),
     }
 
-    #Build authorization URL
-    #Canvas requires specific URL-based scope format for API access
-    #The UNR developer key provides READ ONLY access
-    #Try requesting courses scope since that's what we primarily need
-    scope = "url:GET|/api/v1/courses"
+
+    scopes = [
+        "url:GET|/api/v1/courses",
+        "url:GET|/api/v1/courses/:course_id/assignments",
+        "url:GET|/api/v1/courses/:course_id/discussion_topics",
+        "url:GET|/api/v1/courses/:course_id/enrollments",
+        "url:GET|/api/v1/users/:user_id/courses",
+    ]
+    scope = " ".join(scopes)
 
     params = {
         "client_id": CANVAS_CLIENT_ID,
@@ -58,12 +62,11 @@ async def authorize(current_user: User = Depends(get_current_user)):
         "redirect_uri": CANVAS_REDIRECT_URI,
         "state": state,
         "scope": scope,
-        "canvas_login": "1", 
-        "force_login": "1",  
+        "canvas_login": "1",
+        "force_login": "1",
     }
 
     auth_url = f"{CANVAS_URL}/login/oauth2/auth?{urlencode(params)}"
-    
 
     return {"authorization_url": auth_url}
 
@@ -78,11 +81,11 @@ async def callback(
 ):
 
     try:
-      
+
         if error:
             print(f"[Canvas OAuth] Error from Canvas: {error} - {error_description}")
             return RedirectResponse(
-                url=f"{FRONTEND_URL}?canvas_error={error}&canvas_error_description={error_description or 'Unknown error'}"
+                url=f"{FRONTEND_URL}/aisidebar?canvas_error={error}&canvas_error_description={error_description or 'Unknown error'}"
             )
 
         if not code:
@@ -90,13 +93,11 @@ async def callback(
                 status_code=400, detail="No authorization code received"
             )
 
-  
         state_data = _oauth_states.pop(state, None)
         if not state_data:
             print(f"[Canvas OAuth] Invalid state: {state}")
             raise HTTPException(status_code=400, detail="Invalid or expired state")
 
-   
         if datetime.utcnow() - state_data["created_at"] > timedelta(minutes=10):
             print(f"[Canvas OAuth] State expired")
             raise HTTPException(status_code=400, detail="State expired")
@@ -104,7 +105,6 @@ async def callback(
         user_id = state_data["user_id"]
         print(f"[Canvas OAuth] Processing callback for user {user_id}")
 
-        
         async with httpx.AsyncClient() as client:
             token_response = await client.post(
                 f"{CANVAS_URL}/login/oauth2/token",
@@ -115,7 +115,10 @@ async def callback(
                     "redirect_uri": CANVAS_REDIRECT_URI,
                     "grant_type": "authorization_code",
                 },
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": "AgendaAI/1.0 (FastAPI; Canvas OAuth Integration)",
+                },
             )
 
         print(f"[Canvas OAuth] Token exchange status: {token_response.status_code}")
@@ -131,7 +134,7 @@ async def callback(
         tokens = token_response.json()
         print(f"[Canvas OAuth] Token response: {tokens}")
         access_token = tokens.get("access_token")
-        refresh_token = tokens.get("refresh_token")  
+        refresh_token = tokens.get("refresh_token")
         expires_in = tokens.get("expires_in")
 
         if not access_token:
@@ -142,7 +145,6 @@ async def callback(
                 status_code=400, detail=f"No access token received. Response: {tokens}"
             )
 
-       
         userinfo = tokens.get("user")
         if not userinfo:
             print(f"[Canvas OAuth] No user info in token response: {tokens}")
@@ -268,7 +270,10 @@ async def refresh_token(
                 "refresh_token": account.refresh_token,
                 "grant_type": "refresh_token",
             },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "AgendaAI/1.0 (FastAPI; Canvas OAuth Integration)",
+            },
         )
 
     if token_response.status_code != 200:
