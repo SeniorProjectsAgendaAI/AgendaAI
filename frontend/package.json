@@ -44,9 +44,9 @@
     }
   },
   "jest": {
-    "transformIgnorePatterns": [
-      "node_modules/(?!(@radix-ui)/)"
-    ]
+    "moduleNameMapper": {
+      "^radix-ui/internal$": "<rootDir>/node_modules/@radix-ui/themes/dist/cjs/components/index.js"
+    }
   },
   "browserslist": {
     "production": [
