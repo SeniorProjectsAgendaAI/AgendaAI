@@ -42,7 +42,15 @@ def get_canvas_instance():
         except Exception as e:
             print(f"[Canvas MCP] Failed to load runtime token, using default: {e}")
 
-    return Canvas(CANVAS_URL, token)
+    #Create Canvas instance
+    canvas_instance = Canvas(CANVAS_URL, token)
+    
+    if hasattr(canvas_instance, '_Canvas__requester'):
+        canvas_instance._Canvas__requester._session.headers.update({
+            "User-Agent": "AgendaAI/1.0 (Python canvasapi; MCP Server)"
+        })
+    
+    return canvas_instance
 
 
 #set up the canvas app (kept for backward compatibility, but tools should use get_canvas_instance())
