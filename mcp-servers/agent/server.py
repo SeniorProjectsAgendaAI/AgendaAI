@@ -8,7 +8,11 @@ from functools import lru_cache
 from urllib.request import urlopen
 
 from client import AgendaAIAgent
-from database import get_user_gmail_token, get_user_google_calendar_token
+from database import (
+    get_user_canvas_token,
+    get_user_gmail_token,
+    get_user_google_calendar_token,
+)
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -188,9 +192,9 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
     #Send message to AI agent with MCP tool calling
     import google.generativeai as genai
 
-
     gcal_token = get_user_google_calendar_token(cognito_sub)
     gmail_token = get_user_gmail_token(cognito_sub)
+    canvas_token = get_user_canvas_token(cognito_sub)
 
     if gcal_token:
         print(f"[Agent] Using Google Calendar token for user {cognito_sub}")
@@ -205,6 +209,13 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
     else:
         print(f"[Agent] No Gmail token found for user {cognito_sub}")
         _agent.current_user_gmail_token = None
+
+    if canvas_token:
+        print(f"[Agent] Using Canvas token for user {cognito_sub}")
+        _agent.current_user_canvas_token = canvas_token
+    else:
+        print(f"[Agent] No Canvas token found for user {cognito_sub}")
+        _agent.current_user_canvas_token = None
 
     try:
         #Send message with tools
@@ -248,7 +259,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                             json.dump(_agent.current_user_gcal_token, f)
                         print(f"   [Using user's Google Calendar token]")
 
-                    # Set Gmail token in temp file if this is a gmail tool
+                    #Set Gmail token in temp file if this is a gmail tool
                     if (
                         tool_name.startswith("gmail:")
                         and _agent.current_user_gmail_token
@@ -258,11 +269,38 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                             json.dump(_agent.current_user_gmail_token, f)
                         print(f"   [Using user's Gmail token]")
 
-                    session, actual_tool_name = _agent.tool_map[tool_name]
+                    #Set Canvas token in temp file if this is a canvas tool
+                    if (
+                        tool_name.startswith("canvas:")
+                        and _agent.current_user_canvas_token
+                    ):
+                        token_file = "/tmp/agendaai_canvas_runtime_token.json"
+                        with open(token_file, "w") as f:
+                            json.dump(_agent.current_user_canvas_token, f)
+                        print(f"   [Using user's Canvas token]")
+
+                    #AI tool fallback
+                    if tool_name in _agent.tool_map:
+                        session, actual_tool_name = _agent.tool_map[tool_name]
+                    else:
+
+                        found = False
+                        for prefix in ["google_calendar:", "gmail:", "canvas:"]:
+                            prefixed_name = f"{prefix}{tool_name}"
+                            if prefixed_name in _agent.tool_map:
+                                session, actual_tool_name = _agent.tool_map[
+                                    prefixed_name
+                                ]
+                                tool_name = prefixed_name
+                                found = True
+                                break
+                        if not found:
+                            raise KeyError(f"Tool '{tool_name}' not found in tool_map")
+
                     result = await session.call_tool(actual_tool_name, args)
                     result_text = result.content[0].text
 
-                    # Clear the runtime token files after use
+                    #Clear the runtime token files after use
                     if tool_name.startswith("google_calendar:"):
                         try:
                             os.remove("/tmp/agendaai_gcal_runtime_token.json")
@@ -273,11 +311,16 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                             os.remove("/tmp/agendaai_gmail_runtime_token.json")
                         except:
                             pass
+                    if tool_name.startswith("canvas:"):
+                        try:
+                            os.remove("/tmp/agendaai_canvas_runtime_token.json")
+                        except:
+                            pass
 
-                    # Print readable, formatted result
+                    #Print readable, formatted result
                     print(f"   Retrieved information")
                     if len(result_text) > 300:
-                        # Show first 300 chars with formatting
+                        #Show first 300 chars with formatting
                         lines = result_text[:300].split("\n")
                         print(f"   Here's what was found:")
                         for line in lines[:5]:
@@ -285,12 +328,12 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                         if len(lines) > 5 or len(result_text) > 300:
                             print(f"      ... (more content available)")
                     else:
-                        # Show full result if short
+                        #Show full result if short
                         print(f"   Here's what was found:")
                         for line in result_text.split("\n")[:10]:
                             print(f"      {line}")
 
-                    # Truncate long results
+                    #Truncate long results
                     max_result_length = 8000
                     if len(result_text) > max_result_length:
                         result_text = (
@@ -310,7 +353,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
 
                     traceback.print_exc()
 
-                    # Return error to model
+                    #Return error to model
                     function_responses.append(
                         genai.protos.Part(
                             function_response=genai.protos.FunctionResponse(

@@ -110,3 +110,31 @@ def get_user_gmail_token(cognito_sub: str) -> dict:
         }
     finally:
         db.close()
+
+
+def get_user_canvas_token(cognito_sub: str) -> dict:
+    """Get Canvas access token for a user."""
+    db = SessionLocal()
+    try:
+        account = (
+            db.query(ConnectedAccount)
+            .filter(
+                ConnectedAccount.user_id == cognito_sub,
+                ConnectedAccount.provider == "canvas",
+            )
+            .first()
+        )
+
+        if not account:
+            return None
+
+        return {
+            "access_token": account.access_token,
+            "refresh_token": account.refresh_token,
+            "expires_at": (
+                account.expires_at.isoformat() if account.expires_at else None
+            ),
+            "scopes": account.scopes.split(",") if account.scopes else [],
+        }
+    finally:
+        db.close()

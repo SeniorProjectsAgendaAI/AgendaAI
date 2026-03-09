@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
-import api from "./services/api";
+import api from "../../services/api";
 import "./aisidebar.css";
 
 //markdown-to-HTML converter
@@ -62,11 +62,13 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] =
     useState(false);
   const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [isCanvasConnected, setIsCanvasConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
 
   useEffect(() => {
     checkGoogleCalendarConnection();
     checkGmailConnection();
+    checkCanvasConnection();
 
     // Handle OAuth callback
     if (searchParams.get("google_calendar_connected") === "true") {
@@ -74,6 +76,9 @@ const AISidebar: React.FC<AISidebarProps> = ({
     }
     if (searchParams.get("gmail_connected") === "true") {
       checkGmailConnection();
+    }
+    if (searchParams.get("canvas_connected") === "true") {
+      checkCanvasConnection();
     }
   }, [searchParams]);
 
@@ -184,6 +189,57 @@ const AISidebar: React.FC<AISidebarProps> = ({
       setIsGmailConnected(false);
     } catch (error) {
       console.error("Failed to disconnect Gmail:", error);
+    }
+  };
+
+  const checkCanvasConnection = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/canvas/status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsCanvasConnected(response.data.connected);
+    } catch (error) {
+      console.error("Failed to check Canvas connection:", error);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
+
+  const handleConnectCanvas = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      const response = await api.get("/oauth/canvas/authorize", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Redirect to Canvas login page
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error("Failed to initiate Canvas connection:", error);
+    }
+  };
+
+  const handleDisconnectCanvas = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+      await api.delete("/oauth/canvas/disconnect", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsCanvasConnected(false);
+    } catch (error) {
+      console.error("Failed to disconnect Canvas:", error);
     }
   };
 
@@ -306,6 +362,23 @@ const AISidebar: React.FC<AISidebarProps> = ({
                 </button>
               ) : (
                 <button className="connect-btn" onClick={handleConnectGmail}>
+                  Connect
+                </button>
+              )}
+            </div>
+            <div className="connection-item">
+              <span>Canvas</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isCanvasConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectCanvas}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button className="connect-btn" onClick={handleConnectCanvas}>
                   Connect
                 </button>
               )}

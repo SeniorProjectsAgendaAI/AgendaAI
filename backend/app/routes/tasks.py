@@ -14,6 +14,7 @@ ALLOWED_TASK_STATUSES = {"todo", "in_progress", "done"}
 
 # create a new task
 @router.post("/", response_model=TaskResponse)
+@router.post("", response_model=TaskResponse)
 def create_task(
     task: TaskCreate,
     db: Session = Depends(get_db),
@@ -43,6 +44,7 @@ def create_task(
 
 # tasks for current user
 @router.get("/", response_model=list[TaskResponse])
+@router.get("", response_model=list[TaskResponse])
 def get_tasks(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),

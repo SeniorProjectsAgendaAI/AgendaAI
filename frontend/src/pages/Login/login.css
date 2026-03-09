@@ -1,0 +1,120 @@
+:root {
+  --amplify-components-fieldcontrol-border-radius: 9999px;
+  --amplify-components-button-border-radius: 9999px;
+
+  --amplify-components-button-primary-background-color: #000000;
+  --amplify-components-button-primary-color: #ffffff;
+}
+
+/* split layout */
+.auth-split-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #111111;
+  padding: 2rem 1rem 1rem 1rem;
+  box-sizing: border-box;
+  gap: 1rem;
+}
+
+/* black sidebar*/
+.auth-sidebar {
+  flex: 1; 
+  background-color: #111111;
+  color: white;
+  padding: 4rem; 
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; 
+}
+
+.auth-form-section {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  box-shadow: -15px 0 30px rgba(0,0,0,0.08);
+}
+
+/*
+Referenced official Amplify docs for custom styling: https://docs.amplify.aws/ui/auth/authenticator/customization/#styling-the-authenticator
+*/
+[data-amplify-authenticator] {
+  /* text field customization */
+  --amplify-components-fieldcontrol-border-radius: 9999px;
+  --amplify-components-button-border-radius: 9999px;
+  --amplify-components-fieldcontrol-background-color: #f4f4f5;
+  --amplify-components-fieldcontrol-focus-border-color: #888888;
+
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-authenticator-form-padding: var(--amplify-space-medium) var(--amplify-space-xl) var(--amplify-space-xl);
+  
+  /* controlling sign in button */
+  --amplify-components-button-primary-background-color: #000000; 
+  --amplify-components-button-primary-hover-background-color: #333333; 
+  --amplify-components-button-primary-color: #ffffff; 
+  
+  /* input fields */
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px #888888; 
+  
+  /* links (forgot password...) */
+  --amplify-components-button-link-color: #888888; 
+  --amplify-components-button-link-hover-color: #111111;
+  --amplify-components-button-link-focus-color: #111111; 
+  --amplify-components-button-link-active-color: #000000;
+  --amplify-components-button-link-hover-background-color: transparent;
+
+  /* changing default buttons (social providers and eye icon) */
+  --amplify-components-button-hover-background-color: #f2f2f2;
+  --amplify-components-button-hover-color: #111111;
+  --amplify-components-button-focus-background-color: 0 0 0 2px #888888;
+  --amplify-components-button-active-background-color: #e5e5e5;
+  --amplify-components-button-active-color: #000000;
+
+  /* tabs (sign in | create account) */
+  --amplify-components-tabs-item-active-border-color: #000000;
+  --amplify-components-tabs-item-color: #888888;
+  --amplify-components-tabs-item-active-color: #000000;
+  --amplify-components-tabs-item-hover-color: #111111;
+
+  /* scaling variables (font size, buttons and size of login screen) */
+
+  /*button size and input fields*/
+  --amplify-components-fieldcontrol-padding-block-start: 1.0rem;
+  --amplify-components-fieldcontrol-padding-block-end: 1.0rem;
+  --amplify-components-button-padding-block-start: 0.75rem;
+  --amplify-components-button-padding-block-end: 0.75rem;
+
+  /* font size inside input fields and buttons */
+  --amplify-components-fieldcontrol-font-size: 1.1rem;
+  --amplify-components-button-font-size: 1.1rem;
+
+  /* increasing vertical spacing between elements */
+  --amplify-space-small: 1.0rem;
+  --amplify-space-medium: 8rem;
+}
+
+/* authenticator styling */
+.auth-form-section [data-amplify-authenticator] {
+  width: 100%;
+  max-width: 560px;
+  border: none;
+  box-shadow: none;
+}
+
+@media (max-width: 1024px) {
+  .auth-split-wrapper {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .auth-sidebar, .auth-form-section {
+    max-width: 100%;
+    min-height: auto;
+    width: 95%;
+  }
+}

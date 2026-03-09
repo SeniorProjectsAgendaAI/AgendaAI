@@ -23,24 +23,14 @@ export const auth = defineAuth({
       callbackUrls: [
         'http://localhost:3000/', 
         'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
-        // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
-        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
-        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com',
-        // Dev Amplify Console domain
         'https://dev.d2i3jqbsdy4snq.amplifyapp.com/',
-        // Dashboard domain 
-        'https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/',
+        'https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com/',
       ],
       logoutUrls: [
         'http://localhost:3000/',
         'https://main.d2i3jqbsdy4snq.amplifyapp.com/',
-         // Amplify Console domain for auth-start-branch. DELETE THESE WHEN BRANCH IS DELETED
-        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com/',
-        'https://feature-auth-fresh-start.d2i3jqbsdy4snq.amplifyapp.com',
-        // Dev Amplify Console domain
         'https://dev.d2i3jqbsdy4snq.amplifyapp.com/',
-        // Dashboard domain
-        'https://dashboard.d2i3jqbsdy4snq.amplifyapp.com/'
+        'https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com/',
       ],
     },
   },

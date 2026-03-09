@@ -1,0 +1,30 @@
+.back-button {
+  background-color: #2d2d2d;
+  color: white;
+  border: 1px solid #555;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background-color: #444;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+:root {
+  --amplify-components-fieldcontrol-border-radius: 9999px;
+  --amplify-components-button-border-radius: 9999px;
+
+  --amplify-components-button-primary-background-color: #000000;
+  --amplify-components-button-primary-color: #ffffff;
+}

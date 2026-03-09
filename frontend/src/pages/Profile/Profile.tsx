@@ -1,6 +1,7 @@
-import react from "react";
+import React from "react";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
+import pfp from "../../assets/pfp.jpg";
 
 const Profile = () => {
     const { signOut, user } = useAuthenticator();
@@ -9,7 +10,7 @@ const Profile = () => {
             <h1>Profile Page</h1>
             <h2>Potential Image</h2>
             <img
-            src="./assets/pfp.jpg"
+            src={pfp}
             alt="placeholder profile picture"
             />
             <p>Hi, {user?.signInDetails?.loginId}</p>
