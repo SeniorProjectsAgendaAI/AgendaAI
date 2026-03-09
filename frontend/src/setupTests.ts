@@ -1,46 +1,63 @@
-// Author: Ankush
-// This file is used to set up the testing environment for Jest and the Testing Library
+// // Author: Ankush
+// // This file is used to set up the testing environment for Jest and the Testing Library
 
-import React from "react";
-import "@testing-library/jest-dom";
-import { toHaveNoViolations } from "jest-axe";
+// import React from "react";
+// import "@testing-library/jest-dom";
+// import { toHaveNoViolations } from "jest-axe";
 
-expect.extend(toHaveNoViolations);
+// expect.extend(toHaveNoViolations);
+
+// jest.mock("@aws-amplify/ui-react", () => ({
+//   Authenticator: ({ children }: any) => children,
+//   useAuthenticator: () => ({
+//     user: { username: "test-user" },
+//     signOut: jest.fn(),
+//   }),
+// }));
+
+// jest.mock("@aws-amplify/ui-react/styles.css", () => ({}), { virtual: true });
+
+// // Mock Radix UI
+// jest.mock("@radix-ui/themes/styles.css", () => ({}), { virtual: true });
+// jest.mock("@radix-ui/themes", () => ({
+//   Theme: ({ children }: any) => children,
+//   Button: ({ children, ...props }: any) =>
+//     React.createElement("button", props, children),
+//   Flex: ({ children, ...props }: any) =>
+//     React.createElement("div", props, children),
+//   Text: ({ children, ...props }: any) =>
+//     React.createElement("span", props, children),
+// }));
+
+// jest.mock("axios", () => ({
+//   create: () => ({
+//     interceptors: {
+//       request: { use: jest.fn(), eject: jest.fn() },
+//       response: { use: jest.fn(), eject: jest.fn() },
+//     },
+//     get: jest.fn(() => Promise.resolve({ data: {} })),
+//     post: jest.fn(() => Promise.resolve({ data: {} })),
+//     put: jest.fn(() => Promise.resolve({ data: {} })),
+//     delete: jest.fn(() => Promise.resolve({ data: {} })),
+//     defaults: { headers: { common: {} } },
+//   }),
+//   get: jest.fn(() => Promise.resolve({ data: {} })),
+//   post: jest.fn(() => Promise.resolve({ data: {} })),
+// }));
+
+// frontend/src/setupTests.ts
 
 jest.mock("@aws-amplify/ui-react", () => ({
+  // Use a simple functional component pattern that doesn't explicitly
+  // reference the 'React' variable inside the factory scope.
   Authenticator: ({ children }: any) => children,
+  Theme: ({ children }: any) => children,
+  View: ({ children }: any) => children,
+  Button: ({ children }: any) => children,
+  Flex: ({ children }: any) => children,
+  Text: ({ children }: any) => children,
   useAuthenticator: () => ({
     user: { username: "test-user" },
     signOut: jest.fn(),
   }),
-}));
-
-jest.mock("@aws-amplify/ui-react/styles.css", () => ({}), { virtual: true });
-
-// Mock Radix UI
-jest.mock("@radix-ui/themes/styles.css", () => ({}), { virtual: true });
-jest.mock("@radix-ui/themes", () => ({
-  Theme: ({ children }: any) => children,
-  Button: ({ children, ...props }: any) =>
-    React.createElement("button", props, children),
-  Flex: ({ children, ...props }: any) =>
-    React.createElement("div", props, children),
-  Text: ({ children, ...props }: any) =>
-    React.createElement("span", props, children),
-}));
-
-jest.mock("axios", () => ({
-  create: () => ({
-    interceptors: {
-      request: { use: jest.fn(), eject: jest.fn() },
-      response: { use: jest.fn(), eject: jest.fn() },
-    },
-    get: jest.fn(() => Promise.resolve({ data: {} })),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
-    put: jest.fn(() => Promise.resolve({ data: {} })),
-    delete: jest.fn(() => Promise.resolve({ data: {} })),
-    defaults: { headers: { common: {} } },
-  }),
-  get: jest.fn(() => Promise.resolve({ data: {} })),
-  post: jest.fn(() => Promise.resolve({ data: {} })),
 }));
