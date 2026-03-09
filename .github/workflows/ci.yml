@@ -58,7 +58,7 @@ jobs:
       
       - name:  Installing radix
         working-directory: frontend
-        run: npm install @radix-ui/themes@latest
+        run: npm install @radix-ui/themes
 
 
       - name: Run frontend tests
@@ -73,4 +73,5 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
 
