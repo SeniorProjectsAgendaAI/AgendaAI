@@ -1,6 +1,7 @@
 // Author: Ankush 
 // This file is used to set up the testing environment for Jest and the Testing Library
 
+import React from 'react';
 import '@testing-library/jest-dom';
 import { toHaveNoViolations } from "jest-axe";
 
