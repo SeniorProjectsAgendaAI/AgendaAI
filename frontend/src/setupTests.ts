@@ -13,6 +13,15 @@ jest.mock('@aws-amplify/ui-react', () => ({
 
 jest.mock('@aws-amplify/ui-react/styles.css', () => ({}), { virtual: true });
 
+// Mock Radix UI
+jest.mock('@radix-ui/themes/styles.css', () => ({}), { virtual: true });
+jest.mock('@radix-ui/themes', () => ({
+  Theme: ({ children }: any) => children,
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Flex: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  Text: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+}));
+
 jest.mock('axios', () => ({
   create: () => ({
     interceptors: {
