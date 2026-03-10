@@ -12,13 +12,13 @@ const Sidebar = () => {
         <NavLink to="/dashboard" className="navigationItem">
             Dashboard
         </NavLink>
-        <NavLink to="/aisidebar" className="navigationItem">
+        <NavLink to="/aicontain" className="navigationItem">
             Ai Agent
         </NavLink>
-        <NavLink to="/calendars" className="navigationItem">
+        <NavLink to="/calendarcontainer" className="navigationItem">
             Calendars
         </NavLink>
-        <NavLink to="/profile" className="navigationItem">
+        <NavLink to="/profilecontainer" className="navigationItem">
             Profile
         </NavLink>
         
