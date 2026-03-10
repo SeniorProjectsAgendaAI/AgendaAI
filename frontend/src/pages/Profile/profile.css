@@ -2,8 +2,9 @@
 {
     color: white;
     display: flex;
-    justify-content: center; /* Centers horizontally */
-    
+    justify-content: center; 
+    align-items: center; 
+    flex-direction: column; 
 }
 img
 {
