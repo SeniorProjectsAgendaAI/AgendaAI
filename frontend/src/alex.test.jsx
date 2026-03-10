@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import Profile from './Profile';
+import Profile from './pages/Profile/Profile';
 
-// Fake the login to test offline using JEST instead of VITEST
-jest.mock('@aws-amplify/ui-react', () => ({
+// Fake the login to test offline using Vitest
+vi.mock('@aws-amplify/ui-react', () => ({
   useAuthenticator: () => ({
-    signOut: jest.fn(),
+    signOut: vi.fn(),
     user: {
       signInDetails: {
         loginId: 'alex_test_user@example.com'
