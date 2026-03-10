@@ -12,6 +12,31 @@ jest.mock('@radix-ui/themes/styles.css', () => ({}), { virtual: true });
 // Mock the broken internal Radix module that may not exist
 jest.mock('radix-ui/internal', () => ({}), { virtual: true });
 
+// Mock axios (ships ESM that Jest can't parse without transform)
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    create: () => ({
+      interceptors: {
+        request: { use: jest.fn(), eject: jest.fn() },
+        response: { use: jest.fn(), eject: jest.fn() }
+      },
+      get: jest.fn(() => Promise.resolve({ data: {} })),
+      post: jest.fn(() => Promise.resolve({ data: {} })),
+      put: jest.fn(() => Promise.resolve({ data: {} })),
+      delete: jest.fn(() => Promise.resolve({ data: {} })),
+      defaults: { headers: { common: {} } }
+    }),
+    get: jest.fn(() => Promise.resolve({ data: {} })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+  }
+}));
+
+// Mock aws-amplify/auth
+jest.mock('aws-amplify/auth', () => ({
+  fetchAuthSession: jest.fn(() => Promise.resolve({ tokens: {} }))
+}));
+
 // Mock the Radix Theme provider
 jest.mock('@radix-ui/themes', () => ({
   Theme: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
