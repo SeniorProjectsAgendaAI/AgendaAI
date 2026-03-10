@@ -5,6 +5,10 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 
+// Mock CSS imports that Jest can't resolve
+jest.mock('@aws-amplify/ui-react/styles.css', () => ({}), { virtual: true });
+jest.mock('@radix-ui/themes/styles.css', () => ({}), { virtual: true });
+
 // Mock the broken internal Radix module that may not exist
 jest.mock('radix-ui/internal', () => ({}), { virtual: true });
 
