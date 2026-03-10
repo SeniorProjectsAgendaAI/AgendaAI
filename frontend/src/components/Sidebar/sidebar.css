@@ -13,7 +13,7 @@
 .navigationItem {
   padding: 10px;
   text-decoration: none;
-  background: #000000;
+  /*background: #000000;*/
   color: rgb(255, 255, 255);
   border-radius: 5px;
   text-align: center;
@@ -21,8 +21,9 @@
 
 /* highlight active page automatically */
 .navigationItem.active {
-  background: #4a90e2;
-  color: white;
+  /*background: #4a90e2;*/
+  color: #1f8bd1;
+
 }
 
 /* push logout to bottom of sidebar */
