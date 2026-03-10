@@ -2,7 +2,7 @@
 .sidebar {
   width: 180px;
   background: #000000;
-  height: 90dvh; /* dynamic viewport height*/
+  height: 100dvh; /* dynamic viewport height*/
   box-sizing: border-box; /* include padding in the height to prevent overflow */
   padding: 20px;
   display: flex;

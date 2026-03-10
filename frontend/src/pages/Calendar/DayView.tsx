@@ -1,5 +1,6 @@
 //bini work + template
 //Reference: https://mui.com/x/react-date-pickers/date-calendar/
+
 /* Progress Bar - Alex*/
 import React, { useState, useEffect } from "react";
 import "./dayview.css";
@@ -364,7 +365,7 @@ const DayView = () => {
             <BackButton />
           </div>
           */}
-          <h2>Day View</h2>
+          <h2>Today's Agenda</h2>
           <div className="dateNavigation">
             <button onClick={goToPreviousDay}>← Previous</button>
             <button onClick={goToToday}>Today</button>
