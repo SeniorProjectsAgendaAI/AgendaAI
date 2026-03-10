@@ -1,8 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import CalendarView from "../Calendar/CalendarView";
-import TaskPanel from "../../components/TaskPanel/TaskPanel";
-import HighPriorityDash from "../HighPriority/HighPriorityDash";
+
 import "./dashboard.css";
 
 const Dashboard = () => {
@@ -10,7 +9,7 @@ const Dashboard = () => {
     <div>
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
-        <h2>Dashboard</h2>
+        <h2>Calendars</h2>
       </div>
     
       {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
@@ -19,9 +18,7 @@ const Dashboard = () => {
 
         <div className="centerDash">
           <CalendarView />
-          <HighPriorityDash />
         </div>
-        <TaskPanel />
       </div>
     </div>
   );

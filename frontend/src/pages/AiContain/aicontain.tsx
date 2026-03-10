@@ -1,16 +1,14 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import CalendarView from "../Calendar/CalendarView";
-import TaskPanel from "../../components/TaskPanel/TaskPanel";
-import HighPriorityDash from "../HighPriority/HighPriorityDash";
-import "./dashboard.css";
+import AISidebar from "../../components/AiSidebar/AiSidebar";
+import "./aicontain.css";
 
-const Dashboard = () => {
+const AiContain = () => {
   return (
     <div>
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
-        <h2>Dashboard</h2>
+        <h2>Ai Agent</h2>
       </div>
     
       {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
@@ -18,13 +16,13 @@ const Dashboard = () => {
         <Sidebar />
 
         <div className="centerDash">
-          <CalendarView />
-          <HighPriorityDash />
+          <AISidebar />
+          
         </div>
-        <TaskPanel />
+
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default AiContain;
