@@ -12,7 +12,7 @@ const Sidebar = () => {
         <NavLink to="/dashboard" className="navigationItem">
             Dashboard
         </NavLink>
-        <NavLink to="/aicontain" className="navigationItem">
+        <NavLink to="/aicontainer" className="navigationItem">
             Ai Agent
         </NavLink>
         <NavLink to="/calendarcontainer" className="navigationItem">
