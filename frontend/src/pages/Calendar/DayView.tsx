@@ -1,9 +1,12 @@
 //bini work + template
 //Reference: https://mui.com/x/react-date-pickers/date-calendar/
+
+/* Progress Bar - Alex*/
 import React, { useState, useEffect } from "react";
 import "./dayview.css";
 import BackButton from "../../components/BackButton";
 import api from "../../services/api";
+import TaskPanel from "../../components/TaskPanel/TaskPanel";
 
 //Task from database
 interface ApiTask {
@@ -346,15 +349,23 @@ const DayView = () => {
 
   const todayTasks = getTasksForDate(currentDate);
   const todayEvents = getEventsForDate(currentDate);
+  ///math for the progress bar //test later
+  const totalTaskInDay = todayTasks.length;
+
+  const completedTaskInDay = todayTasks.filter((task) => task.completed).length;
+
+  const percentageComplete = totalTaskInDay === 0 ? 0 : (completedTaskInDay / totalTaskInDay) * 100;
 
   return (
     <div className="dayViewContainer">
       <div className="dayViewContent">
         <div className="dayViewHeader">
+          {/* 
           <div className="back-button-wrapper">
             <BackButton />
           </div>
-          <h2>Day View</h2>
+          */}
+          <h2>Today's Agenda</h2>
           <div className="dateNavigation">
             <button onClick={goToPreviousDay}>← Previous</button>
             <button onClick={goToToday}>Today</button>
@@ -544,9 +555,24 @@ const DayView = () => {
                       )}
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
+                
+                {/* ///////////////////////////////////////////////start of taskbar visuals*/}
+                {totalTaskInDay > 0 && (
+                  <div className="taskProgressBarContainer">
+                    <div className="taskProgressBarHeader">
+                      <span> Daily Progress</span>
+                      <span>{percentageComplete}% ({completedTaskInDay}/{totalTaskInDay})</span>
+                    </div>
+                    {/*grey part of bar, could change later idk*/}
+                    <div className="taskProgressBarBackground">
+                      <div className="taskProgressBarFill" style={{ width: `${percentageComplete}%` }}>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
             <div className="daySchedule">
               <div className="timeColumn">

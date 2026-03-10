@@ -13,8 +13,24 @@
 
 .calendarButtons {
   display: flex;
-  gap: 10px;
+  gap: 20px;
   margin-bottom: 20px;
+  align-items: center;
+  justify-content: center;
+
+}
+.calendarButtons button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+.calendarButtons button:hover {
+  color: #1f8bd1;
+}
+.calendarButtons button:active {
+  color: #1f8bd1;
 }
 
 .calendarViewDisplay {

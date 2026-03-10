@@ -14,21 +14,26 @@ const CalendarView = () => {
 
     return (
         <div className="calendarContainer">
+            {/*
             <div className="back-button-wrapper">
                 <BackButton />
             </div>
+            */}
             <div className="calendarView">
                 <div className="calendarButtons">
                     {/* buttons to switch views*/}
-                    <button onClick={()=>setCalendarView("month")}>
-                        Month
-                    </button>
-                    <button onClick={()=>setCalendarView("week")}>
-                        Week
-                    </button>
-                    <button onClick={()=>setCalendarView("day")}>
-                        Day
-                    </button>
+
+                <button
+                    className={calendarView === "month" ? "active" : ""} onClick={() => setCalendarView("month")}>
+                    Month
+                </button>
+                <button
+                    className={calendarView === "week" ? "active" : ""} onClick={() => setCalendarView("week")}>
+                    Week
+                </button>
+                <button className={calendarView === "day" ? "active" : ""} onClick={() => setCalendarView("day")}>
+                    Day
+                </button>
                 </div>
                 <div className="calendarViewDisplay">
                     {calendarView === "month" && <div>
@@ -45,5 +50,6 @@ const CalendarView = () => {
         </div>
     );
 };
+
 
 export default CalendarView;
