@@ -27,6 +27,7 @@
 }
 
 /* push logout to bottom of sidebar */
-.logout {
+.navigationItemlogout {
   margin-top: auto;
+  color: rgb(255, 255, 255);
 }

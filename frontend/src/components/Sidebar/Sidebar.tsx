@@ -22,7 +22,7 @@ const Sidebar = () => {
             Profile
         </NavLink>
         
-                <button className="navigationItem logout" onClick={signOut}>
+        <button className="navigationItemlogout" onClick={signOut}>
           Logout
         </button>
     </div>
