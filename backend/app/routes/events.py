@@ -1,3 +1,5 @@
+#james acacio
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -7,10 +9,13 @@ from app.schemas.events import EventCreate, EventResponse, EventUpdate
 from app.services.auth_utils import get_current_user
 
 router = APIRouter(prefix="/events", tags=["Events"])
+# Valid status values allowed for events.
 ALLOWED_EVENT_STATUSES = {"scheduled", "ongoing", "completed", "canceled"}
+# Valid recurrence options allowed for repeating events.
 ALLOWED_EVENT_RECURRENCE = {"none", "daily", "weekly", "monthly"}
 
 
+# Creates a new event for the currently logged-in user.
 @router.post("/", response_model=EventResponse)
 def create_event(
     event: EventCreate,
@@ -42,6 +47,7 @@ def create_event(
     return new_event
 
 
+# Returns all events that belong to the current user.
 @router.get("/", response_model=list[EventResponse])
 def get_events(
     db: Session = Depends(get_db),
@@ -50,6 +56,7 @@ def get_events(
     return db.query(models.Event).filter(models.Event.user_id == user.id).all()
 
 
+# Updates an existing event if it belongs to the current user.
 @router.put("/{event_id}", response_model=EventResponse)
 def update_event(
     event_id: int,
@@ -98,6 +105,7 @@ def update_event(
     return event
 
 
+# Deletes an event if it belongs to the current user.
 @router.delete("/{event_id}")
 def delete_event(
     event_id: int,

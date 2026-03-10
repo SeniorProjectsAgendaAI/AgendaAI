@@ -1,11 +1,12 @@
-#James Acacio - schemas for Task creation, update, and response 
+# Schemas for task creation, update, and response data.
 
 from datetime import date, datetime, time
 from typing import Optional
 
 from pydantic import BaseModel
 
-#
+
+# Data sent when creating a new task.
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -17,6 +18,7 @@ class TaskCreate(BaseModel):
     due_time: Optional[time] = None
 
 
+# Data that can be changed when updating an existing task.
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
@@ -29,6 +31,7 @@ class TaskUpdate(BaseModel):
     completed: Optional[bool] = None
 
 
+# Data returned to the client for a task.
 class TaskResponse(BaseModel):
     id: int
     title: str
@@ -44,4 +47,5 @@ class TaskResponse(BaseModel):
     created_at: datetime
 
     class Config:
+        # Lets Pydantic read data directly from SQLAlchemy models.
         orm_mode = True

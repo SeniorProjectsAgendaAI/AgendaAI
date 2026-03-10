@@ -97,7 +97,7 @@ class Task(Base):
 
     user = relationship("User", back_populates="tasks")
 
-
+#user event created by user with title, description, start/end time, and timestamp
 class Event(Base):
     __tablename__ = "events"
 
