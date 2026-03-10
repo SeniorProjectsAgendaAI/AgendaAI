@@ -1,6 +1,8 @@
 .profile
 {
     color: white;
+    display: flex;
+    justify-content: center; /* Centers horizontally */
     
 }
 img

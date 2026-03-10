@@ -2,7 +2,7 @@ import React from "react";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import pfp from "../../assets/pfp.jpg";
-
+//alex, a start for future functionality including delete account, and edit profile
 const Profile = () => {
     const { signOut, user } = useAuthenticator();
     return (
