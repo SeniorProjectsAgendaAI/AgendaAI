@@ -1,6 +1,12 @@
 //bini work + template
 //Reference: https://mui.com/x/react-date-pickers/date-calendar/
 
+/*
+TODO:
+- Make progress bar a little smaller and put percentage 
+
+*/
+
 /* Progress Bar - Alex*/
 import React, { useState, useEffect } from "react";
 import "./dayview.css";
