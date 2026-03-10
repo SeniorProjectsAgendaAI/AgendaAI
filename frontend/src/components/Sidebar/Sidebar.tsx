@@ -15,6 +15,9 @@ const Sidebar = () => {
         <NavLink to="/aisidebar" className="navigationItem">
             Ai Agent
         </NavLink>
+        <NavLink to="/calendars" className="navigationItem">
+            Calendars
+        </NavLink>
         <NavLink to="/profile" className="navigationItem">
             Profile
         </NavLink>
