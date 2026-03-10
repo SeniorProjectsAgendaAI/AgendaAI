@@ -41,7 +41,8 @@
   "overrides": {
     "react-scripts": {
       "typescript": "^5.0.0"
-    }
+    },
+    "postcss-calc": "9.0.1"
   },
   "browserslist": {
     "production": [
