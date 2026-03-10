@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import Profile from './pages/Profile/Profile';
 
-// Fake the login to test offline using Vitest
-vi.mock('@aws-amplify/ui-react', () => ({
+// Override the global mock with test-specific user details
+jest.mock('@aws-amplify/ui-react', () => ({
   useAuthenticator: () => ({
-    signOut: vi.fn(),
+    signOut: jest.fn(),
     user: {
       signInDetails: {
         loginId: 'alex_test_user@example.com'
