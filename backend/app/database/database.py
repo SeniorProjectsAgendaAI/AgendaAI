@@ -55,7 +55,7 @@ def init_db():
     _migrate_tasks_table_for_metadata()
     _migrate_events_table_for_metadata()
 
-
+# This function adds new columns to the users table for Cognito integration, such as cognito_sub and created_at. It also makes the existing hashed_password column nullable since we won't be using it for Cognito users. 
 def _migrate_users_table_for_cognito() -> None:
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
@@ -79,7 +79,7 @@ def _migrate_users_table_for_cognito() -> None:
             text("CREATE INDEX IF NOT EXISTS ix_users_cognito_sub ON users (cognito_sub)")
         )
 
-
+# These functions add new columns to the tasks and events tables for metadata like tags, colors, priorities, statuses, due dates/times, etc. They check if the columns already exist before trying to add them, so they can be safely run on an existing database without causing errors. This allows us to evolve the database schema over time as we add new features that require additional metadata on tasks and events.
 def _migrate_tasks_table_for_metadata() -> None:
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
@@ -101,7 +101,7 @@ def _migrate_tasks_table_for_metadata() -> None:
         if "due_time" not in columns:
             conn.execute(text("ALTER TABLE tasks ADD COLUMN due_time TIME NULL"))
 
-
+# Similar to the tasks table migration, this function adds new columns to the events table for metadata like all_day, recurrence, location, and status. 
 def _migrate_events_table_for_metadata() -> None:
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
