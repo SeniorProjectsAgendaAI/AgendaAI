@@ -5,28 +5,28 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 
-// Force Vitest to ignore the broken internal Radix module
-vi.mock('radix-ui/internal', () => ({}));
+// Mock the broken internal Radix module that may not exist
+jest.mock('radix-ui/internal', () => ({}), { virtual: true });
 
 // Mock the Radix Theme provider
-vi.mock('@radix-ui/themes', () => ({
+jest.mock('@radix-ui/themes', () => ({
   Theme: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock Amplify Authenticator AND its Provider
-vi.mock('@aws-amplify/ui-react', () => {
-  const stub = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
-  const MockAuthenticator = Object.assign(stub, {
-    Provider: stub,
+jest.mock('@aws-amplify/ui-react', () => {
+  const mockStub = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
+  const mockAuthenticator = Object.assign(mockStub, {
+    Provider: mockStub,
   });
   return {
-    Authenticator: MockAuthenticator,
-    useAuthenticator: () => ({ user: { username: 'test-user' }, signOut: vi.fn() }),
-    View: stub,
-    Heading: stub,
-    Text: stub,
-    Flex: stub,
-    Button: stub,
+    Authenticator: mockAuthenticator,
+    useAuthenticator: () => ({ user: { username: 'test-user' }, signOut: jest.fn() }),
+    View: mockStub,
+    Heading: mockStub,
+    Text: mockStub,
+    Flex: mockStub,
+    Button: mockStub,
   };
 });
 
