@@ -3,6 +3,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import CalendarView from "../Calendar/CalendarView";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import HighPriorityDash from "../HighPriority/HighPriorityDash";
+import DayView from "../Calendar/DayView";
 import "./dashboard.css";
 
 const Dashboard = () => {
@@ -18,7 +19,7 @@ const Dashboard = () => {
         <Sidebar />
 
         <div className="centerDash">
-          <CalendarView />
+          <DayView />
           <HighPriorityDash />
         </div>
         <TaskPanel />
