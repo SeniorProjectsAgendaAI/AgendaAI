@@ -1,4 +1,5 @@
 /*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
+/* Progress Bar Styles - Alex*/
 .dayViewContainer {
   display: flex;
   flex-direction: column;
@@ -429,4 +430,28 @@
   display: flex;
   gap: 8px;
   margin-top: 4px;
+}
+/* Progress Bar Styles - Alex*/
+.taskProgressBarContainer
+{
+  padding: 15px;
+  border-radius: 10px;
+}
+.taskProgressBarHeader
+{
+  display: flex;
+  justify-content: space-between;
+  margin: 10px;
+  color: rgb(0, 0, 0);
+
+}
+.taskProgressBarBackground
+{
+  width: 80%;
+  height: 10px;
+  background-color: #000000;
+}
+.taskProgressBarFill
+{
+  background-color: #1976d2;
 }
