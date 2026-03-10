@@ -14,9 +14,11 @@ const CalendarView = () => {
 
     return (
         <div className="calendarContainer">
+            {/*
             <div className="back-button-wrapper">
                 <BackButton />
             </div>
+            */}
             <div className="calendarView">
                 <div className="calendarButtons">
                     {/* buttons to switch views*/}

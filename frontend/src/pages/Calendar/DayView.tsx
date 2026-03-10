@@ -351,9 +351,11 @@ const DayView = () => {
     <div className="dayViewContainer">
       <div className="dayViewContent">
         <div className="dayViewHeader">
+          {/* 
           <div className="back-button-wrapper">
             <BackButton />
           </div>
+          */}
           <h2>Day View</h2>
           <div className="dateNavigation">
             <button onClick={goToPreviousDay}>← Previous</button>

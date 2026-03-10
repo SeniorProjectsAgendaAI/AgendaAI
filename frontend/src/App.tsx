@@ -15,8 +15,12 @@ import AISidebar from "./components/AiSidebar/AiSidebar";
 import Profile from "./pages/Profile/Profile";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
+import CalendarContainer from "./pages/CalendarContain/calendarcontain";
+import ProfileContainer from "./pages/ProfileContainer/profilecontainer";
+import AiContain from "./pages/AiContain/aicontain";
 
 import "./styles/App.css";
+
 
 const AppContent = () => {
   const { authStatus, user, signOut } = useAuthenticator((context) => [
@@ -44,6 +48,9 @@ const AppContent = () => {
       <Route path='/monthview' element={<MonthView />} />
       <Route path='/aisidebar' element={<AISidebar fullScreen={true} />} />
       <Route path='/profile' element={<Profile />} />
+      <Route path='/aicontainer' element={<AiContain />}/>
+      <Route path='/calendarcontainer' element={<CalendarContainer />}/>
+      <Route path='/profilecontainer' element={<ProfileContainer />}/>
     </Routes>
   );
 };
