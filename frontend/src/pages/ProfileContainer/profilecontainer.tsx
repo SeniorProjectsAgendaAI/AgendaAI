@@ -3,7 +3,6 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import CalendarView from "../Calendar/CalendarView";
 
 
-import "./dashboard.css";
 import Profile from "../Profile/Profile";
 
 
