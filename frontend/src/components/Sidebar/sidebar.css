@@ -29,5 +29,16 @@
 /* push logout to bottom of sidebar */
 .navigationItemlogout {
   margin-top: auto;
-  color: rgb(255, 255, 255);
+  background-color: black;
+}
+
+.navigationItemLogout button
+{
+  color:white;
+  background-color: black;
+}
+.navigationItemLogout button:hover
+{
+  color: #1f8bd1;
+  
 }

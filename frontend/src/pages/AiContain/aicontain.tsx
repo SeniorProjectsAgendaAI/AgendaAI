@@ -2,7 +2,8 @@ import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import AISidebar from "../../components/AiSidebar/AiSidebar";
 import "./aicontain.css";
-
+//container maintained+made by alex to make website consistent
+//not currently functioning due to ai sidebar formating options
 const AiContain = () => {
   return (
     <div>

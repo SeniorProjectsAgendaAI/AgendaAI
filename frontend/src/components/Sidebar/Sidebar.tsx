@@ -3,7 +3,7 @@ import react from "react";
 import {NavLink} from "react-router-dom";
 import "./sidebar.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-
+//sidebar maintained by alex
 const Sidebar = () => {
   const { signOut } = useAuthenticator();
   return (
@@ -12,7 +12,7 @@ const Sidebar = () => {
         <NavLink to="/dashboard" className="navigationItem">
             Dashboard
         </NavLink>
-        <NavLink to="/aicontainer" className="navigationItem">
+        <NavLink to="/aisidebar" className="navigationItem">
             Ai Agent
         </NavLink>
         <NavLink to="/calendarcontainer" className="navigationItem">
@@ -21,7 +21,7 @@ const Sidebar = () => {
         <NavLink to="/profilecontainer" className="navigationItem">
             Profile
         </NavLink>
-        
+    
         <button className="navigationItemlogout" onClick={signOut}>
           Logout
         </button>
