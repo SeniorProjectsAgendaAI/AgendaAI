@@ -447,11 +447,14 @@
 }
 .taskProgressBarBackground
 {
-  width: 80%;
+  width: 100%;
   height: 10px;
+  border-radius: 10px;
   background-color: #000000;
 }
 .taskProgressBarFill
 {
+  height: 100%;
+  border-radius: 10px;
   background-color: #1976d2;
 }
