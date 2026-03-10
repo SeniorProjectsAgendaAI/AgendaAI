@@ -30,14 +30,15 @@
 .navigationItemlogout {
   margin-top: auto;
   background-color: black;
+  border: none;
 }
 
-.navigationItemLogout button
+.navigationItemlogout button
 {
   color:white;
   background-color: black;
 }
-.navigationItemLogout button:hover
+.navigationItemlogout button:hover
 {
   color: #1f8bd1;
   
