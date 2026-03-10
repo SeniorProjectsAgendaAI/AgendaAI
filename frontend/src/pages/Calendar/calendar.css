@@ -29,6 +29,9 @@
 .calendarButtons button:hover {
   color: #1f8bd1;
 }
+.calendarButtons button:active {
+  color: #1f8bd1;
+}
 
 .calendarViewDisplay {
   background: #fff;
