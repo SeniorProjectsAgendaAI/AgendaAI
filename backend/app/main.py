@@ -1,10 +1,14 @@
+import os
+from dotenv import load_dotenv, find_dotenv
+dotenv_path = find_dotenv()
+print(f"[DEBUG main.py] CWD={os.getcwd()}, find_dotenv()={repr(dotenv_path)}")
+result = load_dotenv()
+print(f"[DEBUG main.py] load_dotenv() returned: {result}")
+print(f"[DEBUG main.py] GOOGLE_CLIENT_ID after load: {repr(os.getenv('GOOGLE_CLIENT_ID'))}")
+
 import time 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-
-# Load environment variables FIRST before any other imports
-load_dotenv()
 
 # DB init
 from app.database.database import init_db
