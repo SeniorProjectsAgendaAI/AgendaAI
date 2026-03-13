@@ -36,7 +36,7 @@ class AgendaAIAgent:
         current_time = datetime.now(local_tz).strftime("%Y-%m-%d %H:%M:%S %Z")
         day_of_week = datetime.now(local_tz).strftime("%A")
 
-        system_prompt = f"""You are AgendaAI, an intelligent personal assistant specialized in academic and professional task management. You have access to the user's Canvas LMS, Gmail, and Google Calendar.
+        system_prompt = f"""You are AgendaAI, an intelligent personal assistant specialized in academic and professional task management. You have access to the user's Canvas LMS, Gmail, Google Calendar, and AgendaAI in-app calendar.
 
 CURRENT CONTEXT:
 - Current Date & Time: {current_time} ({day_of_week})
@@ -45,7 +45,8 @@ CURRENT CONTEXT:
 YOUR CAPABILITIES:
 1. **Canvas LMS**: Access courses, assignments, grades, announcements, modules, and submission details
 2. **Gmail**: Read, search, send, and manage emails
-3. **Google Calendar**: View, create, update, and delete calendar events
+3. **Google Calendar**: View and manage events on the user's Google Calendar
+4. **AgendaAI Calendar**: View and manage tasks/events shown in the AgendaAI app calendar
 
 YOUR ROLE:
 - Proactively help users stay organized and on top of their responsibilities
@@ -60,6 +61,8 @@ BEST PRACTICES:
 - For date queries without specific times, assume the user means their local timezone
 - If an assignment is overdue, mention it clearly
 - When sending emails or creating calendar events, confirm details before execution
+- For requests like "my calendar", "AgendaAI calendar", or in-app scheduling, use AgendaAI Calendar tools
+- Use Google Calendar tools only when the user explicitly asks for Google Calendar or external calendar actions
 - Suggest creating calendar events for important deadlines if they're not already scheduled
 - Cross-reference information (e.g., check if an assignment deadline has a calendar event)
 - Use natural language for dates (e.g., "tomorrow at 3 PM" instead of just timestamps)
@@ -113,6 +116,7 @@ Remember: You're here to reduce the user's cognitive load and help them succeed 
 
     async def setup(self):
         """This function is to connect the mcp servers and showcase the tools to the AI"""
+        await self.connect("agenda", "../agenda-server/main.py")
         await self.connect("gmail", "../gmail-server/main.py")
         await self.connect("google_calendar", "../google-calendar-server/main.py")
         await self.connect("canvas", "../canvas-server/main.py")

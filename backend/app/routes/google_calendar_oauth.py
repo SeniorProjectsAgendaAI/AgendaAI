@@ -46,6 +46,8 @@ async def google_calendar_oauth_start(
     #Returns the authorization URL for the frontend to redirect to.
     
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        print(f"[DEBUG] GOOGLE_CLIENT_ID={repr(GOOGLE_CLIENT_ID)}, GOOGLE_CLIENT_SECRET={repr(GOOGLE_CLIENT_SECRET)}")
+        print(f"[DEBUG] os.getenv check: ID={repr(os.getenv('GOOGLE_CLIENT_ID'))}, SECRET={repr(os.getenv('GOOGLE_CLIENT_SECRET'))}")
         raise HTTPException(
             status_code=500, detail="Google OAuth not configured on server"
         )

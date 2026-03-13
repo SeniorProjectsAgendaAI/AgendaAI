@@ -247,6 +247,13 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                 print(f"   Arguments: {args}")
 
                 try:
+                    #Set user identity for AgendaAI tools
+                    if tool_name.startswith("agenda:"):
+                        user_file = "/tmp/agendaai_user_runtime.json"
+                        with open(user_file, "w") as f:
+                            json.dump({"cognito_sub": cognito_sub}, f)
+                        print(f"   [Using user identity for AgendaAI tools]")
+
                     #Set Google Calendar token in temp file if this is a google_calendar tool
                     if (
                         tool_name.startswith("google_calendar:")
@@ -285,7 +292,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                     else:
 
                         found = False
-                        for prefix in ["google_calendar:", "gmail:", "canvas:"]:
+                        for prefix in ["agenda:", "google_calendar:", "gmail:", "canvas:"]:
                             prefixed_name = f"{prefix}{tool_name}"
                             if prefixed_name in _agent.tool_map:
                                 session, actual_tool_name = _agent.tool_map[
@@ -300,10 +307,28 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                     result = await session.call_tool(actual_tool_name, args)
                     result_text = result.content[0].text
 
+                    #Add explicit calendar target confirmation for event creation.
+                    if actual_tool_name == "create_event":
+                        if tool_name.startswith("agenda:"):
+                            result_text += (
+                                "\n\n[Calendar confirmation] Event was created in: "
+                                "AgendaAI in-app calendar"
+                            )
+                        elif tool_name.startswith("google_calendar:"):
+                            result_text += (
+                                "\n\n[Calendar confirmation] Event was created in: "
+                                "Google Calendar"
+                            )
+
                     #Clear the runtime token files after use
                     if tool_name.startswith("google_calendar:"):
                         try:
                             os.remove("/tmp/agendaai_gcal_runtime_token.json")
+                        except:
+                            pass
+                    if tool_name.startswith("agenda:"):
+                        try:
+                            os.remove("/tmp/agendaai_user_runtime.json")
                         except:
                             pass
                     if tool_name.startswith("gmail:"):
