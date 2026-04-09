@@ -1,12 +1,9 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import CalendarView from "../Calendar/CalendarView";
-
-
 import Profile from "../Profile/Profile";
+import "../../styles/SharedLayout.css"; // <-- ADDED SHARED CSS
 
-
-const  ProfileContainer = () => {
+const ProfileContainer = () => {
   return (
     <div>
       <div className="dashboardHeader">
@@ -14,7 +11,7 @@ const  ProfileContainer = () => {
         <h2>Profile</h2>
       </div>
     
-      {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
+      {/* we Used these groups from the css file in order to organize the dashboard into 3 main panels, left middle and right */}
       <div className="dashboardGroup">
         <Sidebar />
 

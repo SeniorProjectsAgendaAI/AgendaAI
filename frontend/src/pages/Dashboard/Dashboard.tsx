@@ -1,11 +1,12 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import CalendarView from "../Calendar/CalendarView";
+import CalendarView from "../Calendar/CalendarView"; // You can likely remove this import if unused
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import HighPriorityDash from "../HighPriority/HighPriorityDash";
 import DayView from "../Calendar/DayView";
-import "./dashboard.css";
-//container maintained+made by alex+ ankush to make website consistent
+import "../../styles/SharedLayout.css";
+
+// container maintained+made by alex+ ankush to make website consistent
 
 /*
 TODO:
@@ -25,7 +26,7 @@ const Dashboard = () => {
         <h2>Dashboard</h2>
       </div>
     
-      {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
+      {/* we Used these groups from the css file in order to organize the dashboard into 3 main panels, left middle and right */}
       <div className="dashboardGroup">
         <Sidebar />
 
