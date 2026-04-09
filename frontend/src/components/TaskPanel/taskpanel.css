@@ -1,11 +1,19 @@
-.taskPanel {
-  width: 250px;
-  background: var(--nav-bg);
-  height: 95vh;
-  padding: 20px;
-  border-left: 1px solid var(--border-color);
+.taskPanelContainer {
   display: flex;
   flex-direction: column;
+  flex: 1; 
+  min-height: 0; 
+}
+
+.taskPanel {
+  width: 100%;
+  background: var(--nav-bg);
+  flex: 1; 
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 0; 
 }
 
 .panelTitle {

@@ -463,7 +463,7 @@ const TaskPanel = () => {
     };
 
     return (
-        <div>
+        <div className="taskPanelContainer"> 
             <BackButton />
             <div className="taskPanel">
                 <h3 className="panelTitle">Tasks & Events</h3>

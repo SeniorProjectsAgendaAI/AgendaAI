@@ -1,7 +1,7 @@
 .sidebar {
   width: 180px;
   background: var(--nav-bg);
-  height: 100dvh; 
+  height: 100%;
   box-sizing: border-box; 
   padding: 20px;
   display: flex;

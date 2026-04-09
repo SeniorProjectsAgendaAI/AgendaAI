@@ -6,7 +6,7 @@ import "../../styles/SharedLayout.css";
 // container maintained+made by alex to make website consistent
 const CalendarContainer = () => { 
   return (
-    <div>
+    <div className="app-wrapper">
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
         <h2>Calendars</h2>

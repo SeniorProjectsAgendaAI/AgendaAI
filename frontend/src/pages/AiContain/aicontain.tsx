@@ -7,7 +7,7 @@ import "../../styles/SharedLayout.css";
 // not currently functioning due to ai sidebar formatting options
 const AiContain = () => {
   return (
-    <div>
+    <div className="app-wrapper">
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
         <h2>Ai Agent</h2>

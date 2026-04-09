@@ -5,7 +5,7 @@ import "../../styles/SharedLayout.css"; // <-- ADDED SHARED CSS
 
 const ProfileContainer = () => {
   return (
-    <div>
+    <div className="app-wrapper">
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
         <h2>Profile</h2>
