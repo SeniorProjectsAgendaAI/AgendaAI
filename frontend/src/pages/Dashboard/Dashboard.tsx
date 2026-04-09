@@ -32,7 +32,7 @@ const Dashboard = () => {
           <HighPriorityDash />
         </div>
         <div className="rightDash">
-          <TaskPanel />
+          <TaskPanel hideBackButton={true} />
           <AISidebar fullScreen={false} />
         </div>
 

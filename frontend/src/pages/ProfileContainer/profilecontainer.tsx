@@ -1,7 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Profile from "../Profile/Profile";
-import "../../styles/SharedLayout.css"; // <-- ADDED SHARED CSS
+import "../../styles/SharedLayout.css";
 
 const ProfileContainer = () => {
   return (

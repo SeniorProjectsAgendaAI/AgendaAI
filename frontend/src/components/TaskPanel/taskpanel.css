@@ -1,7 +1,9 @@
+/* frontend/src/components/TaskPanel/taskpanel.css */
+
 .taskPanelContainer {
   display: flex;
   flex-direction: column;
-  flex: 1; 
+  flex: 1;
   min-height: 0; 
 }
 
@@ -9,7 +11,7 @@
   width: 100%;
   background: var(--nav-bg);
   flex: 1; 
-  padding: 20px;
+  padding: 15px 15px 0px 15px; 
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -19,12 +21,14 @@
 .panelTitle {
   margin: 0 0 8px;
   color: var(--text-color);
+  flex-shrink: 0; /* Prevents the title from getting squished */
 }
 
 .panelSwitch {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  flex-shrink: 0; /* Prevents the switch buttons from getting squished */
 }
 
 .switchBtn {
@@ -46,8 +50,10 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  flex: 1;
+  flex: 1 1 auto; /* Allows it to take up max space, but shrink if window is small */
+  min-height: 0;  /* CRITICAL: Allows the internal scrollbar to actually work */
   overflow-y: auto;
+  padding-bottom: 10px; 
 }
 
 .taskItem {
@@ -61,15 +67,30 @@
   border-left: 6px solid var(--border-color);
 }
 
-.addTask {
-  margin-top: auto;
-  padding: 10px;
-}
-
 .panelActions {
   margin-top: auto;
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px 0 15px 0; /* Re-balanced padding so it's taller than old, but doesn't eat the list */
+  border-top: 1px solid var(--border-color); 
+  background: var(--nav-bg);
+  flex-shrink: 0; /* Prevents the footer from shrinking when the list gets full */
+}
+
+.addTask {
+  flex: 1; 
+  padding: 10px; /* Slightly tighter so we give more room to the scroll list */
+  background: var(--secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.addTask:hover {
+  background: var(--hover-bg);
 }
 
 .popup {
