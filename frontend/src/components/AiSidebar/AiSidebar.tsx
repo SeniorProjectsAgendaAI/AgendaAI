@@ -321,7 +321,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
           </Link>
         )}
         
-        {/* MODIFIED: Title is now a clickable toggle button */}
+        {/*Title is now a clickable toggle button */}
         <h3 
           onClick={() => setShowConnections(!showConnections)}
           style={{ 

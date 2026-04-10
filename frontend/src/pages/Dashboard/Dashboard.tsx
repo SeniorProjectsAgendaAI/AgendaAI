@@ -28,7 +28,7 @@ const Dashboard = () => {
       <div className="dashboardGroup">
         <Sidebar />
         <div className="centerDash">
-          <DayView />
+          <DayView hideBackButton={true} />
           <HighPriorityDash />
         </div>
         <div className="rightDash">
