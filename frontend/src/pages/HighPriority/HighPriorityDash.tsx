@@ -42,8 +42,8 @@ const HighPriorityDash: React.FC = () => {
     try {
       setLoading(true);
       const [tasksRes, eventsRes] = await Promise.all([
-        api.get<ApiTask[]>("/tasks/"),
-        api.get<ApiEvent[]>("/events/"),
+        api.get<ApiTask[]>("/tasks"),
+        api.get<ApiEvent[]>("/events"),
       ]);
 
       console.log("All tasks from API:", tasksRes.data);

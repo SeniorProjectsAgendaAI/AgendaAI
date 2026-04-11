@@ -168,8 +168,8 @@ const TaskPanel = () => {
         const loadAll = async () => {
             try {
                 const [tasksRes, eventsRes] = await Promise.all([
-                    api.get<ApiTask[]>("/tasks/"),
-                    api.get<ApiEvent[]>("/events/"),
+                    api.get<ApiTask[]>("/tasks"),
+                    api.get<ApiEvent[]>("/events"),
                 ]);
 
                 const mappedTasks = tasksRes.data.map((task) => {
@@ -217,7 +217,7 @@ const TaskPanel = () => {
             return;
         }
         try {
-            const res = await api.post<ApiTask>("/tasks/", {
+            const res = await api.post<ApiTask>("/tasks", {
                 title: newTaskTitle.trim(),
                 description: newTaskDetails.trim() || null,
                 tag: newTaskTag,
@@ -331,7 +331,7 @@ const TaskPanel = () => {
         }
 
         try {
-            const res = await api.post<ApiEvent>("/events/", {
+            const res = await api.post<ApiEvent>("/events", {
                 title: newEventTitle.trim(),
                 description: newEventDescription.trim() || null,
                 start_at: newEventStartAt,
