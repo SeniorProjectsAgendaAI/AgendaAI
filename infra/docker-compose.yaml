@@ -33,5 +33,21 @@ services:
       postgres:
         condition: service_healthy
 
+  agent:
+    build:
+      context: ../mcp-servers
+      dockerfile: agent/Dockerfile
+    container_name: agendaai_agent
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../mcp-servers/agent/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://agendaai:agendaai@postgres:5432/agendaai
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:

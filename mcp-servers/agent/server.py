@@ -24,9 +24,13 @@ load_dotenv()
 app = FastAPI(title="AgendaAI Agent API")
 
 #CORS
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        *[o.strip() for o in CORS_ALLOWED_ORIGINS.split(",") if o.strip()],
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
