@@ -273,7 +273,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
       }
 
       const agentUrl =
-        import.meta.env.VITE_AGENT_URL || "http://localhost:8001";
+        process.env.REACT_APP_AGENT_URL || "http://localhost:8001";
       const response = await axios.post(
         `${agentUrl}/chat`,
         { message: currentInput },
