@@ -98,8 +98,8 @@ const WeekView: React.FC = () => {
       setLoading(true);
       try {
         const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks/"),
-          api.get<ApiEvent[]>("/events/"),
+          api.get<ApiTask[]>("/tasks"),
+          api.get<ApiEvent[]>("/events"),
         ]);
 
         // Map tasks → WeekItem

@@ -55,8 +55,8 @@ const MonthView = () => {
       setLoading(true);
       try {
         const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks/"),
-          api.get<ApiEvent[]>("/events/"),
+          api.get<ApiTask[]>("/tasks"),
+          api.get<ApiEvent[]>("/events"),
         ]);
 
         const taskItems: CalendarItem[] = tasksRes.data.map((task) => {

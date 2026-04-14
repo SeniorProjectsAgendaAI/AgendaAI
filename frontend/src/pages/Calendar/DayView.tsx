@@ -119,7 +119,7 @@ const DayView = () => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const loadTasks = async () => {
-    const res = await api.get<ApiTask[]>("/tasks/");
+    const res = await api.get<ApiTask[]>("/tasks");
     const mapped = res.data.map((task) => {
       const meta = parseTaskDescription(task.description);
       return {
@@ -135,7 +135,7 @@ const DayView = () => {
   };
 
   const loadEvents = async () => {
-    const res = await api.get<ApiEvent[]>("/events/");
+    const res = await api.get<ApiEvent[]>("/events");
     const mapped = res.data.map((event) => {
       const start = new Date(event.start_at);
       const end = new Date(event.end_at);

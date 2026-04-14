@@ -272,8 +272,10 @@ const AISidebar: React.FC<AISidebarProps> = ({
         return;
       }
 
+      const agentUrl =
+        process.env.REACT_APP_AGENT_URL || "http://localhost:8001";
       const response = await axios.post(
-        "http://localhost:8001/chat",
+        `${agentUrl}/chat`,
         { message: currentInput },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -290,7 +292,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         id: (Date.now() + 1).toString(),
         text:
           error.response?.data?.detail ||
-          "Agent server not running. Start it with: cd mcp-servers/agent && uvicorn server:app --reload --port 8001",
+          "AI assistant is temporarily unavailable. Please try again later.",
         isUser: false,
         timestamp: new Date(),
       };
