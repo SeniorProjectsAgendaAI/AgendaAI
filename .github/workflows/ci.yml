@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   backend:
@@ -45,26 +45,29 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+
+    # Clean up: Force all run commands to execute in the frontend directory
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version:  "20"
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
 
-      - name:  Install frontend deps
-        working-directory: frontend
+      - name: Clean Install Dependencies
         run: npm ci
 
-      - name: Run frontend tests
-        working-directory: frontend
-        run: npm test -- --watch=false
-      # Adding a mock amplify_outputs.json to bypass build errors (Ankush)
       - name: Create mock amplify_outputs.json
-        working-directory: frontend/src
-        run: |
-          echo '{}' > amplify_outputs.json
+        run: echo '{}' > src/amplify_outputs.json
+
+      - name: Run frontend tests
+        run: npm test -- --watch=false
 
       - name: Build frontend
-        working-directory: frontend
         run: npm run build
