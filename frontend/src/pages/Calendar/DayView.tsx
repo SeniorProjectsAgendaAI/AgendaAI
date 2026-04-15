@@ -13,6 +13,10 @@ import "./dayview.css";
 import BackButton from "../../components/BackButton";
 import api from "../../services/api";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+interface DayViewProps {
+  hideBackButton?: boolean;
+}
 
 //Task from database
 interface ApiTask {
@@ -96,8 +100,20 @@ const formatTime12Hour = (time24: string): string => {
   return `${hour - 12}:${minute} PM`;
 };
 
-const DayView = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [currentDate, setCurrentDate] = useState(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      const [year, month, day] = dateParam.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date();
+  });
+
   const [events, setEvents] = useState<Event[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -365,22 +381,30 @@ const DayView = () => {
   return (
     <div className="dayViewContainer">
       <div className="dayViewContent">
+        {!hideBackButton && (
+          <button 
+            className="back-button" 
+            onClick={() => navigate('/calendarcontainer', { 
+              state: { returnTo: location.state?.fromView || 'month' } 
+            })}
+            style={{ marginBottom: '20px' }}
+          >
+            ← Back to Calendar
+          </button>
+        )}
         <div className="dayViewHeader">
-          {/* 
-          <div className="back-button-wrapper">
-            <BackButton />
-          </div>
-          */}
           <h2>Today's Agenda</h2>
-          <div className="dateNavigation">
-            <button onClick={goToPreviousDay}>← Previous</button>
-            <button onClick={goToToday}>Today</button>
-            <button onClick={goToNextDay}>Next →</button>
-            <button onClick={loadAll}> Refresh</button>
+          <div className="headerControls">
+            <div className="currentDate">{formatDate(currentDate)}</div>
+            
+            <div className="dateNavigation">
+              <button onClick={goToPreviousDay}>← Previous</button>
+              <button onClick={goToToday}>Today</button>
+              <button onClick={goToNextDay}>Next →</button>
+              <button onClick={loadAll}>Refresh</button>
+            </div>
           </div>
-          <div className="currentDate">{formatDate(currentDate)}</div>
         </div>
-
         {loading ? (
           <div className="loadingMessage">Loading tasks...</div>
         ) : (
