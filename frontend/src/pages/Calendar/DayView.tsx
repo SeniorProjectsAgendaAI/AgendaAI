@@ -8,7 +8,7 @@ TODO:
 */
 
 /* Progress Bar - Alex*/
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./dayview.css";
 import BackButton from "../../components/BackButton";
 import api from "../../services/api";
@@ -101,6 +101,7 @@ const formatTime12Hour = (time24: string): string => {
 };
 
 const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
+  const dayViewContentRef = useRef<HTMLDivElement | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -148,6 +149,15 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     }, 60000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!isViewingToday) return;
+    const container = dayViewContentRef.current;
+    if (!container) return;
+
+    const targetScrollTop = Math.max(0, nowTop - container.clientHeight * 0.35);
+    container.scrollTop = targetScrollTop;
+  }, [isViewingToday, nowTop, currentDate]);
 
   const loadTasks = async () => {
     const res = await api.get<ApiTask[]>("/tasks");
@@ -395,7 +405,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
 
   return (
     <div className="dayViewContainer">
-      <div className="dayViewContent">
+      <div className="dayViewContent" ref={dayViewContentRef}>
         {!hideBackButton && (
           <button 
             className="back-button" 

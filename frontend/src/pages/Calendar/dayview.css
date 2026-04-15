@@ -331,6 +331,41 @@
   position: relative;
 }
 
+.dayNowLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #db4437;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.dayNowDot {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #db4437;
+  transform: translateY(-50%);
+}
+
+.dayNowLabel {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #db4437;
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .hourBlock {
   height: 60px;
   border-bottom: 1px solid var(--border-color);
