@@ -117,6 +117,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(() => new Date());
 
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editTaskName, setEditTaskName] = useState("");
@@ -133,6 +134,20 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   const [editEventColor, setEditEventColor] = useState("");
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  const today = new Date();
+  const isViewingToday =
+    currentDate.getFullYear() === today.getFullYear() &&
+    currentDate.getMonth() === today.getMonth() &&
+    currentDate.getDate() === today.getDate();
+  const nowTop = ((now.getHours() * 60 + now.getMinutes()) / 60) * 60;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loadTasks = async () => {
     const res = await api.get<ApiTask[]>("/tasks");
@@ -619,6 +634,12 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                 ))}
               </div>
               <div className="eventsColumn">
+                {isViewingToday && (
+                  <div className="dayNowLine" style={{ top: nowTop }} aria-label="Current time indicator">
+                    <span className="dayNowDot" />
+                    <span className="dayNowLabel">Now</span>
+                  </div>
+                )}
                 {hours.map((hour) => (
                   <div key={hour} className="hourBlock">
                     {todayEvents

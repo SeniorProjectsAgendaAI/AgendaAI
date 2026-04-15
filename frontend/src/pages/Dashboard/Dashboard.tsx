@@ -2,21 +2,12 @@ import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import HighPriorityDash from "../HighPriority/HighPriorityDash";
-import DayView from "../Calendar/DayView";
+// import DayView from "../Calendar/DayView";
+import WeekView from "../Calendar/WeekView";
 import AISidebar from "../../components/AiSidebar/AiSidebar";
 import "../../styles/SharedLayout.css";
 
 // container maintained+made by alex+ ankush to make website consistent
-
-/*
-TODO:
-- Make more like mockup
---> organize today's agenda and play around with its styling
-- Make agenda and priority tasks fit on one standard page.
-- Add an option for overdue tasks and reflect that on the day view.
-- Make task and events more of a 'todo'
-- move new event button to top right corner
-*/
 
 const Dashboard = () => {
   const [taskRefreshCounter, setTaskRefreshCounter] = React.useState(0);
@@ -30,7 +21,7 @@ const Dashboard = () => {
       <div className="dashboardGroup">
         <Sidebar />
         <div className="centerDash">
-          <DayView hideBackButton={true} />
+          <WeekView embedded />
           <HighPriorityDash />
         </div>
         <div className="rightDash">

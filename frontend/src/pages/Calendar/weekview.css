@@ -1,184 +1,463 @@
 .weekViewContainer {
   display: flex;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   background: var(--bg-color);
+}
+
+.weekViewContainer.standalone {
+  min-height: 100vh;
+}
+
+.weekViewContainer.embedded {
+  height: 100%;
 }
 
 .weekViewContent {
+  display: flex;
   flex: 1;
+  min-height: 0;
+  flex-direction: column;
   background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.weekViewContent.standalone {
   padding: 20px;
-  overflow-y: auto;
+}
+
+.weekViewContent.embedded {
+  padding: 0;
 }
 
 .weekViewHeader {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.weekHeaderTitleRow {
   display: flex;
   flex-direction: column;
-  gap: 15px; 
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--border-color);
+  gap: 14px;
 }
 
 .weekViewHeader h2 {
   margin: 0;
   font-size: 24px;
-  text-align: left; 
-  color: var(--text-color);
+  line-height: 1.1;
 }
 
 .headerControls {
   display: flex;
-  justify-content: space-between; 
-  align-items: center; 
-  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .weekRange {
-  font-size: 16px;
-  font-weight: 500;
-  color: #888; 
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .weekNavigation {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.weekNavigation button,
+.weekCreateMenu button,
+.weekFormActions button {
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  color: var(--text-color);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .weekNavigation button {
-  padding: 6px 12px;
-  border: 1px solid var(--border-color);
-  background: var(--secondary-bg);
-  color: var(--text-color);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s ease;
+  padding: 8px 14px;
 }
 
-.weekNavigation button:hover {
+.weekNavigation button:hover,
+.weekCreateMenu button:hover,
+.weekFormActions button:hover {
   background: var(--hover-bg);
 }
 
+.weekNavigation button:active,
+.weekCreateMenu button:active,
+.weekFormActions button:active {
+  transform: translateY(1px);
+}
+
 .weekLoading {
+  padding: 40px 0;
   text-align: center;
   color: var(--text-muted);
-  margin-top: 40px;
 }
 
-.weekGrid {
+.weekCalendarShell {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin-top: 16px;
+}
+
+.weekCalendar {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  min-width: 100%;
+  align-items: stretch;
 }
 
-.weekDay {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
+.weekCalendarCorner,
+.weekDayHeaderCell,
+.weekTimeColumn,
+.weekDayColumn {
+  background: var(--bg-color);
 }
 
-.weekDay.weekDayToday {
-  border-color: var(--primary-accent);
-  box-shadow: 0 0 0 2px rgba(31, 139, 209, 0.25);
-}
-
-.weekDayHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
+.weekCalendarCorner,
+.weekDayHeaderCell {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   border-bottom: 1px solid var(--border-color);
 }
 
+.weekCalendarCorner {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 1px solid var(--border-color);
+}
+
+.weekDayHeaderCell {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-left: 1px solid var(--border-color);
+}
+
+.weekDayHeaderCell.weekDayToday {
+  background: rgba(79, 109, 224, 0.08);
+}
+
 .weekDayName {
-  font-weight: 600;
   font-size: 13px;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .weekDayNumber {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-color);
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
 }
 
 .todayBadge {
   background: var(--primary-accent);
   color: #fff;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
 }
 
-.weekDayTasks {
-  flex: 1;
-  padding: 6px 8px;
+.weekTimeColumn {
+  grid-column: 1;
+  grid-row: 2;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 1px solid var(--border-color);
+}
+
+.weekTimeSlot {
+  height: 72px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 10px 10px 0 0;
+  box-sizing: border-box;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.weekDayColumn {
+  grid-row: 2;
+  position: relative;
+  min-height: 1728px;
+  border-left: 1px solid var(--border-color);
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(72px - 1px),
+    rgba(127, 127, 127, 0.16) calc(72px - 1px),
+    rgba(127, 127, 127, 0.16) 72px
+  );
+  background-size: 100% 72px;
+  background-repeat: repeat-y;
+}
+
+.weekDayColumn.weekDayToday {
+  background-color: rgba(79, 109, 224, 0.04);
+}
+
+.weekHourSlots {
+  position: relative;
+  z-index: 1;
+}
+
+.weekHourSlotButton {
+  display: block;
+  width: 100%;
+  height: 72px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.16);
+  background: transparent;
+  cursor: pointer;
+}
+
+.weekHourSlotButton:hover {
+  background: rgba(79, 109, 224, 0.06);
+}
+
+.weekEventLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.weekNowLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #db4437;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.weekNowDot {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #db4437;
+  transform: translateY(-50%);
+}
+
+.weekNowLabel {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #db4437;
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.weekEventCard {
+  position: absolute;
+  left: 8px;
+  right: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  overflow-y: auto;
-}
-
-.noTasks {
-  color: var(--text-muted);
-  text-align: center;
-  margin-top: 10px;
-}
-
-.weekTask {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  border-left: 3px solid;
-  background: var(--bg-color);
-  border-top: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary-accent);
+  background: color-mix(in srgb, var(--secondary-bg) 88%, transparent);
   color: var(--text-color);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  overflow: hidden;
 }
 
-.weekTask.priority-high {
-  border-left-color: #e74c3c;
+.weekEventCard.task {
+  background: color-mix(in srgb, var(--secondary-bg) 94%, transparent);
 }
 
-.weekTask.priority-medium {
-  border-left-color: #f39c12;
+.weekEventCard.event {
+  background: color-mix(in srgb, var(--secondary-bg) 88%, transparent);
 }
 
-.weekTask.priority-low {
-  border-left-color: #27ae60;
-}
-
-.weekTask.week-event {
-  border-left-color: var(--primary-accent);
-}
-
-.weekTask.taskCompleted {
-  opacity: 0.5;
+.weekEventCard.taskCompleted {
+  opacity: 0.55;
   text-decoration: line-through;
 }
 
-.weekTaskTime {
-  font-weight: 600;
-  white-space: nowrap;
+.weekEventTime {
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.weekTaskName {
+.weekEventTitle {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.weekPriorityTag {
+  margin-top: auto;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.weekPriorityTag.high {
+  background: rgba(231, 76, 60, 0.16);
+  color: #b93b2d;
+}
+
+.weekPriorityTag.medium {
+  background: rgba(243, 156, 18, 0.16);
+  color: #ba7600;
+}
+
+.weekPriorityTag.low {
+  background: rgba(39, 174, 96, 0.14);
+  color: #1d7f45;
+}
+
+.weekCreateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(16, 24, 40, 0.12);
+}
+
+.weekCreateMenu,
+.weekCreateModal {
+  position: fixed;
+  z-index: 1001;
+  background: var(--secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+}
+
+.weekCreateMenu {
+  width: 220px;
+  padding: 12px;
+}
+
+.weekCreateMenuTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.weekCreateMenuSubtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.weekCreateMenu button {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+
+.weekCreateModal {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+}
+
+.weekCreateModal h3 {
+  margin: 0 0 14px;
+}
+
+.weekCreateModal label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.weekCreateModal input,
+.weekCreateModal textarea,
+.weekCreateModal select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.weekCreateModal textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.weekFormRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weekFormActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.weekFormActions button {
+  padding: 10px 14px;
+}
+
+.weekFormActions .secondary {
+  background: transparent;
+}
+
+@media (max-width: 1100px) {
+  .weekCalendar {
+    min-width: 980px;
+  }
 }
