@@ -111,6 +111,8 @@ class Event(Base):
     color = Column(String, nullable=True)
     location = Column(String, nullable=True)
     status = Column(String, nullable=False, default="scheduled")
+    source = Column(String(50), nullable=False, default="manual")  
+    external_event_id = Column(String(255), nullable=True)  
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
