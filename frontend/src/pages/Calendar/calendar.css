@@ -1,8 +1,6 @@
-/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
-/*(Alex) standard padding and experimenting with heights mnaually*/
 .calendarcontainer {
   height: 100vh;
-  background: #fafafa;
+  background: var(--bg-color);
   position: relative;
   padding: 20px;
 }
@@ -17,30 +15,32 @@
   margin-bottom: 20px;
   align-items: center;
   justify-content: center;
-
 }
+
 .calendarButtons button {
   background: none;
   border: none;
-  color: white;
+  color: var(--text-color);
   font-size: 15px;
   cursor: pointer;
 }
+
 .calendarButtons button:hover {
-  color: #1f8bd1;
+  color: var(--primary-accent);
 }
+
 .calendarButtons button:active {
-  color: #1f8bd1;
+  color: var(--primary-accent);
 }
 
 .calendarViewDisplay {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
   height: 80vh;
   padding: 20px;
 }
 
 .timeSlot {
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
 }

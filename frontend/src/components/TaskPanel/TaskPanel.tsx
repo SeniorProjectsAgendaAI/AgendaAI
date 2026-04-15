@@ -63,6 +63,11 @@ interface ApiEvent {
     updated_at: string;
 }
 
+// NEW: Added the prop interface here at the top
+interface TaskPanelProps {
+    hideBackButton?: boolean;
+}
+
 const TAG_COLORS: Record<string, string> = {
     Homework: "#4A90E2",
     Quiz: "#F5A623",
@@ -116,7 +121,8 @@ const formatDateTimeLabel = (value: string) => {
     return date.toLocaleString();
 };
 
-const TaskPanel = () => {
+// MODIFIED: Added the prop to the component signature
+const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     const [view, setView] = React.useState<"tasks" | "events">("tasks");
     const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(null);
 
@@ -463,8 +469,8 @@ const TaskPanel = () => {
     };
 
     return (
-        <div>
-            <BackButton />
+        <div className="taskPanelContainer"> 
+            {!hideBackButton && <BackButton />}
             <div className="taskPanel">
                 <h3 className="panelTitle">Tasks & Events</h3>
                 <div className="panelSwitch">

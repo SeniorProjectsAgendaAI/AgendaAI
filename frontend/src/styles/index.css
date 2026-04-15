@@ -1,13 +1,37 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root 
+{
+  /* Light Mode Equivalents */
+  --bg-color: #f0f2f5;       /* Main app background */
+  --secondary-bg: #ffffff;   /* Cards, panels, view displays */
+  --nav-bg: #ffffff;         /* Header/Sidebar background */
+  --text-color: #111111;     /* Standard text */
+  --text-muted: #666666;     /* Subtitles, times, less important text */
+  --primary-accent: #1f8bd1; /* The blue tone accent */
+  --nav-text: #111111;       /* Sidebar text */
+  --border-color: #dddddd;   /* Dividers and borders */
+  --hover-bg: #e4e6eb;       /* Button hovers */
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+[data-theme="dark"] 
+{
+  /* Dark Mode Colors */
+  --bg-color: #121212;       /* Main app background */
+  --secondary-bg: #1e1e1e;   /* Cards, panels, view displays */
+  --nav-bg: #000000;         /* Header and Sidebar */
+  --text-color: #ffffff;     /* Standard text */
+  --text-muted: #aaaaaa;     /* Subtitles, times, less important text */
+  --primary-accent: #1f8bd1; /* The blue tone accent */
+  --nav-text: #ffffff;       /* Sidebar text */
+  --border-color: #333333;   /* Dividers and borders */
+  --hover-bg: #2a2a2a;       /* Button hovers */
+}
+
+body 
+{
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

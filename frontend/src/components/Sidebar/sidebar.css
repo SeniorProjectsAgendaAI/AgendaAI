@@ -1,45 +1,43 @@
-/*takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
 .sidebar {
   width: 180px;
-  background: #000000;
-  height: 100dvh; /* dynamic viewport height*/
-  box-sizing: border-box; /* include padding in the height to prevent overflow */
+  background: var(--nav-bg);
+  height: 100%;
+  box-sizing: border-box; 
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  border-right: 1px solid var(--border-color);
 }
 
 .navigationItem {
   padding: 10px;
   text-decoration: none;
-  /*background: #000000;*/
-  color: rgb(255, 255, 255);
+  color: var(--nav-text);
   border-radius: 5px;
   text-align: center;
+  transition: background 0.2s, color 0.2s;
 }
 
-/* highlight active page automatically */
-.navigationItem.active {
-  /*background: #4a90e2;*/
-  color: #1f8bd1;
+.navigationItem:hover { background: var(--hover-bg); }
+.navigationItem.active { color: var(--primary-accent); font-weight: bold; }
 
-}
-
-/* push logout to bottom of sidebar */
 .navigationItemlogout {
   margin-top: auto;
-  background-color: rgb(255, 255, 255);
+  background-color: transparent;
   border: none;
 }
 
-.navigationItemlogout button
-{
-  color:white;
-  background-color: black;
+.navigationItemlogout button {
+  color: var(--nav-text);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
 }
-.navigationItemlogout button:hover
-{
-  color: #1f8bd1;
-  
+
+.navigationItemlogout button:hover 
+{ 
+  color: var(--primary-accent); 
 }
