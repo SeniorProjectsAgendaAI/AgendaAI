@@ -2,6 +2,7 @@ import React from "react";
 import "./taskpanel.css";
 import api from "../../services/api";
 import BackButton from "../BackButton";
+import { useRef, useEffect } from "react";
 //currently there is no mcp integration with task creations all manual because the database doesnt currently support tasks
 //task making by alex, editing +deletion by bini
 //basically making a task its own object ish
@@ -66,6 +67,7 @@ interface ApiEvent {
 // NEW: Added the prop interface here at the top
 interface TaskPanelProps {
     hideBackButton?: boolean;
+    refreshTrigger?: number;
 }
 
 const TAG_COLORS: Record<string, string> = {
@@ -122,9 +124,21 @@ const formatDateTimeLabel = (value: string) => {
 };
 
 // MODIFIED: Added the prop to the component signature
-const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
+const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTrigger = 0 }) => {
     const [view, setView] = React.useState<"tasks" | "events">("tasks");
     const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(null);
+    const [showCreateMenu, setShowCreateMenu] = React.useState(false);
+    const createMenuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) {
+                setShowCreateMenu(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const [tasks, setTasks] = React.useState<Task[]>([]);
     const [events, setEvents] = React.useState<EventItem[]>([]);
@@ -215,7 +229,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         };
 
         loadAll();
-    }, []);
+    }, [refreshTrigger]);
 
     const addTask = async () => {
         if (!newTaskTitle.trim() || !newTaskDate || !newTaskTime || !newTaskPriority) {
@@ -661,12 +675,21 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                 )}
 
                 <div className="panelActions">
-                    <button className="addTask" onClick={() => setActiveForm("task")}>
-                        Add Task
-                    </button>
-                    <button className="addTask" onClick={() => setActiveForm("event")}>
-                        Add Event
-                    </button>
+                    <div className="createNewWrapper" ref={createMenuRef}>
+                        <button className="addTask" onClick={() => setShowCreateMenu((prev) => !prev)}>
+                            + Create New ▾
+                        </button>
+                        {showCreateMenu && (
+                            <div className="createNewMenu">
+                                <button onClick={() => { setActiveForm("task"); setShowCreateMenu(false); }}>
+                                    Task
+                                </button>
+                                <button onClick={() => { setActiveForm("event"); setShowCreateMenu(false); }}>
+                                    Event
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {activeForm === "task" && (

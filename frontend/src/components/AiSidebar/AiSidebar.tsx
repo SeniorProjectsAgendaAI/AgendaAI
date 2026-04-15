@@ -30,12 +30,14 @@ interface AISidebarProps {
   isOpen?: boolean;
   onToggle?: () => void;
   fullScreen?: boolean;
+  onAgentResponse?: () => void;
 }
 
 const AISidebar: React.FC<AISidebarProps> = ({
   isOpen: propIsOpen,
   onToggle,
   fullScreen = false,
+  onAgentResponse,
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(true);
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
@@ -290,6 +292,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+      onAgentResponse?.();
     } catch (error: any) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

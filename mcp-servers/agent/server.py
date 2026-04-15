@@ -50,9 +50,9 @@ class ChatResponse(BaseModel):
     response: str
 
 
-#General agent instance and chat session
+#General agent instance and per-user chat sessions
 _agent = None
-_chat_session = None
+_user_chat_sessions: dict = {}
 _gemini_tools = []
 
 
@@ -163,8 +163,6 @@ async def startup():
             )
         )
 
-    #Start chat session with MCP tools
-    _chat_session = _agent.model.start_chat(enable_automatic_function_calling=False)
     print(f"Agent ready with {len(_gemini_tools)} tools!")
 
 
@@ -221,9 +219,17 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
         print(f"[Agent] No Canvas token found for user {cognito_sub}")
         _agent.current_user_canvas_token = None
 
+    #Get or create a per-user chat session so histories don't cross between users
+    if cognito_sub not in _user_chat_sessions:
+        _user_chat_sessions[cognito_sub] = _agent.model.start_chat(
+            enable_automatic_function_calling=False
+        )
+        print(f"[Agent] Created new chat session for user {cognito_sub[:8]}...")
+    chat_session = _user_chat_sessions[cognito_sub]
+
     try:
         #Send message with tools
-        response = _chat_session.send_message(request.message, tools=_gemini_tools)
+        response = chat_session.send_message(request.message, tools=_gemini_tools)
 
         #Handle function calling loop
         max_iterations = 10
@@ -392,7 +398,7 @@ async def chat(request: ChatRequest, cognito_sub: str = Depends(get_current_user
                         )
                     )
 
-            response = _chat_session.send_message(function_responses)
+            response = chat_session.send_message(function_responses)
             iteration += 1
 
         return ChatResponse(response=response.text)

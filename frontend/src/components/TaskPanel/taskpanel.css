@@ -72,9 +72,49 @@
   display: flex;
   gap: 10px;
   padding: 12px 0 15px 0; /* Re-balanced padding so it's taller than old, but doesn't eat the list */
-  border-top: 1px solid var(--border-color); 
+  border-top: 1px solid var(--border-color);
   background: var(--nav-bg);
   flex-shrink: 0; /* Prevents the footer from shrinking when the list gets full */
+}
+
+.createNewWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.createNewWrapper .addTask {
+  width: 100%;
+}
+
+.createNewMenu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  z-index: 200;
+}
+
+.createNewMenu button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text-color);
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.createNewMenu button:hover {
+  background: var(--hover-bg);
 }
 
 .addTask {

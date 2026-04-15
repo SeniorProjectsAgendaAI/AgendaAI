@@ -80,7 +80,7 @@ const Login = () => {
 
         <Flex alignItems='center' gap='1rem' width="100%"> 
           <Heading level={4} color="white">AgendaAI</Heading>
-          <div style = {{ height: '2px', backgroundColor: 'gray', flexGrow: 1, }}></div>
+          <div style = {{ height: '2px', backgroundColor: 'gray', flexGrow: 1, fontSize: "10rem"}}></div>
         </Flex>
 
         <View marginTop="20%" marginBottom="auto">

@@ -74,6 +74,11 @@ HANDLING REQUESTS:
 - Provide summaries for large amounts of data
 - Ask for clarification only when truly necessary
 
+CRITICAL - DATA FRESHNESS:
+- NEVER rely on conversation history to determine whether a task or event currently exists
+- Before confirming or denying the existence of any task or event, ALWAYS call list_tasks or list_events to get the live state from the database
+- A task or event mentioned earlier in this conversation may have been deleted by the user — always verify with a tool call before acting on it
+
 Remember: You're here to reduce the user's cognitive load and help them succeed academically and professionally."""
 
         self.model = genai.GenerativeModel(

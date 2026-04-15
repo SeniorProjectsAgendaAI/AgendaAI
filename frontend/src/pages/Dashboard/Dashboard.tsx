@@ -10,15 +10,17 @@ import "../../styles/SharedLayout.css";
 
 /*
 TODO:
-- Make more like mockup 
---> organize today's agenda and play around with its styling 
-- Make agenda and priority tasks fit on one standard page. 
+- Make more like mockup
+--> organize today's agenda and play around with its styling
+- Make agenda and priority tasks fit on one standard page.
 - Add an option for overdue tasks and reflect that on the day view.
 - Make task and events more of a 'todo'
-- move new event button to top right corner 
-*/ 
+- move new event button to top right corner
+*/
 
 const Dashboard = () => {
+  const [taskRefreshCounter, setTaskRefreshCounter] = React.useState(0);
+
   return (
     <div className="app-wrapper"> {/* <-- GLOBAL WRAPPER */}
       <div className="dashboardHeader">
@@ -32,8 +34,8 @@ const Dashboard = () => {
           <HighPriorityDash />
         </div>
         <div className="rightDash">
-          <TaskPanel hideBackButton={true} />
-          <AISidebar fullScreen={false} />
+          <TaskPanel hideBackButton={true} refreshTrigger={taskRefreshCounter} />
+          <AISidebar fullScreen={false} onAgentResponse={() => setTaskRefreshCounter((c) => c + 1)} />
         </div>
 
       </div>

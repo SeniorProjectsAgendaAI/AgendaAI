@@ -37,9 +37,8 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    # allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
-    allow_origin_regex=r"https://.*\.d2i3jqbsdy4snq\.amplifyapp\.com",
+    # Matches localhost:3000 AND any Amplify Gen 2 branch URL
+    allow_origin_regex=r"^http://localhost:3000$|^https://[a-zA-Z0-9-]+\.[a-zA-Z0-9]+\.amplifyapp\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
