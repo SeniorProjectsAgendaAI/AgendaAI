@@ -14,6 +14,16 @@ interface ApiTask {
   completed: boolean;
 }
 
+interface ApiEvent {
+  id: number;
+  title: string;
+  description?: string | null;
+  start_at: string;
+  end_at: string;
+  status?: string;
+  source?: string;
+}
+
 interface DashItem {
   id: string;
   type: "task" | "event";
@@ -103,7 +113,6 @@ const HighPriorityDash: React.FC = () => {
         });
 
       console.log("High priority tasks after filtering:", highPriorityTasks);
-
 
       const sorted = highPriorityTasks.sort((a, b) => {
         if (a.priority !== b.priority) {

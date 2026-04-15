@@ -64,6 +64,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [isCanvasConnected, setIsCanvasConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [showConnections, setShowConnections] = useState(false);
 
   useEffect(() => {
     checkGoogleCalendarConnection();
@@ -319,16 +320,16 @@ const AISidebar: React.FC<AISidebarProps> = ({
             ← Back
           </Link>
         )}
-        
+
         {/*Title is now a clickable toggle button */}
-        <h3 
+        <h3
           onClick={() => setShowConnections(!showConnections)}
-          style={{ 
-            cursor: "pointer", 
-            display: "flex", 
-            alignItems: "center", 
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
             gap: "8px",
-            userSelect: "none"
+            userSelect: "none",
           }}
           title="Toggle Connected Services"
         >

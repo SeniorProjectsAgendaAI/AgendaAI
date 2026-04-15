@@ -13,7 +13,7 @@ const Sidebar = () => {
             Dashboard
         </NavLink>
         <NavLink to="/aisidebar" className="navigationItem">
-            Ai Agent
+            AI Agent
         </NavLink>
         <NavLink to="/calendarcontainer" className="navigationItem">
             Calendars
