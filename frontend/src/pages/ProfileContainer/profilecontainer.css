@@ -1,0 +1,31 @@
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/ */
+/*(Alex) used the flex system to organize the 3 pannel format*/
+.dashboardGroup {
+    display: flex;
+    height:100vh;
+    background: #171717; /*this is the backing of taskk pannel by default*/
+}
+
+.centerDash {
+    flex: 1;
+    background: #171717;
+
+}
+.dashboardHeader {
+    background: #000000;
+    color: rgb(255, 255, 255);
+    text-align: Left;
+    padding: 1px;
+    padding-left: 20px;
+    font-size: 20px;
+}
+.dashboardHeader h1 {
+    margin: 0;
+    
+}
+.dashboardHeader h2 {
+    margin: 0;
+    
+    text-align: center;
+    
+}

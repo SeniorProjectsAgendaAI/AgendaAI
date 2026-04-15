@@ -1,37 +1,34 @@
 .ai-sidebar {
-  background: var(--nav-bg);
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
-  transition: height 0.3s ease;
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  background: #000000;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+  transition: width 0.3s ease;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
-  color: var(--text-color);
-  border-top: 1px solid var(--border-color);
+  color: white;
 }
 
 .ai-sidebar.open {
-  height: 450px; 
-  width: 100%;
+  width: 350px;
 }
 
 .ai-sidebar.closed {
-  height: 60px; 
-  width: 100%;
-  overflow: hidden;
+  width: 50px;
 }
 
 .ai-sidebar.fullscreen {
-  position: fixed !important;
-  top: 0;
-  left: 0;
   width: 100vw !important;
-  height: 100vh !important;
-  z-index: 1000;
-  border: none;
+  position: relative;
+  right: auto;
 }
 
 .sidebar-header {
   padding: 1rem;
-  border-bottom: 1px solid var(--border-color); /* Changed from rgba */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -40,9 +37,9 @@
 }
 
 .back-btn {
-  background: var(--secondary-bg); /* Changed from rgba */
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
@@ -53,7 +50,7 @@
 }
 
 .back-btn:hover {
-  background: var(--hover-bg);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .ai-sidebar.fullscreen .sidebar-header {
@@ -72,9 +69,9 @@
 }
 
 .toggle-btn {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
   padding: 0.5rem;
   border-radius: 4px;
   cursor: pointer;
@@ -83,12 +80,12 @@
 }
 
 .toggle-btn:hover {
-  background: var(--hover-bg);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .connections-section {
   padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .connections-section h4 {
@@ -125,24 +122,24 @@
 }
 
 .connect-btn {
-  background: var(--secondary-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .connect-btn:hover {
-  background: var(--hover-bg);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .disconnect-btn {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .disconnect-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .ai-sidebar.fullscreen .messages-container {
@@ -195,14 +192,14 @@
 }
 
 .message.user .message-content {
-  background: var(--primary-accent);
+  background: #4a90e2;
   color: white;
 }
 
 .message.ai .message-content {
-  background: var(--secondary-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.95);
+  color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .message-content p {
@@ -224,19 +221,19 @@
 }
 .input-container {
   padding: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   gap: 0.5rem;
-  background: var(--nav-bg);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .input-container textarea {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  background: var(--bg-color);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
   font-family: inherit;
   font-size: 0.9rem;
   resize: none;
@@ -245,16 +242,17 @@
 
 .input-container textarea:focus {
   outline: none;
-  border-color: var(--primary-accent);
+  border-color: #4a90e2;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .input-container textarea::placeholder {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .input-container button {
   padding: 0.75rem 1.5rem;
-  background: var(--primary-accent);
+  background: #4a90e2;
   color: white;
   border: none;
   border-radius: 8px;
@@ -266,7 +264,7 @@
 }
 
 .input-container button:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #357abd;
 }
 
 .input-container button:disabled {
@@ -279,14 +277,14 @@
 }
 
 .messages-container::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .messages-container::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 
 .messages-container::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(255, 255, 255, 0.3);
 }
