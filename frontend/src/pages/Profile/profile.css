@@ -1,50 +1,14 @@
-.profile 
+.profile
 {
-    color: var(--text-color); /* <-- CHANGED FROM white TO DYNAMIC VARIABLE */
+    color: white;
     display: flex;
     justify-content: center; 
     align-items: center; 
     flex-direction: column; 
-    gap: 15px; /* Added a gap so the buttons and text don't touch */
 }
-
-img 
+img
 {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-}
-
-.themeToggleBtn 
-{
-    padding: 10px 20px;
-    background-color: var(--primary-accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s ease;
-}
-
-.themeToggleBtn:hover 
-{
-    opacity: 0.9;
-}
-
-.logoutBtn 
-{
-    padding: 10px 20px;
-    background-color: transparent;
-    color: var(--text-color);
-    border: 1px solid var(--text-color);
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.logoutBtn:hover 
-{
-    background-color: var(--text-color);
-    color: var(--bg-color);
 }

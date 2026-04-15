@@ -17,8 +17,11 @@ interface ApiTask {
 interface ApiEvent {
   id: number;
   title: string;
+  description?: string | null;
   start_at: string;
   end_at: string;
+  status?: string;
+  source?: string;
 }
 
 interface DashItem {
@@ -47,7 +50,6 @@ const HighPriorityDash: React.FC = () => {
       ]);
 
       console.log("All tasks from API:", tasksRes.data);
-      console.log("All events from API:", eventsRes.data);
 
       const now = new Date();
       const threeDaysFromNow = new Date(now);
@@ -79,7 +81,6 @@ const HighPriorityDash: React.FC = () => {
             return false;
           }
 
-          
           const timeStr = task.due_time || "00:00:00";
           const formattedTime =
             timeStr.includes(":") && timeStr.split(":").length === 2
@@ -92,7 +93,6 @@ const HighPriorityDash: React.FC = () => {
             `  Is before threshold: ${dueDateTime <= threeDaysFromNow}`,
           );
 
-        
           return dueDateTime <= threeDaysFromNow;
         })
         .map((task) => {
@@ -114,55 +114,15 @@ const HighPriorityDash: React.FC = () => {
 
       console.log("High priority tasks after filtering:", highPriorityTasks);
 
-      //Filter upcoming events
-      const upcomingEvents: DashItem[] = eventsRes.data
-        .filter((event) => {
-          console.log(`Event: ${event.title}`);
-          console.log(`  Start: ${event.start_at}`);
-          const eventStart = new Date(event.start_at);
-          console.log(`  Start parsed: ${eventStart}`);
-          console.log(`  Is after now: ${eventStart >= now}`);
-          console.log(`  Is before threshold: ${eventStart <= threeDaysFromNow}`);
-          return eventStart >= now && eventStart <= threeDaysFromNow;
-        })
-        .map((event) => ({
-          id: `event-${event.id}`,
-          type: "event" as const,
-          title: event.title,
-          dueDate: new Date(event.start_at),
-        }));
-
-      console.log("Upcoming events after filtering:", upcomingEvents);
-      const combined = [...highPriorityTasks, ...upcomingEvents].sort(
-        (a, b) => {
-
-          if (a.priority && b.priority) {
-            if (a.priority !== b.priority) {
-              return b.priority - a.priority; 
-            }
-          }
-
-          if (
-            a.priority &&
-            a.priority >= 3 &&
-            (!b.priority || b.priority < 3)
-          ) {
-            return -1;
-          }
-          if (
-            b.priority &&
-            b.priority >= 3 &&
-            (!a.priority || a.priority < 3)
-          ) {
-            return 1;
-          }
-
-          return a.dueDate.getTime() - b.dueDate.getTime();
-        },
-      );
+      const sorted = highPriorityTasks.sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return (b.priority ?? 0) - (a.priority ?? 0);
+        }
+        return a.dueDate.getTime() - b.dueDate.getTime();
+      });
 
       //top 5
-      setItems(combined.slice(0, 5));
+      setItems(sorted.slice(0, 5));
     } catch (err) {
       console.error("Failed to load high priority items", err);
     } finally {
@@ -220,7 +180,7 @@ const HighPriorityDash: React.FC = () => {
     <div className="highPriorityDash">
       <div className="dashHeader">
         <span className="starIcon"></span>
-        <h3>High Priority Tasks / Coming up</h3>
+        <h3>High Priority Tasks</h3>
       </div>
       <div className="dashContent">
         {loading ? (

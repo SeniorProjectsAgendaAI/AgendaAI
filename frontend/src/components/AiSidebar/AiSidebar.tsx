@@ -41,9 +41,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
   const [searchParams] = useSearchParams();
 
-  // NEW STATE: Tracks if the connections panel is expanded
-  const [showConnections, setShowConnections] = useState(false);
-
   const handleToggle = () => {
     if (onToggle) {
       onToggle();
@@ -67,6 +64,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [isCanvasConnected, setIsCanvasConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [showConnections, setShowConnections] = useState(false);
 
   useEffect(() => {
     checkGoogleCalendarConnection();
@@ -322,16 +320,16 @@ const AISidebar: React.FC<AISidebarProps> = ({
             ← Back
           </Link>
         )}
-        
+
         {/*Title is now a clickable toggle button */}
-        <h3 
+        <h3
           onClick={() => setShowConnections(!showConnections)}
-          style={{ 
-            cursor: "pointer", 
-            display: "flex", 
-            alignItems: "center", 
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
             gap: "8px",
-            userSelect: "none"
+            userSelect: "none",
           }}
           title="Toggle Connected Services"
         >
@@ -343,73 +341,70 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
         {!fullScreen && (
           <button className="toggle-btn" onClick={handleToggle}>
-            {isOpen ? "↓" : "↑"}
+            {isOpen ? "←" : "→"}
           </button>
         )}
       </div>
 
       {(isOpen || fullScreen) && (
         <>
-          {/* MODIFIED: Connections show based on the toggle state, regardless of screen size */}
-          {showConnections && (
-            <div className="connections-section">
-              <h4>Connected Services</h4>
-              <div className="connection-item">
-                <span>Google Calendar</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGoogleCalendarConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGoogleCalendar}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    className="connect-btn"
-                    onClick={handleConnectGoogleCalendar}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Gmail</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGmailConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGmail}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectGmail}>
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Canvas</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isCanvasConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectCanvas}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectCanvas}>
-                    Connect
-                  </button>
-                )}
-              </div>
+          <div className="connections-section">
+            <h4>Connected Services</h4>
+            <div className="connection-item">
+              <span>Google Calendar</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isGoogleCalendarConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectGoogleCalendar}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  className="connect-btn"
+                  onClick={handleConnectGoogleCalendar}
+                >
+                  Connect
+                </button>
+              )}
             </div>
-          )}
+            <div className="connection-item">
+              <span>Gmail</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isGmailConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectGmail}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button className="connect-btn" onClick={handleConnectGmail}>
+                  Connect
+                </button>
+              )}
+            </div>
+            <div className="connection-item">
+              <span>Canvas</span>
+              {isCheckingConnection ? (
+                <span className="connection-status">Loading...</span>
+              ) : isCanvasConnected ? (
+                <button
+                  className="disconnect-btn"
+                  onClick={handleDisconnectCanvas}
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button className="connect-btn" onClick={handleConnectCanvas}>
+                  Connect
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="messages-container">
             {messages.map((msg) => (
