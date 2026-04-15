@@ -13,6 +13,10 @@ import "./dayview.css";
 import BackButton from "../../components/BackButton";
 import api from "../../services/api";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+interface DayViewProps {
+  hideBackButton?: boolean;
+}
 
 //Task from database
 interface ApiTask {
@@ -96,8 +100,20 @@ const formatTime12Hour = (time24: string): string => {
   return `${hour - 12}:${minute} PM`;
 };
 
-const DayView = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [currentDate, setCurrentDate] = useState(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      const [year, month, day] = dateParam.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date();
+  });
+
   const [events, setEvents] = useState<Event[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +135,7 @@ const DayView = () => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const loadTasks = async () => {
-    const res = await api.get<ApiTask[]>("/tasks/");
+    const res = await api.get<ApiTask[]>("/tasks");
     const mapped = res.data.map((task) => {
       const meta = parseTaskDescription(task.description);
       return {
@@ -135,7 +151,7 @@ const DayView = () => {
   };
 
   const loadEvents = async () => {
-    const res = await api.get<ApiEvent[]>("/events/");
+    const res = await api.get<ApiEvent[]>("/events");
     const mapped = res.data.map((event) => {
       const start = new Date(event.start_at);
       const end = new Date(event.end_at);
@@ -397,22 +413,30 @@ const DayView = () => {
   return (
     <div className="dayViewContainer">
       <div className="dayViewContent">
+        {!hideBackButton && (
+          <button 
+            className="back-button" 
+            onClick={() => navigate('/calendarcontainer', { 
+              state: { returnTo: location.state?.fromView || 'month' } 
+            })}
+            style={{ marginBottom: '20px' }}
+          >
+            ← Back to Calendar
+          </button>
+        )}
         <div className="dayViewHeader">
-          {/* 
-          <div className="back-button-wrapper">
-            <BackButton />
-          </div>
-          */}
           <h2>Today's Agenda</h2>
-          <div className="dateNavigation">
-            <button onClick={goToPreviousDay}>← Previous</button>
-            <button onClick={goToToday}>Today</button>
-            <button onClick={goToNextDay}>Next →</button>
-            <button onClick={loadAll}> Refresh</button>
+          <div className="headerControls">
+            <div className="currentDate">{formatDate(currentDate)}</div>
+            
+            <div className="dateNavigation">
+              <button onClick={goToPreviousDay}>← Previous</button>
+              <button onClick={goToToday}>Today</button>
+              <button onClick={goToNextDay}>Next →</button>
+              <button onClick={loadAll}>Refresh</button>
+            </div>
           </div>
-          <div className="currentDate">{formatDate(currentDate)}</div>
         </div>
-
         {loading ? (
           <div className="loadingMessage">Loading tasks...</div>
         ) : (

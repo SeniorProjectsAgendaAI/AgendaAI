@@ -11,6 +11,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import BackButton from "../../components/BackButton";
 import api from "../../services/api";
 import "./weekview.css";
+//drill down
+import { useNavigate } from "react-router-dom";
 
 // Type definitions and helpers
 interface ApiTask{
@@ -76,6 +78,7 @@ const formatDateKey = (date: Date): string => {
 };
 
 const WeekView: React.FC = () => {
+  const navigate = useNavigate();
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
   const [items, setItems] = useState<WeekItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,15 +94,18 @@ const WeekView: React.FC = () => {
     [weekStart]
   );
 
+  const handleDayClick = (dateKey: string) => {
+    navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'week' } });
+  };
 
-// load tasks and events from API 
+  // load tasks and events from API 
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
       try {
         const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks/"),
-          api.get<ApiEvent[]>("/events/"),
+          api.get<ApiTask[]>("/tasks"),
+          api.get<ApiEvent[]>("/events"),
         ]);
 
         // Map tasks → WeekItem
@@ -173,7 +179,6 @@ const WeekView: React.FC = () => {
     setWeekStart(newStart);
   };
 
- 
   const goToNextWeek = () => {
     const newStart = new Date(weekStart);
     newStart.setDate(weekStart.getDate() + 7);
@@ -185,7 +190,7 @@ const WeekView: React.FC = () => {
     setWeekStart(getStartOfWeek(new Date()));
   };
 
- // getting today's date for highlighing in UI
+  // getting today's date for highlighing in UI
   const todayKey = formatDateKey(new Date());
 
   // calculating end of week for header display
@@ -199,31 +204,32 @@ const WeekView: React.FC = () => {
     return "low";
   };
 
-  
   return (
     <div className="weekViewContainer">
       <div className="weekViewContent">
-        <BackButton />
-
-
+        
         <div className="weekViewHeader">
           <h2>Week View</h2>
-          <div className="weekNavigation">
-            <button onClick={goToPreviousWeek}>← Previous</button>
-            <button onClick={goToCurrentWeek}>This Week</button>
-            <button onClick={goToNextWeek}>Next →</button>
-          </div>
-          <div className="weekRange">
-            {weekStart.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-            })}{" "}
-            –{" "}
-            {weekEnd.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+          
+          <div className="headerControls">
+            <div className="weekRange">
+              {weekStart.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+              })}{" "}
+              –{" "}
+              {weekEnd.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </div>
+
+            <div className="weekNavigation">
+              <button onClick={goToPreviousWeek}>← Previous</button>
+              <button onClick={goToCurrentWeek}>This Week</button>
+              <button onClick={goToNextWeek}>Next →</button>
+            </div>
           </div>
         </div>
 
@@ -242,7 +248,8 @@ const WeekView: React.FC = () => {
                 <div
                   key={key}
                   className={`weekDay ${isToday ? "weekDayToday" : ""}`}
-                >
+                  onClick={() => handleDayClick(key)}
+                  style={{ cursor: "pointer" }}>
                   <div className="weekDayHeader">
                     <span className="weekDayName">
                       {day.toLocaleDateString("en-US", { weekday: "short" })}

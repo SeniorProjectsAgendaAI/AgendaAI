@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "./monthview.css";
 //made by james, connected to backend by james
@@ -43,6 +44,7 @@ const formatDateKey = (date: Date): string => {
 };
 
 const MonthView = () => {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -55,8 +57,8 @@ const MonthView = () => {
       setLoading(true);
       try {
         const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks/"),
-          api.get<ApiEvent[]>("/events/"),
+          api.get<ApiTask[]>("/tasks"),
+          api.get<ApiEvent[]>("/events"),
         ]);
 
         const taskItems: CalendarItem[] = tasksRes.data.map((task) => {
@@ -96,6 +98,10 @@ const MonthView = () => {
 
     loadAll();
   }, []);
+  //drill down click
+  const handleDayClick = (dateKey: string) => {
+    navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'month' } });
+  };
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -174,7 +180,11 @@ const MonthView = () => {
               const overflowCount = dayItems.length - visibleItems.length;
 
               return (
-                <div key={dateKey} className={`monthCell ${isToday ? "monthCellToday" : ""}`}>
+                <div 
+                  key={dateKey} 
+                  className={`monthCell ${isToday ? "monthCellToday" : ""}`}
+                  onClick={() => handleDayClick(dateKey)}
+                  style={{ cursor: "pointer" }}>
                   <div className="monthCellDate">{day}</div>
                   <div className="monthItems">
                     {visibleItems.map((item) => (

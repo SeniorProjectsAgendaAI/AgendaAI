@@ -20,16 +20,23 @@
 .dayViewHeader {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 15px;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #ddd;
 }
 
 .dayViewHeader h2 {
-  margin: 0 0 15px 0;
+  margin: 0;
+  font-size: 24px;
+  color: var(--text-color);
+}
+
+.headerControls {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center; 
   width: 100%;
-  text-align: center;
 }
 
 .dateNavigation {
@@ -39,11 +46,15 @@
 }
 
 .dateNavigation button {
-  padding: 8px 16px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  color: var(--text-color);
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
 }
 
 .dateNavigation button:hover {

@@ -30,7 +30,7 @@ const Dashboard = () => {
         <Sidebar />
 
         <div className="centerDash">
-          <DayView />
+          <DayView hideBackButton={true} />
           <HighPriorityDash />
         </div>
         <TaskPanel />

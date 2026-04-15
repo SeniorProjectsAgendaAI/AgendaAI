@@ -272,8 +272,10 @@ const AISidebar: React.FC<AISidebarProps> = ({
         return;
       }
 
+      const agentUrl =
+        process.env.REACT_APP_AGENT_URL || "http://localhost:8001";
       const response = await axios.post(
-        "http://localhost:8001/chat",
+        `${agentUrl}/chat`,
         { message: currentInput },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -290,7 +292,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         id: (Date.now() + 1).toString(),
         text:
           error.response?.data?.detail ||
-          "Agent server not running. Start it with: cd mcp-servers/agent && uvicorn server:app --reload --port 8001",
+          "AI assistant is temporarily unavailable. Please try again later.",
         isUser: false,
         timestamp: new Date(),
       };
@@ -317,7 +319,25 @@ const AISidebar: React.FC<AISidebarProps> = ({
             ← Back
           </Link>
         )}
-        <h3>AI Assistant</h3>
+        
+        {/*Title is now a clickable toggle button */}
+        <h3 
+          onClick={() => setShowConnections(!showConnections)}
+          style={{ 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            userSelect: "none"
+          }}
+          title="Toggle Connected Services"
+        >
+          AI Assistant
+          <span style={{ fontSize: "0.7em", opacity: 0.6 }}>
+            {showConnections ? "▲" : "▼"}
+          </span>
+        </h3>
+
         {!fullScreen && (
           <button className="toggle-btn" onClick={handleToggle}>
             {isOpen ? "←" : "→"}
