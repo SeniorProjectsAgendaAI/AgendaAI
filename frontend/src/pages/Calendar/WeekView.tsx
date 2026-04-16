@@ -1,3 +1,5 @@
+// Weekview.tsx: displays the week view 
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../../services/api";
 import "./weekview.css";
