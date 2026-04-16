@@ -10,8 +10,6 @@ import "../../styles/SharedLayout.css";
 // container maintained+made by alex+ ankush to make website consistent
 
 const Dashboard = () => {
-  const [taskRefreshCounter, setTaskRefreshCounter] = React.useState(0);
-
   return (
     <div className="app-wrapper"> {/* <-- GLOBAL WRAPPER */}
       <div className="dashboardHeader">
@@ -25,8 +23,8 @@ const Dashboard = () => {
           <HighPriorityDash />
         </div>
         <div className="rightDash">
-          <TaskPanel hideBackButton={true} refreshTrigger={taskRefreshCounter} />
-          <AISidebar fullScreen={false} onAgentResponse={() => setTaskRefreshCounter((c) => c + 1)} />
+          <TaskPanel hideBackButton={true} />
+          <AISidebar fullScreen={false} />
         </div>
 
       </div>

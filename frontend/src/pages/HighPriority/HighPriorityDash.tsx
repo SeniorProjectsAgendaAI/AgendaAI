@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import "./highprioritydash.css";
 import api from "../../services/api";
+import { useTaskEvents } from "../../contexts/TaskEventContext";
 
 interface ApiTask {
   id: number;
@@ -31,12 +32,13 @@ interface DashItem {
 }
 
 const HighPriorityDash: React.FC = () => {
+  const { refreshKey } = useTaskEvents();
   const [items, setItems] = useState<DashItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadHighPriorityItems();
-  }, []);
+  }, [refreshKey]);
 
   const loadHighPriorityItems = async () => {
     try {

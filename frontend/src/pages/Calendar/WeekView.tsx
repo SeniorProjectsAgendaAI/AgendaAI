@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../../services/api";
+import { useTaskEvents } from "../../contexts/TaskEventContext";
 import "./weekview.css";
 
 interface WeekViewProps {
@@ -117,6 +118,7 @@ const buildLocalDateTime = (dateKey: string, time: string) => `${dateKey}T${time
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
+  const { refreshKey, triggerRefresh } = useTaskEvents();
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
   const [items, setItems] = useState<WeekItem[]>([]);
@@ -227,7 +229,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
   useEffect(() => {
     loadAll();
-  }, [loadAll]);
+  }, [loadAll, refreshKey]);
 
   const itemsByDate = useMemo(() => {
     const grouped: Record<string, WeekItem[]> = {};
@@ -312,6 +314,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         due_time: taskDueTime,
       });
       await loadAll();
+      triggerRefresh();
       closeCreationUI();
     } catch (err) {
       console.error("Failed to create task", err);
@@ -343,6 +346,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         recurrence: "none",
       });
       await loadAll();
+      triggerRefresh();
       closeCreationUI();
     } catch (err) {
       console.error("Failed to create event", err);

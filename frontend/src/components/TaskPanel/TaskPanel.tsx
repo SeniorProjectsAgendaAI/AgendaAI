@@ -1,6 +1,7 @@
 import React from "react";
 import "./taskpanel.css";
 import api from "../../services/api";
+import { useTaskEvents } from "../../contexts/TaskEventContext";
 import BackButton from "../BackButton";
 import { useRef, useEffect } from "react";
 //currently there is no mcp integration with task creations all manual because the database doesnt currently support tasks
@@ -124,7 +125,8 @@ const formatDateTimeLabel = (value: string) => {
 };
 
 // MODIFIED: Added the prop to the component signature
-const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTrigger = 0 }) => {
+const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
+    const { refreshKey, triggerRefresh } = useTaskEvents();
     const [view, setView] = React.useState<"tasks" | "events">("tasks");
     const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(null);
     const [showCreateMenu, setShowCreateMenu] = React.useState(false);
@@ -229,7 +231,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
         };
 
         loadAll();
-    }, [refreshTrigger]);
+    }, [refreshKey]);
 
     const addTask = async () => {
         if (!newTaskTitle.trim() || !newTaskDate || !newTaskTime || !newTaskPriority) {
@@ -260,6 +262,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
                 completed: res.data.completed,
             };
             setTasks((prev) => [...prev, newTask]);
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to create task", err);
             alert("Failed to create task.");
@@ -281,6 +284,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
         try {
             await api.delete(`/tasks/${taskId}`);
             setTasks((prev) => prev.filter((task) => task.id !== taskId));
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to delete task", err);
             alert("Failed to delete task.");
@@ -333,6 +337,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
                 ),
             );
             setEditingTaskId(null);
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to update task", err);
             alert("Failed to update task.");
@@ -378,6 +383,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
                     recurrence: res.data.recurrence ?? "none",
                 },
             ]);
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to create event", err);
             alert("Failed to create event.");
@@ -466,6 +472,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
                 ),
             );
             setEditingEventId(null);
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to update event", err);
             alert("Failed to update event.");
@@ -476,6 +483,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false, refreshTr
         try {
             await api.delete(`/events/${eventId}`);
             setEvents((prev) => prev.filter((event) => event.id !== eventId));
+            triggerRefresh();
         } catch (err) {
             console.error("Failed to delete event", err);
             alert("Failed to delete event.");

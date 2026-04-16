@@ -6,6 +6,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
 import api from "../../services/api";
+import { useTaskEvents } from "../../contexts/TaskEventContext";
 import "./aisidebar.css";
 
 //markdown-to-HTML converter
@@ -39,6 +40,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
   fullScreen = false,
   onAgentResponse,
 }) => {
+  const { triggerRefresh } = useTaskEvents();
   const [internalIsOpen, setInternalIsOpen] = useState(true);
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
   const [searchParams] = useSearchParams();
@@ -292,6 +294,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+      triggerRefresh();
       onAgentResponse?.();
     } catch (error: any) {
       const errorMessage: Message = {

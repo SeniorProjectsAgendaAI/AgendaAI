@@ -78,6 +78,22 @@ class Event(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+def _to_local_naive(dt: datetime) -> datetime:
+    """Convert a timezone-aware datetime to a naive local-time datetime.
+
+    Google Calendar returns ISO strings with tz offsets (e.g. '2026-04-16T14:00:00-07:00').
+    datetime.fromisoformat keeps that offset, but our DB column is naive (no tz).
+    If we store the value as-is the offset is silently dropped, so a UTC value
+    like '21:00+00:00' would appear as 9 PM instead of 2 PM local.
+
+    Fix: convert to the server's local timezone first, then strip tzinfo.
+    """
+    if dt.tzinfo is not None:
+        dt = dt.astimezone()          # convert to system local tz
+        dt = dt.replace(tzinfo=None)  # strip tz so SQLAlchemy stores it as naive local
+    return dt
+
+
 ALLOWED_TASK_STATUSES = {"todo", "in_progress", "done"}
 ALLOWED_EVENT_STATUSES = {"scheduled", "ongoing", "completed", "canceled"}
 ALLOWED_EVENT_RECURRENCE = {"none", "daily", "weekly", "monthly"}
@@ -488,8 +504,8 @@ async def call_tool(name: str, arguments: dict):
                 if recurrence not in ALLOWED_EVENT_RECURRENCE:
                     return [TextContent(type="text", text=f"Error: Invalid recurrence '{recurrence}'. Must be one of: {', '.join(ALLOWED_EVENT_RECURRENCE)}")]
 
-                start_at = datetime.fromisoformat(arguments["start_at"])
-                end_at = datetime.fromisoformat(arguments["end_at"])
+                start_at = _to_local_naive(datetime.fromisoformat(arguments["start_at"]))
+                end_at = _to_local_naive(datetime.fromisoformat(arguments["end_at"]))
 
                 if end_at <= start_at:
                     return [TextContent(type="text", text="Error: Event end time must be after start time.")]
@@ -547,9 +563,9 @@ async def call_tool(name: str, arguments: dict):
                 if "description" in arguments:
                     event.description = arguments["description"]
                 if "start_at" in arguments:
-                    event.start_at = datetime.fromisoformat(arguments["start_at"])
+                    event.start_at = _to_local_naive(datetime.fromisoformat(arguments["start_at"]))
                 if "end_at" in arguments:
-                    event.end_at = datetime.fromisoformat(arguments["end_at"])
+                    event.end_at = _to_local_naive(datetime.fromisoformat(arguments["end_at"]))
                 if "all_day" in arguments:
                     event.all_day = bool(arguments["all_day"])
                 if "recurrence" in arguments:
