@@ -5,8 +5,11 @@ applications:
       phases:
         preBuild:
           commands:
-            - npm ci
-            # The flag is simplified to --out-dir for this command
+            # Clear the container's npm cache to wipe any broken dependency trees
+            - npm cache clean --force
+            # Use install instead of ci to gracefully handle the react-scripts overrides
+            - npm install
+            # Generate the Gen 2 backend config for the specific branch
             - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out-dir src
         build:
           commands:
