@@ -1,7 +1,7 @@
 //Biniam Gashaw
 //AI Sidebar Component for interacting with AI assistant
 //Reference: https://coreui.io/react/docs/templates/admin-dashboard/
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
@@ -33,6 +33,8 @@ interface AISidebarProps {
   fullScreen?: boolean;
   onAgentResponse?: () => void;
 }
+
+const DEFAULT_VOICE_LEVELS = Array.from({ length: 14 }, () => 0.12);
 
 const AISidebar: React.FC<AISidebarProps> = ({
   isOpen: propIsOpen,
@@ -71,6 +73,16 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [isGmailConnected, setIsGmailConnected] = useState(false);
   const [isCanvasConnected, setIsCanvasConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [isDictating, setIsDictating] = useState(false);
+  const [dictationError, setDictationError] = useState("");
+  const [voiceLevels, setVoiceLevels] = useState(DEFAULT_VOICE_LEVELS);
+
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const dictationActiveRef = useRef(false);
+  const baseTranscriptRef = useRef("");
 
   useEffect(() => {
     checkGoogleCalendarConnection();
@@ -88,6 +100,173 @@ const AISidebar: React.FC<AISidebarProps> = ({
       checkCanvasConnection();
     }
   }, [searchParams]);
+
+  const stopMicVisualizer = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(() => undefined);
+    }
+    audioContextRef.current = null;
+    setVoiceLevels(DEFAULT_VOICE_LEVELS);
+  }, []);
+
+  const stopDictation = useCallback(() => {
+    dictationActiveRef.current = false;
+    setIsDictating(false);
+
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.onerror = null;
+      recognitionRef.current.onresult = null;
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        recognitionRef.current.abort();
+      }
+      recognitionRef.current = null;
+    }
+
+    stopMicVisualizer();
+  }, [stopMicVisualizer]);
+
+  useEffect(() => {
+    return () => {
+      stopDictation();
+    };
+  }, [stopDictation]);
+
+  const startMicVisualizer = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Microphone access is not available in this browser.");
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const AudioContextConstructor =
+      window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextConstructor();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.78;
+    source.connect(analyser);
+
+    mediaStreamRef.current = stream;
+    audioContextRef.current = audioContext;
+
+    const updateVoiceLevels = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const barCount = DEFAULT_VOICE_LEVELS.length;
+      const bucketSize = Math.max(1, Math.floor(dataArray.length / barCount));
+      const time = performance.now() / 180;
+      const nextLevels = Array.from({ length: barCount }, (_, index) => {
+        const start = index * bucketSize;
+        const end = Math.min(start + bucketSize, dataArray.length);
+        let total = 0;
+        for (let i = start; i < end; i += 1) {
+          total += dataArray[i];
+        }
+        const average = total / Math.max(1, end - start);
+        const idleWave = 0.18 + Math.sin(time + index * 0.7) * 0.08;
+        const voiceBoost = average / 125;
+        return Math.max(0.12, Math.min(1, idleWave + voiceBoost));
+      });
+
+      setVoiceLevels(nextLevels);
+      animationFrameRef.current =
+        window.requestAnimationFrame(updateVoiceLevels);
+    };
+
+    updateVoiceLevels();
+  }, []);
+
+  const startDictation = useCallback(async () => {
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionConstructor) {
+      setDictationError("Voice dictation works best in Google Chrome.");
+      return;
+    }
+
+    setDictationError("");
+    baseTranscriptRef.current = inputMessage.trim()
+      ? `${inputMessage.trim()} `
+      : "";
+
+    try {
+      await startMicVisualizer();
+
+      const recognition = new SpeechRecognitionConstructor();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        dictationActiveRef.current = true;
+        setIsDictating(true);
+      };
+
+      recognition.onresult = (event) => {
+        let finalTranscript = "";
+        let interimTranscript = "";
+
+        for (let i = 0; i < event.results.length; i += 1) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += `${transcript.trim()} `;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        setInputMessage(
+          `${baseTranscriptRef.current}${finalTranscript}${interimTranscript}`.trimStart(),
+        );
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setDictationError("Microphone permission is blocked for this site.");
+        } else if (event.error !== "no-speech") {
+          setDictationError("Dictation stopped. Please try again.");
+        }
+        stopDictation();
+      };
+
+      recognition.onend = () => {
+        if (!dictationActiveRef.current) return;
+        try {
+          recognition.start();
+        } catch {
+          stopDictation();
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (error) {
+      console.error("Failed to start dictation", error);
+      setDictationError("Could not access the microphone.");
+      stopDictation();
+    }
+  }, [inputMessage, startMicVisualizer, stopDictation]);
+
+  const toggleDictation = () => {
+    if (isDictating) {
+      stopDictation();
+      return;
+    }
+    startDictation();
+  };
 
   const getAuthToken = async (): Promise<string | null> => {
     try {
@@ -252,6 +431,9 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
+    if (dictationActiveRef.current) {
+      stopDictation();
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -452,13 +634,42 @@ const AISidebar: React.FC<AISidebarProps> = ({
           </div>
 
           <div className="input-container">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask about Canvas, Gmail, or Calendar..."
-              rows={2}
-            />
+            <div className="dictation-input-area">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask about Canvas, Gmail, or Calendar..."
+                rows={2}
+              />
+              {isDictating && (
+                <div className="voice-visualizer" aria-label="Listening">
+                  <div className="voice-bars" aria-hidden="true">
+                    {voiceLevels.map((level, index) => (
+                      <span
+                        key={index}
+                        className="voice-bar"
+                        style={{ height: `${Math.round(5 + level * 26)}px` }}
+                      />
+                    ))}
+                  </div>
+                  <span className="voice-status">Listening...</span>
+                </div>
+              )}
+              {dictationError && (
+                <div className="dictation-error">{dictationError}</div>
+              )}
+            </div>
+            <button
+              type="button"
+              className={`mic-btn ${isDictating ? "recording" : ""}`}
+              onClick={toggleDictation}
+              disabled={isLoading}
+              aria-pressed={isDictating}
+              title={isDictating ? "Stop dictation" : "Start dictation"}
+            >
+              {isDictating ? "Stop" : "Mic"}
+            </button>
             <button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}

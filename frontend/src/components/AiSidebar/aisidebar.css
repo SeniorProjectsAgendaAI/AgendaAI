@@ -228,10 +228,20 @@
   display: flex;
   gap: 0.5rem;
   background: var(--nav-bg);
+  align-items: stretch;
+}
+
+.dictation-input-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .input-container textarea {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -272,6 +282,59 @@
 .input-container button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.mic-btn {
+  min-width: 70px;
+  background: var(--secondary-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.mic-btn.recording {
+  background: #db4437 !important;
+  color: #fff !important;
+  border-color: #db4437 !important;
+}
+
+.voice-visualizer {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--secondary-bg);
+  color: var(--text-muted);
+  box-sizing: border-box;
+}
+
+.voice-bars {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.voice-bar {
+  width: 3px;
+  min-height: 5px;
+  border-radius: 999px;
+  background: var(--primary-accent);
+  transition: height 0.08s ease;
+}
+
+.voice-status {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dictation-error {
+  color: #db4437;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .messages-container::-webkit-scrollbar {
