@@ -1,3 +1,5 @@
+/* Week View Styles */
+
 .weekViewContainer {
   display: flex;
   flex: 1;
@@ -30,6 +32,7 @@
 .weekViewContent.embedded {
   padding: 0;
 }
+
 
 .weekViewHeader {
   padding-bottom: 16px;
@@ -110,7 +113,7 @@
   margin-top: 16px;
 }
 
-.weekCalendar {
+.weekGrid {
   display: grid;
   min-width: 100%;
   align-items: stretch;
@@ -173,7 +176,7 @@
 }
 
 .todayBadge {
-  background: var(--primary-accent);
+  background: #4a90d9;
   color: #fff;
 }
 

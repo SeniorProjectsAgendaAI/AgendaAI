@@ -491,8 +491,8 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     };
 
     return (
-        <div className="taskPanelContainer"> 
-            {!hideBackButton && <BackButton />}
+        <div>
+            <BackButton />
             <div className="taskPanel">
                 <h3 className="panelTitle">Tasks & Events</h3>
                 <div className="panelSwitch">

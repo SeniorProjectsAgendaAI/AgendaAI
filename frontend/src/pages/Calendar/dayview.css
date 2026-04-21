@@ -1,16 +1,19 @@
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
+/* Progress Bar Styles - Alex*/
 .dayViewContainer {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 400px;
+  height: auto;
+  min-height: 100vh;
   background: transparent;
 }
 
 .dayViewContent {
   flex: 1;
-  background: var(--bg-color);
+  background: #fafafa;
   padding: 20px;
   overflow-y: auto;
+  max-height: calc(100vh - 200px);
   box-sizing: border-box;
 }
 
@@ -20,7 +23,7 @@
   gap: 15px;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #ddd;
 }
 
 .dayViewHeader h2 {
@@ -55,26 +58,25 @@
 }
 
 .dateNavigation button:hover {
-  background: var(--hover-bg);
+  background: #f0f0f0;
 }
 
 .currentDate {
   font-size: 18px;
   font-weight: 500;
-  color: var(--text-color);
+  color: #333;
 }
 
 .loadingMessage {
   text-align: center;
   padding: 40px;
   font-size: 16px;
-  color: var(--text-muted);
+  color: #666;
 }
 
 /* Events Summary Section */
 .eventsSummary {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
+  background: #fff;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -84,12 +86,12 @@
 .eventsSummary h3 {
   margin: 0 0 10px 0;
   font-size: 18px;
-  color: var(--text-color);
+  color: #333;
 }
 
 .eventsSummary p {
   margin: 0 0 15px 0;
-  color: var(--text-muted);
+  color: #666;
   font-size: 14px;
 }
 
@@ -100,13 +102,11 @@
 }
 
 .eventItem {
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--primary-accent);
+  background: #f0f8ff;
+  border-left: 4px solid #2196f3;
   padding: 15px;
   border-radius: 4px;
   transition: transform 0.2s;
-  color: var(--text-color);
 }
 
 .eventItem:hover {
@@ -125,17 +125,17 @@
 .eventItemTitle {
   font-weight: 600;
   font-size: 16px;
-  color: var(--primary-accent);
+  color: #1976d2;
 }
 
 .eventItemTime {
-  color: var(--text-muted);
+  color: #666;
   font-size: 14px;
   white-space: nowrap;
 }
 
 .eventItemDescription {
-  color: var(--text-muted);
+  color: #555;
   font-size: 14px;
   margin-bottom: 8px;
   line-height: 1.4;
@@ -146,7 +146,7 @@
   flex-wrap: wrap;
   gap: 12px;
   font-size: 13px;
-  color: var(--text-muted);
+  color: #777;
 }
 
 .eventLocation {
@@ -172,8 +172,7 @@
 
 /* Task Summary Section */
 .taskSummary {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
+  background: #fff;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -186,12 +185,12 @@
 .taskSummary h3 {
   margin: 0 0 10px 0;
   font-size: 18px;
-  color: var(--text-color);
+  color: #333;
 }
 
 .taskSummary p {
   margin: 0 0 15px 0;
-  color: var(--text-muted);
+  color: #666;
   font-size: 14px;
 }
 
@@ -202,13 +201,11 @@
 }
 
 .taskItem {
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
+  background: #f9f9f9;
   border-left: 4px solid #4caf50;
   padding: 12px 15px;
   border-radius: 4px;
   transition: transform 0.2s;
-  color: var(--text-color);
 }
 
 .taskItem:hover {
@@ -233,11 +230,11 @@
 .taskTitle {
   font-weight: 600;
   font-size: 16px;
-  color: var(--text-color);
+  color: #333;
 }
 
 .taskTime {
-  color: var(--text-muted);
+  color: #666;
   font-size: 14px;
 }
 
@@ -245,7 +242,7 @@
   display: flex;
   gap: 15px;
   font-size: 13px;
-  color: var(--text-muted);
+  color: #777;
 }
 
 .taskPriority {
@@ -311,7 +308,7 @@
 .timeColumn {
   flex-shrink: 0;
   width: 100px;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid #e0e0e0;
   background: transparent;
 }
 
@@ -321,8 +318,8 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
+  color: #666;
+  border-bottom: 1px solid #e0e0e0;
   font-weight: 500;
 }
 
@@ -368,7 +365,7 @@
 
 .hourBlock {
   height: 60px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e0e0e0;
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -379,32 +376,30 @@
 }
 
 .eventBlock {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--primary-accent);
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
   padding: 10px;
   border-radius: 4px;
   font-size: 13px;
   flex: 0 0 auto;
   max-width: 250px;
   margin-bottom: 5px;
-  color: var(--text-color);
 }
 
 .eventBlockTitle {
   font-weight: 600;
-  color: var(--primary-accent);
+  color: #1976d2;
   margin-bottom: 4px;
 }
 
 .eventBlockTime {
-  color: var(--text-muted);
+  color: #666;
   font-size: 11px;
   margin-bottom: 4px;
 }
 
 .eventBlockLocation {
-  color: var(--text-muted);
+  color: #555;
   font-size: 11px;
   margin-bottom: 3px;
   display: flex;
@@ -413,7 +408,7 @@
 }
 
 .eventBlockDescription {
-  color: var(--text-muted);
+  color: #666;
   font-size: 11px;
   font-style: italic;
   margin-top: 4px;
@@ -424,9 +419,8 @@
 }
 
 .taskBlock {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid #ff9800;
+  background: #fff3e0;
+  border-left: 3px solid #ff9800;
   padding: 6px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -435,7 +429,6 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  color: var(--text-color);
 }
 
 .taskBlock.completed {
@@ -445,16 +438,16 @@
 
 .taskBlockTitle {
   font-weight: 600;
-  color: #ff9800;
+  color: #e65100;
 }
 
 .taskBlockTime {
-  color: var(--text-muted);
+  color: #666;
   font-size: 10px;
 }
 
 .taskBlockPriority {
-  color: #ff9800;
+  color: #f57c00;
   font-size: 10px;
   font-weight: 600;
 }
@@ -466,16 +459,13 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
+  background: #f9f9f9;
   border-radius: 6px;
 }
 
 .editInput {
   padding: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--secondary-bg);
-  color: var(--text-color);
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
 }
@@ -490,26 +480,30 @@
   gap: 8px;
   margin-top: 4px;
 }
-
-/* Progress Bar Styles */
-.taskProgressBarContainer {
+/* Progress Bar Styles - Alex*/
+.taskProgressBarContainer
+{
   padding: 15px;
   border-radius: 10px;
 }
-.taskProgressBarHeader {
+.taskProgressBarHeader
+{
   display: flex;
   justify-content: space-between;
   margin: 10px;
-  color: var(--text-color);
+  color: rgb(0, 0, 0);
+
 }
-.taskProgressBarBackground {
+.taskProgressBarBackground
+{
   width: 100%;
   height: 10px;
   border-radius: 10px;
-  background-color: var(--border-color);
+  background-color: #000000;
 }
-.taskProgressBarFill {
+.taskProgressBarFill
+{
   height: 100%;
   border-radius: 10px;
-  background-color: var(--primary-accent);
+  background-color: #1976d2;
 }

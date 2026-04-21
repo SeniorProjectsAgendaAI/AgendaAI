@@ -45,11 +45,6 @@
     },
     "postcss-calc": "9.0.1"
   },
-  "jest": {
-    "transformIgnorePatterns": [
-      "node_modules/(?!(@radix-ui)/)"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",

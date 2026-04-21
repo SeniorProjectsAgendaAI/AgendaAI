@@ -1,70 +1,68 @@
-/* frontend/src/components/TaskPanel/taskpanel.css */
-
-.taskPanelContainer {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0; 
-}
-
+/*some inspiration takenfrom a style guide http://bjankord.github.io/Style-Guide-Boilerplate/*/
 .taskPanel {
-  width: 100%;
-  background: var(--nav-bg);
-  flex: 1; 
-  padding: 15px 15px 0px 15px; 
+  width: 250px;
+  background: #c4aaaa00;
+  height: 95vh;
+  padding: 20px;
+  border-left: 1px solid #ffffff;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  min-height: 0; 
 }
 
 .panelTitle {
   margin: 0 0 8px;
-  color: var(--text-color);
-  flex-shrink: 0; /* Prevents the title from getting squished */
+  color: #ffffff;
 }
 
 .panelSwitch {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
-  flex-shrink: 0; /* Prevents the switch buttons from getting squished */
 }
 
 .switchBtn {
-  border: 1px solid var(--border-color);
-  background: var(--secondary-bg);
-  color: var(--text-color);
+  border: 1px solid #ccc;
+  background: #f5f5f5;
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
 }
 
 .switchBtn.active {
-  background: var(--primary-accent);
+  background: #1f8bd1;
   color: #fff;
-  border-color: var(--primary-accent);
+  border-color: #1f8bd1;
 }
 
 .taskList {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex: 1 1 auto; /* Allows it to take up max space, but shrink if window is small */
-  min-height: 0;  /* CRITICAL: Allows the internal scrollbar to actually work */
+  flex: 1;
   overflow-y: auto;
-  padding-bottom: 10px; 
 }
 
 .taskItem {
   display: flex;
   justify-content: space-between;
-  background: var(--secondary-bg);
-  color: var(--text-color);
+  background: #eee;
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 6px;
-  border-left: 6px solid var(--border-color);
+  border-left: 6px solid #999;
+}
+/*
+.delete-btn {
+  background: #ff6b6b;
+  border: none;
+  padding: 6px 8px;
+  color: white;
+  border-radius: 4px;
+}
+*/
+.addTask {
+  margin-top: auto;
+  padding: 10px;
 }
 
 .panelActions {
@@ -138,12 +136,11 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--secondary-bg);
-  color: var(--text-color);
+  background: white;
   padding: 24px;
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -167,8 +164,8 @@
   margin: 0 0 8px 0;
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
   padding-bottom: 8px;
 }
 
@@ -176,9 +173,7 @@
 .popup textarea,
 .popup select {
   padding: 10px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-color);
-  color: var(--text-color);
+  border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
@@ -211,13 +206,12 @@
 }
 
 .popup button:last-of-type {
-  background: var(--bg-color);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+  background: #f5f5f5;
+  color: #666;
 }
 
 .popup button:last-of-type:hover {
-  background: var(--hover-bg);
+  background: #e8e8e8;
 }
 
 .taskView {

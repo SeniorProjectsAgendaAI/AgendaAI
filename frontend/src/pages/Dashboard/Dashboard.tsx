@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
+import CalendarView from "../Calendar/CalendarView";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import HighPriorityDash from "../HighPriority/HighPriorityDash";
 // import DayView from "../Calendar/DayView";
@@ -11,22 +12,21 @@ import "../../styles/SharedLayout.css";
 
 const Dashboard = () => {
   return (
-    <div className="app-wrapper"> {/* <-- GLOBAL WRAPPER */}
+    <div>
       <div className="dashboardHeader">
         <h1>AgendaAI</h1>
         <h2>Dashboard</h2>
       </div>
+    
+      {/* we Used these groups from the css file in order to organize the dashboardinto 3 main pannels, left middle and right*/}
       <div className="dashboardGroup">
         <Sidebar />
+
         <div className="centerDash">
           <WeekView embedded />
           <HighPriorityDash />
         </div>
-        <div className="rightDash">
-          <TaskPanel hideBackButton={true} />
-          <AISidebar fullScreen={false} />
-        </div>
-
+        <TaskPanel />
       </div>
     </div>
   );

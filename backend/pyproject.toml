@@ -9,17 +9,22 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "alembic>=1.17.2",
-    "fastapi>=0.121.2",
-    "httpx>=0.28.1",
-    "passlib[bcrypt]>=1.7.4",
-    "psycopg[binary]>=3.2.12",
-    "python-dotenv>=1.2.1",
-    "python-jose[cryptography]>=3.5.0",
-    "python-multipart>=0.0.20",
-    "sqlalchemy>=2.0",
-    "uvicorn[standard]>=0.38.0",
-    "psycopg2-binary"
+  "alembic>=1.17.2",
+  "apscheduler>=3.10.4",
+  "fastapi>=0.121.2",
+  "google-auth>=2.26.0",
+  "google-auth-httplib2>=0.2.0",
+  "google-api-python-client>=2.100.0",
+  "httpx>=0.28.1",
+  "passlib[bcrypt]>=1.7.4",
+  "psycopg[binary]>=3.2.12",
+  "python-dotenv>=1.2.1",
+  "python-jose[cryptography]>=3.5.0",
+  "python-multipart>=0.0.20",
+  "pytz>=2024.1",
+  "sqlalchemy>=2.0",
+  "uvicorn[standard]>=0.38.0",
+  "psycopg2-binary",
 ]
 
 [tool.hatch.build.targets.wheel]

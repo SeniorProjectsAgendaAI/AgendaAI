@@ -211,10 +211,41 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     setEvents(mapped);
   };
 
+  const syncGoogleCalendar = async () => {
+    try {
+   
+      const response = await api.post("/events/sync/google-calendar", {});
+      console.log("Google Calendar sync initiated:", response.data);
+      
+      await loadEvents();
+    } catch (err) {
+
+      console.debug("Google Calendar sync not available:", err);
+    }
+  };
+
+  const syncCanvas = async () => {
+    try {
+
+      const response = await api.post("/events/sync/canvas", {});
+      console.log("Canvas sync initiated:", response.data);
+
+      await loadEvents();
+    } catch (err) {
+
+      console.debug("Canvas sync not available:", err);
+    }
+  };
+
   const loadAll = async () => {
     try {
       setLoading(true);
-      await Promise.all([loadTasks(), loadEvents()]);
+      await Promise.all([
+        loadTasks(),
+        loadEvents(),
+        syncGoogleCalendar(),
+        syncCanvas(),
+      ]);
     } catch (err) {
       console.error("Failed to load tasks/events", err);
     } finally {
@@ -401,7 +432,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
 
   const completedTaskInDay = todayTasks.filter((task) => task.completed).length;
 
-  const percentageComplete = totalTaskInDay === 0 ? 0 : (completedTaskInDay / totalTaskInDay) * 100;
+  const percentageComplete =
+    totalTaskInDay === 0 ? 0 : (completedTaskInDay / totalTaskInDay) * 100;
 
   return (
     <div className="dayViewContainer">
@@ -463,26 +495,34 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                           />
                           <textarea
                             value={editEventDescription}
-                            onChange={(e) => setEditEventDescription(e.target.value)}
+                            onChange={(e) =>
+                              setEditEventDescription(e.target.value)
+                            }
                             placeholder="Description"
                             className="editInput"
                           />
                           <input
                             type="time"
                             value={editEventStartTime}
-                            onChange={(e) => setEditEventStartTime(e.target.value)}
+                            onChange={(e) =>
+                              setEditEventStartTime(e.target.value)
+                            }
                             className="editInput"
                           />
                           <input
                             type="time"
                             value={editEventEndTime}
-                            onChange={(e) => setEditEventEndTime(e.target.value)}
+                            onChange={(e) =>
+                              setEditEventEndTime(e.target.value)
+                            }
                             className="editInput"
                           />
                           <input
                             type="text"
                             value={editEventLocation}
-                            onChange={(e) => setEditEventLocation(e.target.value)}
+                            onChange={(e) =>
+                              setEditEventLocation(e.target.value)
+                            }
                             placeholder="Location"
                             className="editInput"
                           />
@@ -493,10 +533,16 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                             className="editInput"
                           />
                           <div className="editActions">
-                            <button className="taskActionBtn completeBtn" onClick={() => saveEditEvent(event.id)}>
+                            <button
+                              className="taskActionBtn completeBtn"
+                              onClick={() => saveEditEvent(event.id)}
+                            >
                               Save
                             </button>
-                            <button className="taskActionBtn deleteBtn" onClick={() => setEditingEventId(null)}>
+                            <button
+                              className="taskActionBtn deleteBtn"
+                              onClick={() => setEditingEventId(null)}
+                            >
                               Cancel
                             </button>
                           </div>
@@ -504,24 +550,48 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                       ) : (
                         <>
                           <div className="eventItemHeader">
-                            <span className="eventItemTitle">{event.title}</span>
+                            <span className="eventItemTitle">
+                              {event.title}
+                            </span>
                             <span className="eventItemTime">
                               {event.allDay
                                 ? "All Day"
                                 : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
                             </span>
                           </div>
-                          {event.description && <div className="eventItemDescription">{event.description}</div>}
+                          {event.description && (
+                            <div className="eventItemDescription">
+                              {event.description}
+                            </div>
+                          )}
                           <div className="eventItemDetails">
-                            {event.location && <span className="eventLocation">{event.location}</span>}
-                            {event.status && <span className="eventStatus">Status: {event.status}</span>}
-                            {event.recurrence && <span className="eventRecurrence">Recurring: {event.recurrence}</span>}
+                            {event.location && (
+                              <span className="eventLocation">
+                                {event.location}
+                              </span>
+                            )}
+                            {event.status && (
+                              <span className="eventStatus">
+                                Status: {event.status}
+                              </span>
+                            )}
+                            {event.recurrence && (
+                              <span className="eventRecurrence">
+                                Recurring: {event.recurrence}
+                              </span>
+                            )}
                           </div>
                           <div className="taskActions">
-                            <button className="taskActionBtn completeBtn" onClick={() => startEditEvent(event)}>
+                            <button
+                              className="taskActionBtn completeBtn"
+                              onClick={() => startEditEvent(event)}
+                            >
                               Edit
                             </button>
-                            <button className="taskActionBtn deleteBtn" onClick={() => deleteEvent(event.id)}>
+                            <button
+                              className="taskActionBtn deleteBtn"
+                              onClick={() => deleteEvent(event.id)}
+                            >
                               Delete
                             </button>
                           </div>
@@ -536,12 +606,17 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
             <div className="taskSummary">
               <h3>Schedule for {formatDate(currentDate)}</h3>
               <p>
-                {todayTasks.length} task(s) scheduled • {todayTasks.filter((t) => t.completed).length} completed • {todayEvents.length} event(s)
+                {todayTasks.length} task(s) scheduled •{" "}
+                {todayTasks.filter((t) => t.completed).length} completed •{" "}
+                {todayEvents.length} event(s)
               </p>
               {todayTasks.length > 0 && (
                 <div className="taskList">
                   {todayTasks.map((task) => (
-                    <div key={task.id} className={`taskItem ${task.completed ? "completed" : ""}`}>
+                    <div
+                      key={task.id}
+                      className={`taskItem ${task.completed ? "completed" : ""}`}
+                    >
                       {editingTaskId === task.id ? (
                         <div className="taskEditor">
                           <input
@@ -566,17 +641,25 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                           <input
                             type="number"
                             value={editTaskPriority}
-                            onChange={(e) => setEditTaskPriority(Number(e.target.value))}
+                            onChange={(e) =>
+                              setEditTaskPriority(Number(e.target.value))
+                            }
                             placeholder="Priority"
                             min={1}
                             max={10}
                             className="editInput"
                           />
                           <div className="editActions">
-                            <button className="taskActionBtn completeBtn" onClick={() => saveEditTask(task.id)}>
+                            <button
+                              className="taskActionBtn completeBtn"
+                              onClick={() => saveEditTask(task.id)}
+                            >
                               Save
                             </button>
-                            <button className="taskActionBtn deleteBtn" onClick={() => setEditingTaskId(null)}>
+                            <button
+                              className="taskActionBtn deleteBtn"
+                              onClick={() => setEditingTaskId(null)}
+                            >
                               Cancel
                             </button>
                           </div>
@@ -585,24 +668,46 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                         <>
                           <div className="taskHeader">
                             <span className="taskTitle">{task.name}</span>
-                            <span className="taskTime">{formatTime12Hour(task.time)}</span>
+                            <span className="taskTime">
+                              {formatTime12Hour(task.time)}
+                            </span>
                           </div>
                           <div className="taskDetails">
-                            <span className="taskPriority">Priority: {task.priority}</span>
-                            {task.completed && <span className="completedBadge">✓ Completed</span>}
+                            <span className="taskPriority">
+                              Priority: {task.priority}
+                            </span>
+                            {task.completed && (
+                              <span className="completedBadge">
+                                ✓ Completed
+                              </span>
+                            )}
                           </div>
                           <div className="taskActions">
                             <button
                               className="taskActionBtn completeBtn"
-                              onClick={() => toggleComplete(task.id, task.completed)}
-                              title={task.completed ? "Mark as incomplete" : "Mark as complete"}
+                              onClick={() =>
+                                toggleComplete(task.id, task.completed)
+                              }
+                              title={
+                                task.completed
+                                  ? "Mark as incomplete"
+                                  : "Mark as complete"
+                              }
                             >
                               {task.completed ? "↩ Undo" : " Complete"}
                             </button>
-                            <button className="taskActionBtn completeBtn" onClick={() => startEditTask(task)} title="Edit task">
+                            <button
+                              className="taskActionBtn completeBtn"
+                              onClick={() => startEditTask(task)}
+                              title="Edit task"
+                            >
                               Edit
                             </button>
-                            <button className="taskActionBtn deleteBtn" onClick={() => deleteTask(task.id)} title="Delete task">
+                            <button
+                              className="taskActionBtn deleteBtn"
+                              onClick={() => deleteTask(task.id)}
+                              title="Delete task"
+                            >
                               Delete
                             </button>
                           </div>
@@ -610,24 +715,29 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                       )}
                     </div>
                   ))}
-                
-                {/* ///////////////////////////////////////////////start of taskbar visuals*/}
-                {totalTaskInDay > 0 && (
-                  <div className="taskProgressBarContainer">
-                    <div className="taskProgressBarHeader">
-                      <span> Daily Progress</span>
-                      <span>{percentageComplete}% ({completedTaskInDay}/{totalTaskInDay})</span>
-                    </div>
-                    {/*grey part of bar, could change later idk*/}
-                    <div className="taskProgressBarBackground">
-                      <div className="taskProgressBarFill" style={{ width: `${percentageComplete}%` }}>
+
+                  {/* ///////////////////////////////////////////////start of taskbar visuals*/}
+                  {totalTaskInDay > 0 && (
+                    <div className="taskProgressBarContainer">
+                      <div className="taskProgressBarHeader">
+                        <span> Daily Progress</span>
+                        <span>
+                          {percentageComplete}% ({completedTaskInDay}/
+                          {totalTaskInDay})
+                        </span>
+                      </div>
+                      {/*grey part of bar, could change later idk*/}
+                      <div className="taskProgressBarBackground">
+                        <div
+                          className="taskProgressBarFill"
+                          style={{ width: `${percentageComplete}%` }}
+                        ></div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="daySchedule">
               <div className="timeColumn">
@@ -655,8 +765,14 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                     {todayEvents
                       .filter((event) => {
                         if (event.allDay) return hour === 0;
-                        const eventStartHour = parseInt(event.startTime.split(":")[0], 10);
-                        const eventEndHour = parseInt(event.endTime.split(":")[0], 10);
+                        const eventStartHour = parseInt(
+                          event.startTime.split(":")[0],
+                          10,
+                        );
+                        const eventEndHour = parseInt(
+                          event.endTime.split(":")[0],
+                          10,
+                        );
                         return hour >= eventStartHour && hour <= eventEndHour;
                       })
                       .map((event) => (
@@ -678,22 +794,40 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                               ? "All Day"
                               : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
                           </div>
-                          {event.location && <div className="eventBlockLocation">{event.location}</div>}
-                          {event.description && <div className="eventBlockDescription">{event.description}</div>}
+                          {event.location && (
+                            <div className="eventBlockLocation">
+                              {event.location}
+                            </div>
+                          )}
+                          {event.description && (
+                            <div className="eventBlockDescription">
+                              {event.description}
+                            </div>
+                          )}
                         </div>
                       ))}
 
                     {todayTasks
                       .filter((task) => {
                         if (!task.time) return false;
-                        const taskHour = parseInt(task.time.trim().split(":")[0], 10);
+                        const taskHour = parseInt(
+                          task.time.trim().split(":")[0],
+                          10,
+                        );
                         return taskHour === hour;
                       })
                       .map((task) => (
-                        <div key={`task-${task.id}`} className={`taskBlock ${task.completed ? "completed" : ""}`}>
+                        <div
+                          key={`task-${task.id}`}
+                          className={`taskBlock ${task.completed ? "completed" : ""}`}
+                        >
                           <div className="taskBlockTitle">{task.name}</div>
-                          <div className="taskBlockTime">{formatTime12Hour(task.time)}</div>
-                          <div className="taskBlockPriority">P{task.priority}</div>
+                          <div className="taskBlockTime">
+                            {formatTime12Hour(task.time)}
+                          </div>
+                          <div className="taskBlockPriority">
+                            P{task.priority}
+                          </div>
                         </div>
                       ))}
                   </div>
