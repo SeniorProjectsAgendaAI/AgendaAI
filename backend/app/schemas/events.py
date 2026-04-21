@@ -15,6 +15,8 @@ class EventCreate(BaseModel):
     color: Optional[str] = None
     location: Optional[str] = None
     status: Optional[str] = "scheduled"
+    source: Optional[str] = "manual"  
+    external_event_id: Optional[str] = None
 
 
 # Data that can be changed when updating an existing event.
@@ -28,6 +30,8 @@ class EventUpdate(BaseModel):
     color: Optional[str] = None
     location: Optional[str] = None
     status: Optional[str] = None
+    source: Optional[str] = None
+    external_event_id: Optional[str] = None
 
 
 # Data returned to the client for an event.
@@ -42,10 +46,12 @@ class EventResponse(BaseModel):
     color: Optional[str] = None
     location: Optional[str] = None
     status: str
+    source: str
+    external_event_id: Optional[str] = None
     user_id: int
     created_at: datetime
     updated_at: datetime
 
     class Config:
         # Lets Pydantic read data directly from SQLAlchemy models.
-        orm_mode = True
+        from_attributes = True

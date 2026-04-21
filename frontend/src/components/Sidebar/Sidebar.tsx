@@ -22,7 +22,7 @@ const Sidebar = () => {
         </NavLink>
         <NavLink to="/aisidebar" className="navigationItem">
             <BsStars className='navigationIcon' />
-            AI Assistant
+            AI Agent
         </NavLink>
         <NavLink to="/calendarcontainer" className="navigationItem">
             <FaRegCalendarAlt className='navigationIcon' />    

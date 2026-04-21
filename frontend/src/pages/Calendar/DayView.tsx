@@ -211,10 +211,35 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     setEvents(mapped);
   };
 
+  const syncGoogleCalendar = async () => {
+    try {
+      const response = await api.post("/events/sync/google-calendar", {});
+      console.log("Google Calendar sync initiated:", response.data);
+      await loadEvents();
+    } catch (err) {
+      console.debug("Google Calendar sync not available:", err);
+    }
+  };
+
+  const syncCanvas = async () => {
+    try {
+      const response = await api.post("/events/sync/canvas", {});
+      console.log("Canvas sync initiated:", response.data);
+      await loadEvents();
+    } catch (err) {
+      console.debug("Canvas sync not available:", err);
+    }
+  };
+
   const loadAll = async () => {
     try {
       setLoading(true);
-      await Promise.all([loadTasks(), loadEvents()]);
+      await Promise.all([
+        loadTasks(),
+        loadEvents(),
+        syncGoogleCalendar(),
+        syncCanvas(),
+      ]);
     } catch (err) {
       console.error("Failed to load tasks/events", err);
     } finally {
