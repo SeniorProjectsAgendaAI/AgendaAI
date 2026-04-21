@@ -28,6 +28,7 @@ _last_sync_times = {}
 
 # Creates a new event for the currently logged-in user.
 @router.post("/", response_model=EventResponse)
+@router.post("", response_model=EventResponse)
 def create_event(
     event: EventCreate,
     db: Session = Depends(get_db),
@@ -62,6 +63,7 @@ def create_event(
 
 # Returns all events that belong to the current user.
 @router.get("/", response_model=list[EventResponse])
+@router.get("", response_model=list[EventResponse])
 def get_events(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
