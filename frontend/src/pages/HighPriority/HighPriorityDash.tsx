@@ -53,7 +53,7 @@ const HighPriorityDash: React.FC = () => {
 
       const now = new Date();
       const threeDaysFromNow = new Date(now);
-      threeDaysFromNow.setDate(now.getDate() + 3);
+      threeDaysFromNow.setDate(now.getDate());
       threeDaysFromNow.setHours(23, 59, 59, 999);
 
       console.log("Now:", now);
