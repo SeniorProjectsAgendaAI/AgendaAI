@@ -14,7 +14,6 @@ interface Task {
   details: string;
   tag: string;
   color: string;
-  pattern: string;
   dueDate: string;
   dueTime: string;
   priority: number;
@@ -27,7 +26,7 @@ interface ApiTask {
   title: string;
   description?: string | null;
   tag?: string | null;
-  color?: string | null; // We will pack pattern + color into this string
+  color?: string | null;
   priority?: number | null;
   status?: string | null;
   due_date?: string | null;
@@ -44,7 +43,6 @@ interface EventItem {
   startAt: string;
   endAt: string;
   color: string;
-  pattern: string;
   location: string;
   status: string;
   allDay: boolean;
@@ -57,7 +55,7 @@ interface ApiEvent {
   description?: string | null;
   start_at: string;
   end_at: string;
-  color?: string | null; // We will pack pattern + color into this string
+  color?: string | null;
   location?: string | null;
   status?: string | null;
   all_day?: boolean | null;
@@ -67,6 +65,7 @@ interface ApiEvent {
   updated_at: string;
 }
 
+// NEW: Added the prop interface here at the top
 interface TaskPanelProps {
   hideBackButton?: boolean;
   refreshTrigger?: number;
@@ -84,7 +83,6 @@ const TAG_COLORS: Record<string, string> = {
 const DEFAULT_TAG = "Homework";
 const DEFAULT_TASK_COLOR = TAG_COLORS[DEFAULT_TAG];
 const DEFAULT_EVENT_COLOR = "#1f8bd1";
-const DEFAULT_PATTERN = "solid";
 const TASK_STATUSES = ["todo", "in_progress", "done"] as const;
 const EVENT_STATUSES = [
   "scheduled",
@@ -93,13 +91,6 @@ const EVENT_STATUSES = [
   "canceled",
 ] as const;
 const EVENT_RECURRENCES = ["none", "daily", "weekly", "monthly"] as const;
-const PATTERN_OPTIONS = [
-  { value: "solid", label: "Solid Color" },
-  { value: "diagonal-right", label: "Diagonal Stripes (/)" },
-  { value: "diagonal-left", label: "Diagonal Stripes (\\)" },
-  { value: "vertical", label: "Vertical Lines" },
-  { value: "horizontal", label: "Horizontal Lines" }
-];
 
 const normalizeHexColor = (
   value?: string | null,
@@ -108,41 +99,6 @@ const normalizeHexColor = (
   if (!value) return fallback;
   const color = value.trim();
   return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : fallback;
-};
-
-// NEW: Helper to parse the packed "pattern:color" string from the database
-const parseColorAndPattern = (value?: string | null, fallbackColor = DEFAULT_TASK_COLOR) => {
-  if (!value) return { color: fallbackColor, pattern: "solid" };
-  const str = value.trim();
-  if (str.includes(":")) {
-    const [pattern, color] = str.split(":");
-    return { pattern, color: normalizeHexColor(color, fallbackColor) };
-  }
-  // Legacy support for plain hex colors already in the DB
-  return { pattern: "solid", color: normalizeHexColor(str, fallbackColor) };
-};
-
-// NEW: Helper to format the pattern and color to send to the database
-const encodeColorAndPattern = (color: string, pattern: string) => {
-  return `${pattern}:${normalizeHexColor(color)}`;
-};
-
-const getPatternStyle = (color: string, pattern: string): React.CSSProperties => {
-  const spacing = "5px";
-  const transparentSpacing = "10px";
-  switch (pattern) {
-      case "diagonal-right":
-          return { backgroundImage: `repeating-linear-gradient(45deg, ${color}, ${color} ${spacing}, transparent ${spacing}, transparent ${transparentSpacing})` };
-      case "diagonal-left":
-          return { backgroundImage: `repeating-linear-gradient(-45deg, ${color}, ${color} ${spacing}, transparent ${spacing}, transparent ${transparentSpacing})` };
-      case "vertical":
-          return { backgroundImage: `repeating-linear-gradient(90deg, ${color}, ${color} ${spacing}, transparent ${spacing}, transparent ${transparentSpacing})` };
-      case "horizontal":
-          return { backgroundImage: `repeating-linear-gradient(0deg, ${color}, ${color} ${spacing}, transparent ${spacing}, transparent ${transparentSpacing})` };
-      case "solid":
-      default:
-          return { backgroundColor: color };
-  }
 };
 
 const parseLegacyDescription = (description?: string | null) => {
@@ -176,6 +132,7 @@ const formatDateTimeLabel = (value: string) => {
   return date.toLocaleString();
 };
 
+// MODIFIED: Added the prop to the component signature
 const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const { refreshKey, triggerRefresh } = useTaskEvents();
   const [view, setView] = React.useState<"tasks" | "events">("tasks");
@@ -210,7 +167,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [newTaskDetails, setNewTaskDetails] = React.useState("");
   const [newTaskTag, setNewTaskTag] = React.useState(DEFAULT_TAG);
   const [newTaskColor, setNewTaskColor] = React.useState(DEFAULT_TASK_COLOR);
-  const [newTaskPattern, setNewTaskPattern] = React.useState(DEFAULT_PATTERN);
   const [newTaskDate, setNewTaskDate] = React.useState("");
   const [newTaskTime, setNewTaskTime] = React.useState("");
   const [newTaskPriority, setNewTaskPriority] = React.useState(1);
@@ -220,7 +176,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [editTaskDetails, setEditTaskDetails] = React.useState("");
   const [editTaskTag, setEditTaskTag] = React.useState(DEFAULT_TAG);
   const [editTaskColor, setEditTaskColor] = React.useState(DEFAULT_TASK_COLOR);
-  const [editTaskPattern, setEditTaskPattern] = React.useState(DEFAULT_PATTERN);
   const [editTaskDate, setEditTaskDate] = React.useState("");
   const [editTaskTime, setEditTaskTime] = React.useState("");
   const [editTaskPriority, setEditTaskPriority] = React.useState(1);
@@ -231,7 +186,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [newEventStartAt, setNewEventStartAt] = React.useState("");
   const [newEventEndAt, setNewEventEndAt] = React.useState("");
   const [newEventColor, setNewEventColor] = React.useState(DEFAULT_EVENT_COLOR);
-  const [newEventPattern, setNewEventPattern] = React.useState(DEFAULT_PATTERN);
   const [newEventLocation, setNewEventLocation] = React.useState("");
   const [newEventStatus, setNewEventStatus] =
     React.useState<string>("scheduled");
@@ -245,7 +199,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [editEventEndAt, setEditEventEndAt] = React.useState("");
   const [editEventColor, setEditEventColor] =
     React.useState(DEFAULT_EVENT_COLOR);
-  const [editEventPattern, setEditEventPattern] = React.useState(DEFAULT_PATTERN);
   const [editEventLocation, setEditEventLocation] = React.useState("");
   const [editEventStatus, setEditEventStatus] =
     React.useState<string>("scheduled");
@@ -263,14 +216,12 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
 
         const mappedTasks = tasksRes.data.map((task) => {
           const legacy = parseLegacyDescription(task.description);
-          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
             id: task.id,
             title: task.title,
             details: legacy.details,
             tag: task.tag ?? DEFAULT_TAG,
-            color: parsedStyles.color,
-            pattern: parsedStyles.pattern,
+            color: normalizeHexColor(task.color),
             dueDate: task.due_date ?? legacy.dueDate,
             dueTime: task.due_time?.slice(0, 5) ?? legacy.dueTime,
             priority: task.priority ?? legacy.priority,
@@ -287,22 +238,18 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
             const eventStart = new Date(event.start_at);
             return eventStart >= now && eventStart <= sevenDaysFromNow;
           })
-          .map((event) => {
-            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
-            return {
-              id: event.id,
-              title: event.title,
-              description: event.description ?? "",
-              startAt: formatDateTimeLocal(event.start_at),
-              endAt: formatDateTimeLocal(event.end_at),
-              color: parsedStyles.color,
-              pattern: parsedStyles.pattern,
-              location: event.location ?? "",
-              status: event.status ?? "scheduled",
-              allDay: Boolean(event.all_day),
-              recurrence: event.recurrence ?? "none",
-            };
-          });
+          .map((event) => ({
+            id: event.id,
+            title: event.title,
+            description: event.description ?? "",
+            startAt: formatDateTimeLocal(event.start_at),
+            endAt: formatDateTimeLocal(event.end_at),
+            color: normalizeHexColor(event.color, DEFAULT_EVENT_COLOR),
+            location: event.location ?? "",
+            status: event.status ?? "scheduled",
+            allDay: Boolean(event.all_day),
+            recurrence: event.recurrence ?? "none",
+          }));
 
         setTasks(mappedTasks);
         setEvents(mappedEvents);
@@ -329,20 +276,18 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         title: newTaskTitle.trim(),
         description: newTaskDetails.trim() || null,
         tag: newTaskTag,
-        color: encodeColorAndPattern(newTaskColor, newTaskPattern), // Pack it here
+        color: normalizeHexColor(newTaskColor),
         priority: newTaskPriority,
         status: newTaskStatus,
         due_date: newTaskDate,
         due_time: newTaskTime,
       });
-      const parsedResStyles = parseColorAndPattern(res.data.color, newTaskColor);
       const newTask: Task = {
         id: res.data.id,
         title: res.data.title,
         details: res.data.description ?? "",
         tag: res.data.tag ?? DEFAULT_TAG,
-        color: parsedResStyles.color,
-        pattern: parsedResStyles.pattern,
+        color: normalizeHexColor(res.data.color),
         dueDate: res.data.due_date ?? newTaskDate,
         dueTime: res.data.due_time?.slice(0, 5) ?? newTaskTime,
         priority: res.data.priority ?? newTaskPriority,
@@ -361,7 +306,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setNewTaskDetails("");
     setNewTaskTag(DEFAULT_TAG);
     setNewTaskColor(DEFAULT_TASK_COLOR);
-    setNewTaskPattern(DEFAULT_PATTERN);
     setNewTaskDate("");
     setNewTaskTime("");
     setNewTaskPriority(1);
@@ -386,7 +330,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setEditTaskDetails(task.details);
     setEditTaskTag(task.tag);
     setEditTaskColor(task.color);
-    setEditTaskPattern(task.pattern);
     setEditTaskDate(task.dueDate);
     setEditTaskTime(task.dueTime);
     setEditTaskPriority(task.priority);
@@ -408,31 +351,28 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         title: editTaskTitle.trim(),
         description: editTaskDetails.trim() || null,
         tag: editTaskTag,
-        color: encodeColorAndPattern(editTaskColor, editTaskPattern), // Pack it here
+        color: normalizeHexColor(editTaskColor),
         priority: editTaskPriority,
         status: editTaskStatus,
         due_date: editTaskDate,
         due_time: editTaskTime,
       });
       setTasks((prev) =>
-        prev.map((task) => {
-          if (task.id === taskId) {
-            const parsedResStyles = parseColorAndPattern(res.data.color, editTaskColor);
-            return {
-              ...task,
-              title: res.data.title,
-              details: res.data.description ?? "",
-              tag: res.data.tag ?? editTaskTag,
-              color: parsedResStyles.color,
-              pattern: parsedResStyles.pattern,
-              dueDate: res.data.due_date ?? editTaskDate,
-              dueTime: res.data.due_time?.slice(0, 5) ?? editTaskTime,
-              priority: res.data.priority ?? editTaskPriority,
-              status: res.data.status ?? editTaskStatus,
-            };
-          }
-          return task;
-        }),
+        prev.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                title: res.data.title,
+                details: res.data.description ?? "",
+                tag: res.data.tag ?? editTaskTag,
+                color: normalizeHexColor(res.data.color ?? editTaskColor),
+                dueDate: res.data.due_date ?? editTaskDate,
+                dueTime: res.data.due_time?.slice(0, 5) ?? editTaskTime,
+                priority: res.data.priority ?? editTaskPriority,
+                status: res.data.status ?? editTaskStatus,
+              }
+            : task,
+        ),
       );
       setEditingTaskId(null);
       triggerRefresh();
@@ -459,14 +399,13 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         description: newEventDescription.trim() || null,
         start_at: newEventStartAt,
         end_at: newEventEndAt,
-        color: encodeColorAndPattern(newEventColor, newEventPattern), // Pack it here
+        color: normalizeHexColor(newEventColor, DEFAULT_EVENT_COLOR),
         location: newEventLocation.trim() || null,
         status: newEventStatus,
         all_day: newEventAllDay,
         recurrence: newEventRecurrence,
       });
 
-      const parsedResStyles = parseColorAndPattern(res.data.color, newEventColor);
       setEvents((prev) => [
         ...prev,
         {
@@ -475,8 +414,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           description: res.data.description ?? "",
           startAt: formatDateTimeLocal(res.data.start_at),
           endAt: formatDateTimeLocal(res.data.end_at),
-          color: parsedResStyles.color,
-          pattern: parsedResStyles.pattern,
+          color: normalizeHexColor(res.data.color, DEFAULT_EVENT_COLOR),
           location: res.data.location ?? "",
           status: res.data.status ?? "scheduled",
           allDay: Boolean(res.data.all_day),
@@ -495,7 +433,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setNewEventStartAt("");
     setNewEventEndAt("");
     setNewEventColor(DEFAULT_EVENT_COLOR);
-    setNewEventPattern(DEFAULT_PATTERN);
     setNewEventLocation("");
     setNewEventStatus("scheduled");
     setNewEventAllDay(false);
@@ -524,7 +461,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setEditEventStartAt(event.startAt);
     setEditEventEndAt(event.endAt);
     setEditEventColor(event.color);
-    setEditEventPattern(event.pattern);
     setEditEventLocation(event.location);
     setEditEventStatus(event.status);
     setEditEventAllDay(event.allDay);
@@ -548,7 +484,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         description: editEventDescription.trim() || null,
         start_at: editEventStartAt,
         end_at: editEventEndAt,
-        color: encodeColorAndPattern(editEventColor, editEventPattern), // Pack it here
+        color: normalizeHexColor(editEventColor, DEFAULT_EVENT_COLOR),
         location: editEventLocation.trim() || null,
         status: editEventStatus,
         all_day: editEventAllDay,
@@ -556,25 +492,22 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
       });
 
       setEvents((prev) =>
-        prev.map((event) => {
-          if (event.id === eventId) {
-            const parsedResStyles = parseColorAndPattern(res.data.color, editEventColor);
-            return {
-              ...event,
-              title: res.data.title,
-              description: res.data.description ?? "",
-              startAt: formatDateTimeLocal(res.data.start_at),
-              endAt: formatDateTimeLocal(res.data.end_at),
-              color: parsedResStyles.color,
-              pattern: parsedResStyles.pattern,
-              location: res.data.location ?? "",
-              status: res.data.status ?? "scheduled",
-              allDay: Boolean(res.data.all_day),
-              recurrence: res.data.recurrence ?? "none",
-            };
-          }
-          return event;
-        }),
+        prev.map((event) =>
+          event.id === eventId
+            ? {
+                ...event,
+                title: res.data.title,
+                description: res.data.description ?? "",
+                startAt: formatDateTimeLocal(res.data.start_at),
+                endAt: formatDateTimeLocal(res.data.end_at),
+                color: normalizeHexColor(res.data.color, DEFAULT_EVENT_COLOR),
+                location: res.data.location ?? "",
+                status: res.data.status ?? "scheduled",
+                allDay: Boolean(res.data.all_day),
+                recurrence: res.data.recurrence ?? "none",
+              }
+            : event,
+        ),
       );
       setEditingEventId(null);
       triggerRefresh();
@@ -623,8 +556,8 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                 <li
                   key={task.id}
                   className="taskItem"
+                  style={{ borderLeftColor: task.color }}
                 >
-                  <div className="taskItemPattern" style={getPatternStyle(task.color, task.pattern)} />
                   {editingTaskId === task.id ? (
                     <div className="taskEditor">
                       <input
@@ -654,18 +587,11 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                           </option>
                         ))}
                       </select>
-                      <div className="colorPatternRow">
-                        <input
-                          type="color"
-                          value={editTaskColor}
-                          onChange={(e) => setEditTaskColor(e.target.value)}
-                        />
-                        <select value={editTaskPattern} onChange={(e) => setEditTaskPattern(e.target.value)}>
-                            {PATTERN_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                      </div>
+                      <input
+                        type="color"
+                        value={editTaskColor}
+                        onChange={(e) => setEditTaskColor(e.target.value)}
+                      />
                       <input
                         type="date"
                         value={editTaskDate}
@@ -740,8 +666,8 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
               <li
                 key={event.id}
                 className="taskItem"
+                style={{ borderLeftColor: event.color }}
               >
-                <div className="taskItemPattern" style={getPatternStyle(event.color, event.pattern)} />
                 {editingEventId === event.id ? (
                   <div className="taskEditor">
                     <input
@@ -767,18 +693,11 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                       min={editEventStartAt || undefined}
                       disabled={!editEventStartAt}
                     />
-                    <div className="colorPatternRow">
-                      <input
-                        type="color"
-                        value={editEventColor}
-                        onChange={(e) => setEditEventColor(e.target.value)}
-                      />
-                      <select value={editEventPattern} onChange={(e) => setEditEventPattern(e.target.value)}>
-                          {PATTERN_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                      </select>
-                    </div>
+                    <input
+                      type="color"
+                      value={editEventColor}
+                      onChange={(e) => setEditEventColor(e.target.value)}
+                    />
                     <input
                       type="text"
                       value={editEventLocation}
@@ -801,7 +720,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                         checked={editEventAllDay}
                         onChange={(e) => setEditEventAllDay(e.target.checked)}
                       />
-                        All day
+                      All day
                     </label>
                     <select
                       value={editEventRecurrence}
@@ -923,18 +842,11 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                 </option>
               ))}
             </select>
-            <div className="colorPatternRow">
-              <input
-                type="color"
-                value={newTaskColor}
-                onChange={(e) => setNewTaskColor(e.target.value)}
-              />
-              <select value={newTaskPattern} onChange={(e) => setNewTaskPattern(e.target.value)}>
-                  {PATTERN_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-              </select>
-            </div>
+            <input
+              type="color"
+              value={newTaskColor}
+              onChange={(e) => setNewTaskColor(e.target.value)}
+            />
             <input
               type="date"
               value={newTaskDate}
@@ -994,18 +906,11 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
               min={newEventStartAt || undefined}
               disabled={!newEventStartAt}
             />
-            <div className="colorPatternRow">
-              <input
-                type="color"
-                value={newEventColor}
-                onChange={(e) => setNewEventColor(e.target.value)}
-              />
-              <select value={newEventPattern} onChange={(e) => setNewEventPattern(e.target.value)}>
-                  {PATTERN_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-              </select>
-            </div>
+            <input
+              type="color"
+              value={newEventColor}
+              onChange={(e) => setNewEventColor(e.target.value)}
+            />
             <input
               type="text"
               placeholder="Location"
