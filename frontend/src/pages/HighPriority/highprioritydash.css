@@ -1,16 +1,16 @@
 .highPriorityDash {
   background: var(--secondary-bg);
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .dashHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .starIcon {
@@ -19,14 +19,17 @@
 
 .dashHeader h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-color);
 }
 
 .dashContent {
-  padding: 10px;
-  min-height: 100px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .loadingText,
@@ -40,14 +43,43 @@
 .dashItems {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  min-height: 0;
+  flex: 1 1 auto;
+  /* Show ~1 task card; scroll for the rest */
+  max-height: 150px;
+}
+
+.dashItems::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dashItems::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+}
+
+.dashItems::-webkit-scrollbar-thumb {
+  background: #999;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dashItems::-webkit-scrollbar-thumb:hover {
+  background: #666;
+  background-clip: content-box;
 }
 
 .dashItem {
   background: var(--bg-color);
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-radius: 8px;
   border-left: 4px solid #4caf50;
+  flex-shrink: 0;
   transition: all 0.2s;
 }
 
@@ -60,7 +92,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .dashItemIcon {
@@ -70,7 +102,7 @@
 .dashItemTitle {
   font-weight: 500;
   color: var(--text-color);
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .dashItemFooter {
@@ -81,7 +113,7 @@
 }
 
 .dashItemDate {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
@@ -92,4 +124,165 @@
   font-size: 11px;
   font-weight: 600;
   color: white;
+}
+
+.dashItemActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+}
+
+.dashActionBtn {
+  flex: 1;
+  padding: 5px 6px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashActionComplete {
+  background: #4caf50;
+  color: white;
+}
+
+.dashActionComplete:hover {
+  background: #45a049;
+  transform: scale(1.05);
+}
+
+.dashActionEdit {
+  background: #2196f3;
+  color: white;
+}
+
+.dashActionEdit:hover {
+  background: #0b7dda;
+  transform: scale(1.05);
+}
+
+.dashActionDelete {
+  background: #f44336;
+  color: white;
+}
+
+.dashActionDelete:hover {
+  background: #da190b;
+  transform: scale(1.05);
+}
+
+/* Edit Task Modal */
+.editTaskModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.editTaskOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.editTaskForm {
+  position: relative;
+  background: var(--secondary-bg);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 90%;
+  z-index: 1001;
+}
+
+.editTaskForm h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.editFormGroup {
+  margin-bottom: 16px;
+}
+
+.editFormGroup label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.editFormGroup input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.editFormGroup input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+.editFormActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+}
+
+.editSaveBtn,
+.editCancelBtn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editSaveBtn {
+  background: #4caf50;
+  color: white;
+}
+
+.editSaveBtn:hover {
+  background: #45a049;
+}
+
+.editCancelBtn {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.editCancelBtn:hover {
+  background: #d0d0d0;
 }
