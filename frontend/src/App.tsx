@@ -1,7 +1,7 @@
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 
@@ -41,7 +41,8 @@ const AppContent = () => {
   return (
     <TaskEventProvider>
       <Routes>
-        <Route path='/' element={<Home signOut={signOut} user={user} />} />
+        <Route path='/' element={<Navigate to='/dashboard' replace />} />
+        <Route path='/home' element={<Home signOut={signOut} user={user} />} />
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/taskpanel' element={<TaskPanel />} />
         <Route path='/calendarview' element={<CalendarView />} />

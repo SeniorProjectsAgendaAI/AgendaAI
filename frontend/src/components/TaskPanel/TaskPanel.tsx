@@ -176,9 +176,109 @@ const formatDateTimeLabel = (value: string) => {
   return date.toLocaleString();
 };
 
+type RangeFilter = "today" | "week" | "month" | "all";
+
+const RANGE_OPTIONS: { value: RangeFilter; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "week", label: "This Week" },
+  { value: "month", label: "This Month" },
+  { value: "all", label: "All" },
+];
+
+const startOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+const getRangeBounds = (
+  range: RangeFilter,
+): { start: Date; end: Date | null } => {
+  const today = startOfDay(new Date());
+  if (range === "all") return { start: today, end: null };
+  const end = new Date(today);
+  if (range === "today") end.setDate(end.getDate() + 1);
+  if (range === "week") end.setDate(end.getDate() + 7);
+  if (range === "month") end.setDate(end.getDate() + 30);
+  return { start: today, end };
+};
+
+const isWithinRange = (date: Date, range: RangeFilter): boolean => {
+  const { start, end } = getRangeBounds(range);
+  if (date < start) return false;
+  if (end && date >= end) return false;
+  return true;
+};
+
+const parseTaskDate = (dueDate: string, dueTime: string): Date | null => {
+  if (!dueDate) return null;
+  const combined = dueTime ? `${dueDate}T${dueTime}` : `${dueDate}T00:00`;
+  const d = new Date(combined);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const parseEventDate = (startAt: string): Date | null => {
+  if (!startAt) return null;
+  const d = new Date(startAt);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const dateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+const formatDateHeader = (d: Date): string => {
+  const today = startOfDay(new Date());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const itemDay = startOfDay(d);
+  const monthDay = itemDay.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+  if (itemDay.getTime() === today.getTime()) return `Today · ${monthDay}`;
+  if (itemDay.getTime() === tomorrow.getTime()) return `Tomorrow · ${monthDay}`;
+  const weekday = itemDay.toLocaleDateString(undefined, { weekday: "long" });
+  return `${weekday} · ${monthDay}`;
+};
+
+const formatTimeLabel = (value: string): string => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+};
+
+const formatDueTime = (time: string): string => {
+  if (!time) return "";
+  const [h, m] = time.split(":");
+  const hours = Number(h);
+  if (Number.isNaN(hours)) return time;
+  const d = new Date();
+  d.setHours(hours, Number(m ?? 0), 0, 0);
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+};
+
+function groupByDate<T>(
+  items: T[],
+  getDate: (item: T) => Date | null,
+): { key: string; date: Date | null; items: T[] }[] {
+  const map = new Map<string, { key: string; date: Date | null; items: T[] }>();
+  for (const item of items) {
+    const d = getDate(item);
+    const key = d ? dateKey(d) : "undated";
+    if (!map.has(key)) {
+      map.set(key, { key, date: d ? startOfDay(d) : null, items: [] });
+    }
+    map.get(key)!.items.push(item);
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date.getTime() - b.date.getTime();
+  });
+}
+
 const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const { refreshKey, triggerRefresh } = useTaskEvents();
   const [view, setView] = React.useState<"tasks" | "events">("tasks");
+  const [rangeFilter, setRangeFilter] = React.useState<RangeFilter>("week");
   const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(
     null,
   );
@@ -279,30 +379,22 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           };
         });
 
-        const mappedEvents = eventsRes.data
-          .filter((event) => {
-            const now = new Date();
-            const sevenDaysFromNow = new Date(now);
-            sevenDaysFromNow.setDate(now.getDate() + 7);
-            const eventStart = new Date(event.start_at);
-            return eventStart >= now && eventStart <= sevenDaysFromNow;
-          })
-          .map((event) => {
-            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
-            return {
-              id: event.id,
-              title: event.title,
-              description: event.description ?? "",
-              startAt: formatDateTimeLocal(event.start_at),
-              endAt: formatDateTimeLocal(event.end_at),
-              color: parsedStyles.color,
-              pattern: parsedStyles.pattern,
-              location: event.location ?? "",
-              status: event.status ?? "scheduled",
-              allDay: Boolean(event.all_day),
-              recurrence: event.recurrence ?? "none",
-            };
-          });
+        const mappedEvents = eventsRes.data.map((event) => {
+          const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+          return {
+            id: event.id,
+            title: event.title,
+            description: event.description ?? "",
+            startAt: formatDateTimeLocal(event.start_at),
+            endAt: formatDateTimeLocal(event.end_at),
+            color: parsedStyles.color,
+            pattern: parsedStyles.pattern,
+            location: event.location ?? "",
+            status: event.status ?? "scheduled",
+            allDay: Boolean(event.all_day),
+            recurrence: event.recurrence ?? "none",
+          };
+        });
 
         setTasks(mappedTasks);
         setEvents(mappedEvents);
@@ -595,6 +687,27 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     }
   };
 
+  const visibleTasks = tasks
+    .filter((task) => !task.completed)
+    .filter((task) => {
+      const d = parseTaskDate(task.dueDate, task.dueTime);
+      if (!d) return rangeFilter === "all";
+      return isWithinRange(d, rangeFilter);
+    });
+
+  const visibleEvents = events.filter((event) => {
+    const d = parseEventDate(event.startAt);
+    if (!d) return rangeFilter === "all";
+    return isWithinRange(d, rangeFilter);
+  });
+
+  const taskGroups = groupByDate(visibleTasks, (t) =>
+    parseTaskDate(t.dueDate, t.dueTime),
+  );
+  const eventGroups = groupByDate(visibleEvents, (e) =>
+    parseEventDate(e.startAt),
+  );
+
   return (
     <div className="taskPanelContainer">
       {!hideBackButton && <BackButton />}
@@ -613,13 +726,32 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           >
             Events
           </button>
+          <select
+            className="rangeSelect"
+            value={rangeFilter}
+            onChange={(e) => setRangeFilter(e.target.value as RangeFilter)}
+            aria-label="Filter by date range"
+          >
+            {RANGE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {view === "tasks" ? (
-          <ul className="taskList">
-            {tasks
-              .filter((task) => !task.completed)
-              .map((task) => (
+          <div className="taskList">
+            {taskGroups.length === 0 && (
+              <p className="emptyRange">No tasks in this range.</p>
+            )}
+            {taskGroups.map((group) => (
+              <div key={group.key} className="dateGroup">
+                <div className="dateHeader">
+                  {group.date ? formatDateHeader(group.date) : "No due date"}
+                </div>
+                <ul className="dateGroupList">
+                  {group.items.map((task) => (
                 <li
                   key={task.id}
                   className="taskItem"
@@ -704,23 +836,26 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                     </div>
                   ) : (
                     <div className="taskView">
-                      <strong>{task.title}</strong>
-                      <span
-                        className="taskTag"
-                        style={{ backgroundColor: task.color }}
-                      >
-                        {task.tag}
-                      </span>
-                      <br />
+                      <div className="itemHeader">
+                        <strong>{task.title}</strong>
+                        <span
+                          className="taskTag"
+                          style={{ backgroundColor: task.color }}
+                        >
+                          {task.tag}
+                        </span>
+                        {task.dueTime && (
+                          <span className="timeBadge">
+                            {formatDueTime(task.dueTime)}
+                          </span>
+                        )}
+                      </div>
                       {task.details && (
                         <>
                           Details: {task.details}
                           <br />
                         </>
                       )}
-                      <br />
-                      Deadline: {task.dueDate} @ {task.dueTime}
-                      <br />
                       Priority: {task.priority}
                       <br />
                       Status: {task.status}
@@ -732,11 +867,23 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                     </div>
                   )}
                 </li>
-              ))}
-          </ul>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         ) : (
-          <ul className="taskList">
-            {events.map((event) => (
+          <div className="taskList">
+            {eventGroups.length === 0 && (
+              <p className="emptyRange">No events in this range.</p>
+            )}
+            {eventGroups.map((group) => (
+              <div key={group.key} className="dateGroup">
+                <div className="dateHeader">
+                  {group.date ? formatDateHeader(group.date) : "No date"}
+                </div>
+                <ul className="dateGroupList">
+                  {group.items.map((event) => (
               <li
                 key={event.id}
                 className="taskItem"
@@ -822,25 +969,26 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                   </div>
                 ) : (
                   <div className="taskView">
-                    <strong>{event.title}</strong>
-                    <span
-                      className="taskTag"
-                      style={{ backgroundColor: event.color }}
-                    >
-                      Event
-                    </span>
-                    <br />
+                    <div className="itemHeader">
+                      <strong>{event.title}</strong>
+                      <span
+                        className="taskTag"
+                        style={{ backgroundColor: event.color }}
+                      >
+                        Event
+                      </span>
+                      <span className="timeBadge">
+                        {event.allDay
+                          ? "All day"
+                          : `${formatTimeLabel(event.startAt)} – ${formatTimeLabel(event.endAt)}`}
+                      </span>
+                    </div>
                     {event.description && (
                       <>
                         Description: {event.description}
                         <br />
                       </>
                     )}
-                    <br />
-                    Start: {formatDateTimeLabel(event.startAt)}
-                    <br />
-                    End: {formatDateTimeLabel(event.endAt)}
-                    <br />
                     {event.location && (
                       <>
                         Location: {event.location}
@@ -848,8 +996,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                       </>
                     )}
                     Status: {event.status}
-                    <br />
-                    All day: {event.allDay ? "Yes" : "No"}
                     <br />
                     Recurrence: {event.recurrence}
                     <br />
@@ -860,8 +1006,11 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                   </div>
                 )}
               </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
 
         <div className="panelActions">
