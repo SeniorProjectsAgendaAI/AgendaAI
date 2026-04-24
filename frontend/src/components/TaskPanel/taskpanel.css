@@ -26,6 +26,7 @@
 
 .panelSwitch {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-bottom: 12px;
   flex-shrink: 0; /* Prevents the switch buttons from getting squished */
@@ -46,6 +47,28 @@
   border-color: var(--primary-accent);
 }
 
+.rangeSelect {
+  margin-left: auto;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  color: var(--text-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.rangeSelect:hover {
+  background: var(--hover-bg);
+}
+
+.rangeSelect:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+}
+
 .taskList {
   list-style: none;
   padding: 0;
@@ -53,7 +76,61 @@
   flex: 1 1 auto; /* Allows it to take up max space, but shrink if window is small */
   min-height: 0;  /* CRITICAL: Allows the internal scrollbar to actually work */
   overflow-y: auto;
-  padding-bottom: 10px; 
+  padding-bottom: 10px;
+}
+
+.dateGroup {
+  margin-bottom: 14px;
+}
+
+.dateHeader {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color);
+  opacity: 0.75;
+  padding: 6px 4px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background: var(--nav-bg);
+  z-index: 1;
+}
+
+.dateGroupList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.emptyRange {
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.itemHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.timeBadge {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 8px;
+  white-space: nowrap;
 }
 
 .taskItem {
