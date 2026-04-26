@@ -509,7 +509,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                             }}
                             onClick={(event) => event.stopPropagation()}
                           >
-                            <span className="weekEventTime">{item.time ? formatDisplayTime(item.time) : "All day"}</span>
+                            <span className="weekEventTime">{item.time ? (item.type === "event" && item.endTime ? `${formatDisplayTime(item.time)} - ${formatDisplayTime(item.endTime)}` : formatDisplayTime(item.time)) : "All day"} </span>
                             <span className="weekEventTitle">{item.type === "event" ? "📅 " : ""}{item.name}</span>
                             {item.type === "task" && <span className={`weekPriorityTag ${priorityLabel(item.priority)}`}>Priority {item.priority}</span>}
                           </button>

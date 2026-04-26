@@ -15,6 +15,10 @@ import api from "../../services/api";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
+
+// For patterns
+import { parseColorAndPattern, getPatternStyle, DEFAULT_EVENT_COLOR, DEFAULT_TASK_COLOR } from "../../utils/styleUtils";
+
 interface DayViewProps {
   hideBackButton?: boolean;
 }
@@ -57,6 +61,8 @@ interface Task {
   time: string;
   priority: number;
   completed: boolean;
+  color: string;
+  pattern: string;
 }
 
 //Local event interface
@@ -67,7 +73,8 @@ interface Event {
   startTime: string;
   endTime: string;
   date: string;
-  color?: string;
+  color: string;
+  pattern: string;
   location?: string;
   status?: string;
   allDay?: boolean;
@@ -99,6 +106,13 @@ const formatTime12Hour = (time24: string): string => {
   if (hour < 12) return `${hour}:${minute} AM`;
   if (hour === 12) return `12:${minute} PM`;
   return `${hour - 12}:${minute} PM`;
+};
+
+//attempt at matching week view continuous blocks of time using ten minute blocks
+const parseTimeToMinutes = (timeStr?: string) => {
+  if (!timeStr) return 0;
+  const [hours = "0", minutes = "0"] = timeStr.split(":");
+  return parseInt(hours, 10) * 60 + parseInt(minutes, 10);
 };
 
 const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
@@ -164,6 +178,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     const res = await api.get<ApiTask[]>("/tasks");
     const mapped = res.data.map((task) => {
       const meta = parseTaskDescription(task.description);
+      const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
       return {
         id: task.id,
         name: task.title,
@@ -171,6 +186,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
         time: task.due_time?.slice(0, 5) ?? meta.time,
         priority: task.priority ?? meta.priority,
         completed: task.completed,
+        color: parsedStyles.color,
+        pattern: parsedStyles.pattern,
       };
     });
     setTasks(mapped);
@@ -195,6 +212,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
       const endMM = String(end.getMinutes()).padStart(2, "0");
       const endTime = `${endHH}:${endMM}`;
 
+      const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+
       return {
         id: event.id,
         title: event.title,
@@ -202,7 +221,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
         startTime,
         endTime,
         date: dateStr,
-        color: event.color ?? undefined,
+        color: parsedStyles.color,
+        pattern: parsedStyles.pattern,
         location: event.location ?? undefined,
         status: event.status ?? undefined,
         allDay: event.all_day ?? false,
@@ -429,11 +449,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
 
   const todayTasks = getTasksForDate(currentDate);
   const todayEvents = getEventsForDate(currentDate);
-  ///math for the progress bar //test later
   const totalTaskInDay = todayTasks.length;
-
   const completedTaskInDay = todayTasks.filter((task) => task.completed).length;
-
   const percentageComplete = totalTaskInDay === 0 ? 0 : (completedTaskInDay / totalTaskInDay) * 100;
 
   return (
@@ -473,18 +490,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                 <p>{todayEvents.length} event(s) scheduled</p>
                 <div className="eventsList">
                   {todayEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="eventItem"
-                      style={
-                        event.color
-                          ? {
-                              borderLeftColor: event.color,
-                              borderLeftWidth: "4px",
-                            }
-                          : undefined
-                      }
-                    >
+                    <div key={event.id} className="eventItem">
+                      <div className="taskItemPattern" style={getPatternStyle(event.color, event.pattern)} />
                       {editingEventId === event.id ? (
                         <div className="eventEditor">
                           <input
@@ -575,6 +582,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                 <div className="taskList">
                   {todayTasks.map((task) => (
                     <div key={task.id} className={`taskItem ${task.completed ? "completed" : ""}`}>
+                      <div className="taskItemPattern" style={getPatternStyle(task.color, task.pattern)} />
                       {editingTaskId === task.id ? (
                         <div className="taskEditor">
                           <input
@@ -644,14 +652,12 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                     </div>
                   ))}
                 
-                {/* ///////////////////////////////////////////////start of taskbar visuals*/}
                 {totalTaskInDay > 0 && (
                   <div className="taskProgressBarContainer">
                     <div className="taskProgressBarHeader">
                       <span> Daily Progress</span>
                       <span>{percentageComplete}% ({completedTaskInDay}/{totalTaskInDay})</span>
                     </div>
-                    {/*grey part of bar, could change later idk*/}
                     <div className="taskProgressBarBackground">
                       <div className="taskProgressBarFill" style={{ width: `${percentageComplete}%` }}>
                       </div>
@@ -684,53 +690,101 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
                   </div>
                 )}
                 {hours.map((hour) => (
-                  <div key={hour} className="hourBlock">
-                    {todayEvents
-                      .filter((event) => {
-                        if (event.allDay) return hour === 0;
-                        const eventStartHour = parseInt(event.startTime.split(":")[0], 10);
-                        const eventEndHour = parseInt(event.endTime.split(":")[0], 10);
-                        return hour >= eventStartHour && hour <= eventEndHour;
-                      })
-                      .map((event) => (
-                        <div
-                          key={`event-${event.id}-${hour}`}
-                          className="eventBlock"
-                          style={
-                            event.color
-                              ? {
-                                  borderLeftColor: event.color,
-                                  borderLeftWidth: "4px",
-                                }
-                              : undefined
-                          }
-                        >
-                          <div className="eventBlockTitle">{event.title}</div>
-                          <div className="eventBlockTime">
-                            {event.allDay
-                              ? "All Day"
-                              : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
-                          </div>
-                          {event.location && <div className="eventBlockLocation">{event.location}</div>}
-                          {event.description && <div className="eventBlockDescription">{event.description}</div>}
-                        </div>
-                      ))}
-
-                    {todayTasks
-                      .filter((task) => {
-                        if (!task.time) return false;
-                        const taskHour = parseInt(task.time.trim().split(":")[0], 10);
-                        return taskHour === hour;
-                      })
-                      .map((task) => (
-                        <div key={`task-${task.id}`} className={`taskBlock ${task.completed ? "completed" : ""}`}>
-                          <div className="taskBlockTitle">{task.name}</div>
-                          <div className="taskBlockTime">{formatTime12Hour(task.time)}</div>
-                          <div className="taskBlockPriority">P{task.priority}</div>
-                        </div>
-                      ))}
-                  </div>
+                  <div key={hour} className="hourBlock"></div>
                 ))}
+
+                <div className="dayEventLayer">
+                  {todayEvents.map((event) => {
+                    const startMins = event.allDay ? 0 : parseTimeToMinutes(event.startTime);
+                    const endMins = event.allDay ? 1440 : parseTimeToMinutes(event.endTime);
+                    const duration = Math.max(30, endMins - startMins); 
+                    
+                    const top = (startMins / 60) * 60; 
+                    const height = (duration / 60) * 60;
+                    const isEditing = editingEventId === event.id;
+
+                    return (
+                      <div
+                        key={`event-${event.id}`}
+                        className="eventBlock"
+                        style={{
+                          top: `${top}px`,
+                          minHeight: `${height}px`,
+                          height: isEditing ? 'auto' : `${height}px`,
+                          zIndex: isEditing ? 10 : 2,
+                        }}
+                      >
+                        <div className="taskItemPattern" style={getPatternStyle(event.color, event.pattern)} />
+                        {isEditing ? (
+                          <div className="eventEditor">
+                            <input type="text" value={editEventTitle} onChange={(e) => setEditEventTitle(e.target.value)} placeholder="Event title" className="editInput" />
+                            <textarea value={editEventDescription} onChange={(e) => setEditEventDescription(e.target.value)} placeholder="Description" className="editInput" />
+                            <input type="time" value={editEventStartTime} onChange={(e) => setEditEventStartTime(e.target.value)} className="editInput" />
+                            <input type="time" value={editEventEndTime} onChange={(e) => setEditEventEndTime(e.target.value)} className="editInput" />
+                            <input type="text" value={editEventLocation} onChange={(e) => setEditEventLocation(e.target.value)} placeholder="Location" className="editInput" />
+                            <input type="color" value={editEventColor} onChange={(e) => setEditEventColor(e.target.value)} className="editInput" />
+                            <div className="editActions">
+                              <button className="taskActionBtn completeBtn" onClick={() => saveEditEvent(event.id)}>Save</button>
+                              <button className="taskActionBtn deleteBtn" onClick={() => setEditingEventId(null)}>Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="eventItemHeader">
+                              <span className="eventItemTitle">{event.title}</span>
+                              <span className="eventItemTime">
+                                {event.allDay ? "All Day" : `${formatTime12Hour(event.startTime)} - ${formatTime12Hour(event.endTime)}`}
+                              </span>
+                            </div>
+                            {event.location && <div className="eventBlockLocation">{event.location}</div>}
+                            {event.description && <div className="eventBlockDescription">{event.description}</div>}
+                            <div className="taskActions" style={{marginTop: 'auto', paddingTop: '5px'}}>
+                              <button className="taskActionBtn completeBtn" onClick={() => startEditEvent(event)}>Edit</button>
+                              <button className="taskActionBtn deleteBtn" onClick={() => deleteEvent(event.id)}>Delete</button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {todayTasks.filter(t => t.time).map((task) => {
+                    const startMins = parseTimeToMinutes(task.time);
+                    const top = (startMins / 60) * 60;
+                    const isEditing = editingTaskId === task.id;
+
+                    return (
+                      <div 
+                        key={`task-${task.id}`} 
+                        className={`taskBlock ${task.completed ? "completed" : ""}`}
+                        style={{
+                          top: `${top}px`,
+                          minHeight: '45px',
+                          height: isEditing ? 'auto' : '45px',
+                          zIndex: isEditing ? 10 : 2,
+                        }}
+                      >
+                        <div className="taskItemPattern" style={getPatternStyle(task.color, task.pattern)} />
+                        {isEditing ? (
+                          <div className="taskEditor">
+                            <input type="text" value={editTaskName} onChange={(e) => setEditTaskName(e.target.value)} placeholder="Task name" className="editInput" />
+                            <input type="time" value={editTaskTime} onChange={(e) => setEditTaskTime(e.target.value)} className="editInput" />
+                            <div className="editActions">
+                              <button className="taskActionBtn completeBtn" onClick={() => saveEditTask(task.id)}>Save</button>
+                              <button className="taskActionBtn deleteBtn" onClick={() => setEditingTaskId(null)}>Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="taskBlockTitle">{task.name}</div>
+                            <div className="taskBlockTime">{formatTime12Hour(task.time)}</div>
+                            <div className="taskBlockPriority">P{task.priority}</div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </>

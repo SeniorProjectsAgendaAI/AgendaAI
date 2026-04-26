@@ -1,41 +1,62 @@
 .monthViewContainer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: var(--bg-color);
+  flex-direction: column;
   padding: 20px;
 }
 
+/* Match the WeekView header style */
 .monthViewHeader {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .monthViewHeader h2 {
   margin: 0;
+  font-size: 24px;
+  line-height: 1.1;
   color: var(--text-color);
 }
 
 .monthNavigation {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
+/* Match WeekView button styles exactly */
 .monthNavigation button {
   border: 1px solid var(--border-color);
   background: var(--secondary-bg);
   color: var(--text-color);
-  padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
+  font-weight: 600;
+  padding: 8px 14px;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .monthNavigation button:hover {
   background: var(--hover-bg);
 }
 
+.monthNavigation button:active {
+  transform: translateY(1px);
+}
+
 .monthLoading {
+  padding: 40px 0;
+  text-align: center;
   color: var(--text-muted);
-  margin: 8px 0;
 }
 
 .monthWeekdayRow {
@@ -47,52 +68,80 @@
 
 .monthWeekdayCell {
   text-align: center;
-  font-weight: 600;
-  color: var(--text-muted);
   font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .monthGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px; /* Slightly larger gap to let the cells breathe */
 }
 
+/* Elevated cards to match the new system */
 .monthCell {
   min-height: 120px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 12px; /* Match WeekView's rounded corners */
   background: var(--secondary-bg);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.monthCell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-accent);
 }
 
 .monthCellEmpty {
   background: var(--bg-color);
+  border: 1px dashed var(--border-color);
+  pointer-events: none; /* Can't click empty cells */
 }
 
 .monthCellToday {
+  background: rgba(79, 109, 224, 0.04);
   border-color: var(--primary-accent);
-  box-shadow: 0 0 0 1px var(--primary-accent) inset;
 }
 
+/* Match the circular 'today' badge from WeekView */
 .monthCellDate {
-  font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-color);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  align-self: flex-end; /* Push date to top right corner of cell */
+}
+
+.todayBadge {
+  background: var(--primary-accent);
+  color: #fff;
 }
 
 .monthItems {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 }
 
+/* Chips to match event styles */
 .monthItem {
-  border-radius: 4px;
-  padding: 3px 6px;
+  border-radius: 6px;
+  padding: 4px 6px;
   font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
@@ -101,6 +150,8 @@
   border: 1px solid var(--border-color);
   background: var(--bg-color);
   color: var(--text-color);
+  display: flex;
+  gap: 4px;
 }
 
 .monthTask {
@@ -111,9 +162,26 @@
   border-left: 4px solid var(--primary-accent);
 }
 
+.monthItemTime {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.monthItemTitle {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .monthMore {
   font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
+  text-align: center;
+  padding: 4px 0;
+  background: rgba(127, 127, 127, 0.1);
+  border-radius: 6px;
+  margin-top: auto; /* Push to bottom of cell */
 }
 
 @media (max-width: 900px) {

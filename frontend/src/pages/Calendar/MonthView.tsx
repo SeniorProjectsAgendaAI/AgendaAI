@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
 import "./monthview.css";
-//made by james, connected to backend by james
 
 interface ApiTask {
   id: number;
@@ -43,6 +42,17 @@ const formatDateKey = (date: Date): string => {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+};
+
+//match the 12-hour time format from WeekView/DayView
+const formatDisplayTime = (time: string) => {
+  if (!time) return "";
+  const [rawHours, rawMinutes] = time.split(":");
+  const hours = Number(rawHours);
+  const minutes = rawMinutes ?? "00";
+  const suffix = hours >= 12 ? "pm" : "am";
+  const normalizedHours = hours % 12 || 12;
+  return `${normalizedHours}:${minutes}${suffix}`;
 };
 
 const MonthView = () => {
@@ -102,7 +112,7 @@ const MonthView = () => {
 
     loadAll();
   }, []);
-  //drill down click
+
   const handleDayClick = (dateKey: string) => {
     navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'month' } });
   };
@@ -188,17 +198,18 @@ const MonthView = () => {
                   key={dateKey} 
                   className={`monthCell ${isToday ? "monthCellToday" : ""}`}
                   onClick={() => handleDayClick(dateKey)}
-                  style={{ cursor: "pointer" }}>
-                  <div className="monthCellDate">{day}</div>
+                  title="Click to view day"
+                >
+                  <div className={`monthCellDate ${isToday ? "todayBadge" : ""}`}>{day}</div>
                   <div className="monthItems">
                     {visibleItems.map((item) => (
                       <div
                         key={`${item.type}-${item.id}`}
                         className={`monthItem ${item.type === "task" ? "monthTask" : "monthEvent"}`}
-                        title={item.time ? `${item.time} ${item.title}` : item.title}
+                        title={item.time ? `${formatDisplayTime(item.time)} ${item.title}` : item.title}
                       >
-                        {item.time ? `${item.time} ` : ""}
-                        {item.title}
+                        <span className="monthItemTime">{item.time ? `${formatDisplayTime(item.time)} ` : ""}</span>
+                        <span className="monthItemTitle">{item.title}</span>
                       </div>
                     ))}
                     {overflowCount > 0 && <div className="monthMore">+{overflowCount} more</div>}

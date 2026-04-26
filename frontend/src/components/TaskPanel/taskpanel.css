@@ -143,6 +143,7 @@
   border-radius: 6px;
   position: relative;
   overflow: hidden;
+  border-left: none !important; /* bad practice i know but unfortunatley i cant figure out the importance overide that hppanes otherwise */
   
 }
 
