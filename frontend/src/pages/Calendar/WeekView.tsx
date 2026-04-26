@@ -3,6 +3,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
+import {
+  findEventConflicts,
+  formatConflictMessage,
+  PENDING_APPROVAL_STATUS,
+} from "../../utils/eventConflicts";
 import "./weekview.css";
 
 interface WeekViewProps {
@@ -45,6 +50,7 @@ interface WeekItem {
   priority: number;
   completed: boolean;
   color?: string;
+  status?: string | null;
 }
 
 interface CreateSlot {
@@ -203,21 +209,24 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         };
       });
 
-      const mappedEvents: WeekItem[] = eventsRes.data.map((event) => {
-        const start = new Date(event.start_at);
-        const end = new Date(event.end_at);
-        return {
-          id: event.id,
-          type: "event",
-          name: event.title,
-          date: formatDateKey(start),
-          time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
-          endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
-          priority: 0,
-          completed: false,
-          color: event.color ?? undefined,
-        };
-      });
+      const mappedEvents: WeekItem[] = eventsRes.data
+        .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+        .map((event) => {
+          const start = new Date(event.start_at);
+          const end = new Date(event.end_at);
+          return {
+            id: event.id,
+            type: "event",
+            name: event.title,
+            date: formatDateKey(start),
+            time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
+            endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
+            priority: 0,
+            completed: false,
+            color: event.color ?? undefined,
+            status: event.status,
+          };
+        });
 
       setItems([...mappedTasks, ...mappedEvents]);
     } catch (err) {
@@ -333,20 +342,44 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
       return;
     }
 
+    const eventConflicts = findEventConflicts(
+      items
+        .filter((item) => item.type === "event")
+        .map((item) => ({
+          id: item.id,
+          title: item.name,
+          startAt: buildLocalDateTime(item.date, item.time),
+          endAt: buildLocalDateTime(item.date, item.endTime ?? item.time),
+          status: item.status,
+        })),
+      eventStartAt,
+      eventEndAt,
+    );
+    const hasConflicts = eventConflicts.length > 0;
+    if (hasConflicts) {
+      const approved = window.confirm(
+        `This event conflicts with:\n\n${formatConflictMessage(eventConflicts)}\n\nIt will be saved as pending approval and will not appear on the calendar until approved.`,
+      );
+      if (!approved) return;
+    }
+
     try {
-      await api.post("/events", {
+      const response = await api.post<ApiEvent>("/events", {
         title: eventTitle.trim(),
         description: eventDescription.trim() || null,
         start_at: eventStartAt,
         end_at: eventEndAt,
         color: eventColor,
         location: eventLocation.trim() || null,
-        status: eventStatus,
+        status: hasConflicts ? PENDING_APPROVAL_STATUS : eventStatus,
         all_day: false,
         recurrence: "none",
       });
       await loadAll();
       triggerRefresh();
+      if (response.data.status === PENDING_APPROVAL_STATUS) {
+        alert("Event saved as pending approval. Approve it from the task panel before it appears on the calendar.");
+      }
       closeCreationUI();
     } catch (err) {
       console.error("Failed to create event", err);
