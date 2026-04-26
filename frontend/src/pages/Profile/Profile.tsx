@@ -1,13 +1,13 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
+import { fetchUserAttributes, updateUserAttribute, updatePassword } from 'aws-amplify/auth'; 
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface ProfileData {
-    username?: string;
     fullName?: string;
     email?: string;
-    password?: string;
+    // Removed the dummy password state completely
 }
 
 const Profile: React.FC = () => {
@@ -15,16 +15,38 @@ const Profile: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
 
     const [profileData, setProfileData] = useState<ProfileData>({
-        username: "BiniToo",
-        fullName: "Biniam",
-        email: "bini@gmail.com",
-        password: "samplepassword123" 
+        fullName: "",
+        email: "",
     });
-
-    const [showPassword, setShowPassword] = useState<boolean>(false);
 
     const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Name Update States
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateStatus, setUpdateStatus] = useState<{ message: string, type: 'success' | 'error' | '' }>({ message: '', type: '' });
+
+    // Password Update States
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordInput, setPasswordInput] = useState({ oldPassword: '', newPassword: '' });
+    const [passwordStatus, setPasswordStatus] = useState<{ message: string, type: 'success' | 'error' | '' }>({ message: '', type: '' });
+
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                const attributes = await fetchUserAttributes();
+                
+                setProfileData({
+                    fullName: attributes.name || "", 
+                    email: attributes.email || user?.signInDetails?.loginId || "",
+                });
+            } catch (error) {
+                console.error("Error fetching user attributes:", error);
+            }
+        };
+
+        loadUserData();
+    }, [user]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -34,22 +56,78 @@ const Profile: React.FC = () => {
         }));
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword((prev) => !prev);
+    const saveProfileChanges = async () => {
+        if (!profileData.fullName || profileData.fullName.trim() === "") return;
+        
+        setIsUpdating(true);
+        setUpdateStatus({ message: 'Saving...', type: '' });
+
+        try {
+            await updateUserAttribute({
+                userAttribute: {
+                    attributeKey: 'name',
+                    value: profileData.fullName.trim()
+                }
+            });
+            
+            setUpdateStatus({ message: 'Name updated successfully!', type: 'success' });
+            
+            setTimeout(() => {
+                setUpdateStatus({ message: '', type: '' });
+            }, 3000);
+            
+        } catch (error) {
+            console.error("Failed to update name:", error);
+            setUpdateStatus({ message: 'Failed to update name. Try again.', type: 'error' });
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
-    //profile picture change function
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            saveProfileChanges();
+        }
+    };
+
+    const handlePasswordSubmit = async () => {
+        if (!passwordInput.oldPassword || !passwordInput.newPassword) {
+            setPasswordStatus({ message: 'Both fields are required', type: 'error' });
+            return;
+        }
+
+        try {
+            setPasswordStatus({ message: 'Updating password...', type: '' });
+            await updatePassword({
+                oldPassword: passwordInput.oldPassword,
+                newPassword: passwordInput.newPassword
+            });
+            
+            setPasswordStatus({ message: 'Password updated successfully!', type: 'success' });
+            
+            setTimeout(() => {
+                setIsChangingPassword(false);
+                setPasswordInput({ oldPassword: '', newPassword: '' });
+                setPasswordStatus({ message: '', type: '' });
+            }, 3000);
+
+        } catch (error: any) {
+            console.error("Failed to update password:", error);
+            setPasswordStatus({ message: error.message || 'Failed to update password.', type: 'error' });
+        }
+    };
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setProfileImagePreview(imageUrl);
             
-            // file CONNECT TO BACKEND
+            
         }
     };
 
-    // NEW: Programmatically click the hidden file input
     const triggerFileInput = () => {
         fileInputRef.current?.click();
     };
@@ -57,7 +135,6 @@ const Profile: React.FC = () => {
     return (
         <div className="profile">
         
-            {/* Profile Pic */}
             <div className="profile-picture-section">
                 <div className="profile-picture-wrapper" onClick={triggerFileInput}>
                     {profileImagePreview ? (
@@ -68,7 +145,6 @@ const Profile: React.FC = () => {
                         </div>
                     )}
                 </div>
-                {/* input file restrictios */}
                 <input
                     type="file"
                     accept="image/png"
@@ -77,21 +153,12 @@ const Profile: React.FC = () => {
                     style={{ display: "none" }}
                 />
             </div>
+            
             <p className="profile-greeting">
-                Hi, {profileData.fullName}
+                Hi, {profileData.fullName || profileData.email}
             </p>
 
             <div className="profile-form">
-                <div className="form-group">
-                    <label>Username</label>
-                    <input
-                        type="text"
-                        name="username"
-                        value={profileData.username}
-                        onChange={handleInputChange}
-                    />
-                </div>
-                
                 <div className="form-group">
                     <label>Name</label>
                     <input
@@ -99,7 +166,18 @@ const Profile: React.FC = () => {
                         name="fullName"
                         value={profileData.fullName}
                         onChange={handleInputChange}
+                        onKeyDown={handleKeyDown} 
+                        disabled={isUpdating} 
                     />
+                    {updateStatus.message && (
+                        <span style={{ 
+                            fontSize: '12px', 
+                            marginTop: '4px',
+                            color: updateStatus.type === 'error' ? '#f44336' : '#4caf50' 
+                        }}>
+                            {updateStatus.message}
+                        </span>
+                    )}
                 </div>
                 
                 <div className="form-group">
@@ -109,26 +187,73 @@ const Profile: React.FC = () => {
                         name="email"
                         value={profileData.email}
                         onChange={handleInputChange}
+                        disabled 
                     />
                 </div>
                 
+                {/* password */}
                 <div className="form-group password-group">
                     <label>Password</label>
-                    <div className="password-input-container">
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            value={profileData.password}
-                            onChange={handleInputChange}
-                        />
+                    
+                    {!isChangingPassword ? (
                         <button
                             type="button"
-                            className="show-password-btn"
-                            onClick={togglePasswordVisibility}
+                            onClick={() => setIsChangingPassword(true)}
+                            style={{
+                                padding: '10px 16px',
+                                background: 'transparent',
+                                border: '1px solid var(--border-color)',
+                                color: 'var(--text-color)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '500',
+                                alignSelf: 'flex-start',
+                                width: 'fit-content'
+                            }}
                         >
-                            {showPassword ? "Hide" : "Show"}
+                            Change Password
                         </button>
-                    </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <input
+                                type="password"
+                                placeholder="Current Password"
+                                value={passwordInput.oldPassword}
+                                onChange={(e) => setPasswordInput({...passwordInput, oldPassword: e.target.value})}
+                            />
+                            <input
+                                type="password"
+                                placeholder="New Password"
+                                value={passwordInput.newPassword}
+                                onChange={(e) => setPasswordInput({...passwordInput, newPassword: e.target.value})}
+                            />
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                                <button 
+                                    onClick={handlePasswordSubmit} 
+                                    style={{ padding: '6px 12px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Save Password
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setIsChangingPassword(false);
+                                        setPasswordStatus({ message: '', type: '' });
+                                    }} 
+                                    style={{ padding: '6px 12px', background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                            {passwordStatus.message && (
+                                <span style={{ 
+                                    fontSize: '12px', 
+                                    color: passwordStatus.type === 'error' ? '#f44336' : '#4caf50' 
+                                }}>
+                                    {passwordStatus.message}
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
