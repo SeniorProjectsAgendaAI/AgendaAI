@@ -31,11 +31,25 @@
 .navigationItem:hover { background: var(--hover-bg); }
 .navigationItem.active { color: var(--primary-accent); font-weight: bold; }
 
+.navigationItemlogout:hover { background: var(--hover-bg); }
+.navigationItemlogout.active { color: var(--primary-accent); font-weight: bold; }
+
 .navigationItemlogout {
   margin-top: auto;
   background-color: transparent;
   border: none;
   justify-content: flex-start;
+  padding: 10px;
+  text-decoration: none;
+  color: var(--nav-text);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  text-align: center;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 10px;
 }
 
 .navigationItemlogout button {
