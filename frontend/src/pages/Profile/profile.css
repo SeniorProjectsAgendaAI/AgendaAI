@@ -1,50 +1,117 @@
-.profile 
-{
-    color: var(--text-color); /* <-- CHANGED FROM white TO DYNAMIC VARIABLE */
+.profile {
+    color: var(--text-color); 
     display: flex;
-    justify-content: center; 
-    align-items: center; 
+    align-items: flex-start; /* Aligns everything to the left */
+    text-align: left;
     flex-direction: column; 
-    gap: 15px; /* Added a gap so the buttons and text don't touch */
+    gap: 20px; 
+    padding: 20px;
+    width: 100%;
+    max-width: 400px; 
 }
 
-img 
-{
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-}
-
-.themeToggleBtn 
-{
-    padding: 10px 20px;
-    background-color: var(--primary-accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.profile-greeting {
+    font-size: 2.5rem;
     font-weight: bold;
-    transition: background-color 0.2s ease;
+    margin: 0;
 }
 
-.themeToggleBtn:hover 
-{
-    opacity: 0.9;
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
 }
 
-.logoutBtn 
-{
-    padding: 10px 20px;
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 10px;
+    background-color: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-accent);
+}
+
+.password-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.password-input-container input {
+    flex: 1; 
+}
+
+.show-password-btn {
+    padding: 10px 15px;
     background-color: transparent;
     color: var(--text-color);
     border: 1px solid var(--text-color);
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.9rem;
 }
 
-.logoutBtn:hover 
-{
+.show-password-btn:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Ensures buttons stick to the left */
+    gap: 15px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.themeToggleBtn, .logoutBtn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    width: max-content;
+}
+
+.themeToggleBtn {
+    background-color: var(--primary-accent);
+    color: #ffffff;
+    border: none;
+}
+
+.themeToggleBtn:hover {
+    opacity: 0.9;
+}
+
+.logoutBtn {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+}
+
+.logoutBtn:hover {
     background-color: var(--text-color);
     color: var(--bg-color);
 }
