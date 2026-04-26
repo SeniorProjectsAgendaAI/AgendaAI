@@ -1,12 +1,16 @@
-.calendarcontainer {
-  height: 100vh;
+.calendarContainer {
+  min-height: 100vh; 
   background: var(--bg-color);
   position: relative;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendarView {
-  padding:20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1; 
 }
 
 .calendarButtons {
@@ -15,6 +19,7 @@
   margin-bottom: 20px;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .calendarButtons button {
@@ -23,21 +28,33 @@
   color: var(--text-color);
   font-size: 15px;
   cursor: pointer;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .calendarButtons button:hover {
   color: var(--primary-accent);
 }
 
-.calendarButtons button:active {
+.calendarButtons button.active {
   color: var(--primary-accent);
+  font-weight: bold;
+  border-bottom: 2px solid var(--primary-accent);
 }
 
 .calendarViewDisplay {
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
-  height: 80vh;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 0;
+  min-height: 80vh; 
+  height: auto; 
+  
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden; 
 }
 
 .timeSlot {

@@ -51,7 +51,7 @@ const HighPriorityDash: React.FC = () => {
 
       const now = new Date();
       const threeDaysFromNow = new Date(now);
-      threeDaysFromNow.setDate(now.getDate() + 2);
+      threeDaysFromNow.setDate(now.getDate() + 6);
       threeDaysFromNow.setHours(23, 59, 59, 999);
 
       //Filter high priority tasks

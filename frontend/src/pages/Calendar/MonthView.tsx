@@ -2,13 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
+import { 
+  parseColorAndPattern, 
+  getPatternStyle, 
+  DEFAULT_EVENT_COLOR, 
+  DEFAULT_TASK_COLOR 
+} from "../../utils/styleUtils";
 import "./monthview.css";
-//made by james, connected to backend by james
 
 interface ApiTask {
   id: number;
   title: string;
   description?: string | null;
+  color?: string | null;
   due_date?: string | null;
   due_time?: string | null;
 }
@@ -17,6 +23,7 @@ interface ApiEvent {
   id: number;
   title: string;
   start_at: string;
+  color?: string | null;
   status?: string | null;
 }
 
@@ -26,6 +33,8 @@ interface CalendarItem {
   title: string;
   date: string;
   time: string;
+  color: string;
+  pattern: string;
 }
 
 const parseLegacyDescription = (description?: string | null) => {
@@ -43,6 +52,17 @@ const formatDateKey = (date: Date): string => {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+};
+
+//match the 12-hour time format from WeekView/DayView
+const formatDisplayTime = (time: string) => {
+  if (!time) return "";
+  const [rawHours, rawMinutes] = time.split(":");
+  const hours = Number(rawHours);
+  const minutes = rawMinutes ?? "00";
+  const suffix = hours >= 12 ? "pm" : "am";
+  const normalizedHours = hours % 12 || 12;
+  return `${normalizedHours}:${minutes}${suffix}`;
 };
 
 const MonthView = () => {
@@ -65,12 +85,15 @@ const MonthView = () => {
 
         const taskItems: CalendarItem[] = tasksRes.data.map((task) => {
           const legacy = parseLegacyDescription(task.description);
+          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
             id: task.id,
             type: "task",
             title: task.title,
             date: task.due_date ?? legacy.date,
             time: task.due_time?.slice(0, 5) ?? legacy.time,
+            color: parsedStyles.color,
+            pattern: parsedStyles.pattern,
           };
         });
 
@@ -83,12 +106,15 @@ const MonthView = () => {
             const d = String(start.getDate()).padStart(2, "0");
             const hh = String(start.getHours()).padStart(2, "0");
             const mm = String(start.getMinutes()).padStart(2, "0");
+            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
             return {
               id: event.id,
               type: "event",
               title: event.title,
               date: `${y}-${m}-${d}`,
               time: `${hh}:${mm}`,
+              color: parsedStyles.color,
+              pattern: parsedStyles.pattern,
             };
           });
 
@@ -102,7 +128,7 @@ const MonthView = () => {
 
     loadAll();
   }, []);
-  //drill down click
+
   const handleDayClick = (dateKey: string) => {
     navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'month' } });
   };
@@ -188,17 +214,19 @@ const MonthView = () => {
                   key={dateKey} 
                   className={`monthCell ${isToday ? "monthCellToday" : ""}`}
                   onClick={() => handleDayClick(dateKey)}
-                  style={{ cursor: "pointer" }}>
-                  <div className="monthCellDate">{day}</div>
+                  title="Click to view day"
+                >
+                  <div className={`monthCellDate ${isToday ? "todayBadge" : ""}`}>{day}</div>
                   <div className="monthItems">
                     {visibleItems.map((item) => (
                       <div
                         key={`${item.type}-${item.id}`}
                         className={`monthItem ${item.type === "task" ? "monthTask" : "monthEvent"}`}
-                        title={item.time ? `${item.time} ${item.title}` : item.title}
+                        title={item.time ? `${formatDisplayTime(item.time)} ${item.title}` : item.title}
                       >
-                        {item.time ? `${item.time} ` : ""}
-                        {item.title}
+                        <div className="taskItemPattern" style={getPatternStyle(item.color, item.pattern)} />
+                        <span className="monthItemTime">{item.time ? `${formatDisplayTime(item.time)} ` : ""}</span>
+                        <span className="monthItemTitle">{item.title}</span>
                       </div>
                     ))}
                     {overflowCount > 0 && <div className="monthMore">+{overflowCount} more</div>}

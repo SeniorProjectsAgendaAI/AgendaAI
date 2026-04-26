@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface ProfileData {
     username?: string;
-    firstName?: string;
-    lastName?: string;
+    fullName?: string;
     email?: string;
     password?: string;
 }
@@ -17,13 +16,15 @@ const Profile: React.FC = () => {
 
     const [profileData, setProfileData] = useState<ProfileData>({
         username: "BiniToo",
-        firstName: "Biniam",
-        lastName: "Gashaw",
+        fullName: "Biniam",
         email: "bini@gmail.com",
         password: "samplepassword123" 
     });
 
     const [showPassword, setShowPassword] = useState<boolean>(false);
+
+    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -37,10 +38,47 @@ const Profile: React.FC = () => {
         setShowPassword((prev) => !prev);
     };
 
+    //profile picture change function
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setProfileImagePreview(imageUrl);
+            
+            // file CONNECT TO BACKEND
+        }
+    };
+
+    // NEW: Programmatically click the hidden file input
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
     return (
         <div className="profile">
+        
+            {/* Profile Pic */}
+            <div className="profile-picture-section">
+                <div className="profile-picture-wrapper" onClick={triggerFileInput}>
+                    {profileImagePreview ? (
+                        <img src={profileImagePreview} alt="Profile Preview" className="profile-picture" />
+                    ) : (
+                        <div className="profile-picture-placeholder">
+                            <span>Upload</span>
+                        </div>
+                    )}
+                </div>
+                {/* input file restrictios */}
+                <input
+                    type="file"
+                    accept="image/png"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                />
+            </div>
             <p className="profile-greeting">
-                Hi, {profileData.firstName} {profileData.lastName}
+                Hi, {profileData.fullName}
             </p>
 
             <div className="profile-form">
@@ -55,21 +93,11 @@ const Profile: React.FC = () => {
                 </div>
                 
                 <div className="form-group">
-                    <label>First Name</label>
+                    <label>Name</label>
                     <input
                         type="text"
-                        name="firstName"
-                        value={profileData.firstName}
-                        onChange={handleInputChange}
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label>Last Name</label>
-                    <input
-                        type="text"
-                        name="lastName"
-                        value={profileData.lastName}
+                        name="fullName"
+                        value={profileData.fullName}
                         onChange={handleInputChange}
                     />
                 </div>
