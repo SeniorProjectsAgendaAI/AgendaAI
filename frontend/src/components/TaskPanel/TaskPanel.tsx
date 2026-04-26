@@ -1037,7 +1037,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                           ? "All day"
                           : `${formatTimeLabel(event.startAt)} – ${formatTimeLabel(event.endAt)}`}
                       </span>
-                    </div>
+                    </div> {/* have to organize like this to make conditional displaying */}
                     {event.description && (
                       <>
                         Description: {event.description}
@@ -1050,10 +1050,18 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                         <br />
                       </>
                     )}
-                    Status: {event.status}
-                    <br />
-                    Recurrence: {event.recurrence}
-                    <br />
+                    {event.status && event.status !== "scheduled" && (
+                      <>
+                        Status: {event.status}
+                        <br />
+                      </>
+                    )}
+                    {event.recurrence && event.recurrence !== "none" && (
+                      <>
+                        Recurrence: {event.recurrence}
+                        <br />
+                      </>
+                    )}
                     {event.status === PENDING_APPROVAL_STATUS && (
                       <div className="conflictNotice">
                         <strong>Needs approval before calendar display.</strong>
