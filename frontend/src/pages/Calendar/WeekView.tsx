@@ -1,5 +1,3 @@
-// Weekview.tsx: displays the week view 
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
@@ -8,6 +6,13 @@ import {
   formatConflictMessage,
   PENDING_APPROVAL_STATUS,
 } from "../../utils/eventConflicts";
+import { 
+  parseColorAndPattern, 
+  getPatternStyle, 
+  encodeColorAndPattern, 
+  DEFAULT_EVENT_COLOR, 
+  DEFAULT_TASK_COLOR 
+} from "../../utils/styleUtils";
 import "./weekview.css";
 
 interface WeekViewProps {
@@ -49,7 +54,8 @@ interface WeekItem {
   endTime?: string;
   priority: number;
   completed: boolean;
-  color?: string;
+  color: string;
+  pattern: string;
   status?: string | null;
 }
 
@@ -61,7 +67,14 @@ interface CreateSlot {
 }
 
 const HOUR_HEIGHT = 72;
-const DEFAULT_EVENT_COLOR = "#4f9d69";
+
+const PATTERN_OPTIONS = [
+  { value: "solid", label: "Solid Color" },
+  { value: "diagonal-right", label: "Diagonal Stripes (/)" },
+  { value: "diagonal-left", label: "Diagonal Stripes (\\)" },
+  { value: "vertical", label: "Vertical Lines" },
+  { value: "horizontal", label: "Horizontal Lines" }
+];
 
 const parseLegacyDescription = (desc?: string | null) => {
   if (!desc) return { date: "", time: "", priority: 1 };
@@ -146,6 +159,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   const [eventEndAt, setEventEndAt] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventColor, setEventColor] = useState(DEFAULT_EVENT_COLOR);
+  const [eventPattern, setEventPattern] = useState("solid");
   const [eventStatus, setEventStatus] = useState("scheduled");
 
   const hours = useMemo(() => Array.from({ length: 24 }, (_, hour) => hour), []);
@@ -195,6 +209,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
       const mappedTasks: WeekItem[] = tasksRes.data.map((task) => {
         const legacy = parseLegacyDescription(task.description);
+        const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
         const date = task.due_date ?? legacy.date;
         const time = task.due_time?.slice(0, 5) ?? legacy.time;
         return {
@@ -205,7 +220,8 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
           time,
           priority: task.priority ?? legacy.priority,
           completed: task.completed,
-          color: task.color ?? undefined,
+          color: parsedStyles.color,
+          pattern: parsedStyles.pattern,
         };
       });
 
@@ -214,6 +230,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         .map((event) => {
           const start = new Date(event.start_at);
           const end = new Date(event.end_at);
+          const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
           return {
             id: event.id,
             type: "event",
@@ -223,7 +240,8 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
             endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
             priority: 0,
             completed: false,
-            color: event.color ?? undefined,
+            color: parsedStyles.color,
+            pattern: parsedStyles.pattern,
             status: event.status,
           };
         });
@@ -284,6 +302,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
     setEventEndAt("");
     setEventLocation("");
     setEventColor(DEFAULT_EVENT_COLOR);
+    setEventPattern("solid");
     setEventStatus("scheduled");
   };
 
@@ -369,7 +388,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         description: eventDescription.trim() || null,
         start_at: eventStartAt,
         end_at: eventEndAt,
-        color: eventColor,
+        color: encodeColorAndPattern(eventColor, eventPattern),
         location: eventLocation.trim() || null,
         status: hasConflicts ? PENDING_APPROVAL_STATUS : eventStatus,
         all_day: false,
@@ -487,29 +506,32 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                     <div className="weekEventLayer">
                       {dayItems.map((item) => {
                         const top = (parseTimeToMinutes(item.time) / 60) * hourHeight;
-                        const durationMinutes =
-                          item.type === "event"
-                            ? Math.max(
-                                30,
-                                parseTimeToMinutes(item.endTime) - parseTimeToMinutes(item.time),
-                              )
-                            : 45;
-                        const height = Math.max(36, (durationMinutes / 60) * hourHeight - 6);
-                        const accent = item.color ?? (item.type === "task" ? "#6b7280" : DEFAULT_EVENT_COLOR);
+                        // Calculate duration strictly for events bc tasks are too small otherwise (minimum 30 mins visual size)
+                        const durationMinutes = item.type === "event"
+                          ? Math.max(30, parseTimeToMinutes(item.endTime) - parseTimeToMinutes(item.time))
+                          : 0;
 
+                        // Events scale exactly to their duration tasks just autosize
+                        const height = item.type === "event" 
+                          ? Math.max(36, (durationMinutes / 60) * hourHeight - 6)
+                          : "auto";
+                        
                         return (
                           <button
                             key={`${item.type}-${item.id}`}
                             type="button"
                             className={`weekEventCard ${item.type} ${item.completed ? "taskCompleted" : ""}`}
-                            style={{
-                              top,
-                              height,
-                              borderLeftColor: accent,
-                            }}
+                            style={{ top, height }}
                             onClick={(event) => event.stopPropagation()}
                           >
-                            <span className="weekEventTime">{item.time ? (item.type === "event" && item.endTime ? `${formatDisplayTime(item.time)} - ${formatDisplayTime(item.endTime)}` : formatDisplayTime(item.time)) : "All day"} </span>
+                            <div className="taskItemPattern" style={getPatternStyle(item.color, item.pattern)} />
+                            <span className="weekEventTime">
+                              {item.time 
+                                ? (item.type === "event" && item.endTime 
+                                    ? `${formatDisplayTime(item.time)} - ${formatDisplayTime(item.endTime)}` 
+                                    : formatDisplayTime(item.time)) 
+                                : "All day"}
+                            </span>
                             <span className="weekEventTitle">{item.type === "event" ? "📅 " : ""}{item.name}</span>
                             {item.type === "task" && <span className={`weekPriorityTag ${priorityLabel(item.priority)}`}>Priority {item.priority}</span>}
                           </button>
@@ -620,8 +642,15 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 <input type="text" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} placeholder="Optional location" />
               </label>
               <label>
-                Color
-                <input type="color" value={eventColor} onChange={(event) => setEventColor(event.target.value)} />
+                Color & Pattern
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="color" value={eventColor} onChange={(event) => setEventColor(event.target.value)} style={{height: '38px', width: '50px'}} />
+                  <select value={eventPattern} onChange={(event) => setEventPattern(event.target.value)} style={{flex: 1}}>
+                    {PATTERN_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
               </label>
             </div>
             <label>

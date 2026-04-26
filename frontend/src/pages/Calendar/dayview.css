@@ -405,7 +405,7 @@
   display: flex;
   flex-direction: column;
   
-  /* CSS FIXES */
+  /* Force */
   border-left: none !important;
 }
 
@@ -423,7 +423,6 @@
   text-decoration: line-through;
 }
 
-/* THE NEW PATTERN STRIP */
 .taskItemPattern {
   position: absolute;
   left: 0;

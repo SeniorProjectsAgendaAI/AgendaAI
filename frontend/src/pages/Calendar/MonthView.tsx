@@ -2,12 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
+import { 
+  parseColorAndPattern, 
+  getPatternStyle, 
+  DEFAULT_EVENT_COLOR, 
+  DEFAULT_TASK_COLOR 
+} from "../../utils/styleUtils";
 import "./monthview.css";
 
 interface ApiTask {
   id: number;
   title: string;
   description?: string | null;
+  color?: string | null;
   due_date?: string | null;
   due_time?: string | null;
 }
@@ -16,6 +23,7 @@ interface ApiEvent {
   id: number;
   title: string;
   start_at: string;
+  color?: string | null;
   status?: string | null;
 }
 
@@ -25,6 +33,8 @@ interface CalendarItem {
   title: string;
   date: string;
   time: string;
+  color: string;
+  pattern: string;
 }
 
 const parseLegacyDescription = (description?: string | null) => {
@@ -75,12 +85,15 @@ const MonthView = () => {
 
         const taskItems: CalendarItem[] = tasksRes.data.map((task) => {
           const legacy = parseLegacyDescription(task.description);
+          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
             id: task.id,
             type: "task",
             title: task.title,
             date: task.due_date ?? legacy.date,
             time: task.due_time?.slice(0, 5) ?? legacy.time,
+            color: parsedStyles.color,
+            pattern: parsedStyles.pattern,
           };
         });
 
@@ -93,12 +106,15 @@ const MonthView = () => {
             const d = String(start.getDate()).padStart(2, "0");
             const hh = String(start.getHours()).padStart(2, "0");
             const mm = String(start.getMinutes()).padStart(2, "0");
+            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
             return {
               id: event.id,
               type: "event",
               title: event.title,
               date: `${y}-${m}-${d}`,
               time: `${hh}:${mm}`,
+              color: parsedStyles.color,
+              pattern: parsedStyles.pattern,
             };
           });
 
@@ -208,6 +224,7 @@ const MonthView = () => {
                         className={`monthItem ${item.type === "task" ? "monthTask" : "monthEvent"}`}
                         title={item.time ? `${formatDisplayTime(item.time)} ${item.title}` : item.title}
                       >
+                        <div className="taskItemPattern" style={getPatternStyle(item.color, item.pattern)} />
                         <span className="monthItemTime">{item.time ? `${formatDisplayTime(item.time)} ` : ""}</span>
                         <span className="monthItemTitle">{item.title}</span>
                       </div>

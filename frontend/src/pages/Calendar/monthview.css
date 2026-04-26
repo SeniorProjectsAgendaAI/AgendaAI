@@ -8,7 +8,6 @@
   padding: 20px;
 }
 
-/* Match the WeekView header style */
 .monthViewHeader {
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
@@ -78,14 +77,13 @@
 .monthGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px; /* Slightly larger gap to let the cells breathe */
+  gap: 8px; 
 }
 
-/* Elevated cards to match the new system */
 .monthCell {
   min-height: 120px;
   border: 1px solid var(--border-color);
-  border-radius: 12px; /* Match WeekView's rounded corners */
+  border-radius: 12px; 
   background: var(--secondary-bg);
   padding: 8px;
   display: flex;
@@ -104,7 +102,7 @@
 .monthCellEmpty {
   background: var(--bg-color);
   border: 1px dashed var(--border-color);
-  pointer-events: none; /* Can't click empty cells */
+  pointer-events: none; 
 }
 
 .monthCellToday {
@@ -112,7 +110,6 @@
   border-color: var(--primary-accent);
 }
 
-/* Match the circular 'today' badge from WeekView */
 .monthCellDate {
   font-size: 14px;
   font-weight: 700;
@@ -123,7 +120,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  align-self: flex-end; /* Push date to top right corner of cell */
+  align-self: flex-end; 
 }
 
 .todayBadge {
@@ -138,28 +135,32 @@
   flex: 1;
 }
 
+.taskItemPattern {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px; 
+  border-radius: 4px 0 0 4px;
+}
+
 /* Chips to match event styles */
 .monthItem {
+  position: relative;
+  overflow: hidden;
+  border-left: none !important;
+  padding: 4px 6px 4px 10px; 
+  
   border-radius: 6px;
-  padding: 4px 6px;
   font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
   border: 1px solid var(--border-color);
   background: var(--bg-color);
   color: var(--text-color);
   display: flex;
   gap: 4px;
-}
-
-.monthTask {
-  border-left: 4px solid #ff9800;
-}
-
-.monthEvent {
-  border-left: 4px solid var(--primary-accent);
 }
 
 .monthItemTime {
@@ -181,7 +182,7 @@
   padding: 4px 0;
   background: rgba(127, 127, 127, 0.1);
   border-radius: 6px;
-  margin-top: auto; /* Push to bottom of cell */
+  margin-top: auto; 
 }
 
 @media (max-width: 900px) {
