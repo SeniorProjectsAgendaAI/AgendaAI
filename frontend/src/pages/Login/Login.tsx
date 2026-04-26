@@ -20,18 +20,25 @@ const formFields = {
       order: 1,
       isRequired: true,
     },
+    last_name: {
+      placeholder: 'Enter your name',
+      label: 'Last Name',
+      order: 2,
+      isRequired: true,
+    },
     password: {
       placeholder: 'Create a password',
       label: 'Password',
-      order: 2,
+      order: 3,
       isRequired: true,
     },
     confirm_password: {
       placeholder: 'Confirm your password',
       label: 'Confirm Password',
-      order: 3,
+      order: 4,
       isRequired: true,
     },
+    
   },
 }
 
@@ -73,7 +80,10 @@ const components = {
   }
 };
 
-const Login = () => {
+//create a hook to know if sign IN or UP to change the welcome message
+const AuthLayout = () => {
+  const { route } = useAuthenticator((context) => [context.route]);
+
   return (
     <div className="auth-split-wrapper">
       <div className="auth-sidebar">
@@ -89,7 +99,12 @@ const Login = () => {
             </Text>
           <Text marginTop='15px' color='gray' fontSize="1.2rem"> Benjamin Franklin</Text>
         </View>
-        <Heading level={1} color='white' fontWeight='bold'>Welcome Back!</Heading>
+
+        {/* 2. Dynamically change the heading based on the route */}
+        <Heading level={1} color='white' fontWeight='bold'>
+          {route === 'signUp' ? 'Welcome!' : 'Welcome Back!'}
+        </Heading>
+
       </div>  
       <div className='auth-form-section'>
         <Authenticator 
@@ -99,6 +114,15 @@ const Login = () => {
         />
       </div>
     </div>
+  );
+};
+
+//render it
+const Login = () => {
+  return (
+    <Authenticator.Provider>
+      <AuthLayout />
+    </Authenticator.Provider>
   );
 };
 
