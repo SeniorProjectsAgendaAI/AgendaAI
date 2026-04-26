@@ -146,6 +146,11 @@
   
 }
 
+.pendingApprovalItem {
+  border: 1px dashed #d97706;
+  background: color-mix(in srgb, var(--secondary-bg) 88%, #f59e0b);
+}
+
 .taskItemPattern {
   position: absolute;
   left: 0;
@@ -326,6 +331,24 @@
   font-weight: 600;
   display: inline-block;
   margin-left: 8px;
+}
+
+.conflictNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--text-color);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.conflictNotice strong {
+  color: #b45309;
 }
 
 /* Wrapper to hold color picker and pattern dropdown on the same row */

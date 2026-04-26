@@ -1,17 +1,13 @@
-#James Acacio - Utility functions for authentication using JWT tokens
-
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-import os
 import json
-from pathlib import Path
+import os
+import ssl
+from datetime import datetime, timedelta
 from functools import lru_cache
+from pathlib import Path
+from urllib.error import URLError
 from urllib.request import urlopen
 
+import certifi
 from app.database.models import User
 from app.database.session import get_db
 from dotenv import load_dotenv
@@ -89,7 +85,8 @@ def _get_cognito_jwks() -> dict:
     issuer = _get_cognito_issuer()
     if not issuer:
         raise RuntimeError("Cognito issuer is not configured")
-    with urlopen(f"{issuer}/.well-known/jwks.json") as response:
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    with urlopen(f"{issuer}/.well-known/jwks.json", context=ssl_context) as response:
         return json.load(response)
 
 
@@ -158,7 +155,7 @@ def get_current_user(
         print(
             f"Cognito token validated successfully. Sub: {claims.get('sub')}, Email: {claims.get('email')}"
         )
-    except JWTError as e:
+    except (JWTError, RuntimeError, URLError, OSError) as e:
         print(f"Cognito validation failed: {e}")
         raise credentials_exception
 
