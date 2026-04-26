@@ -20,9 +20,9 @@ const formFields = {
       order: 1,
       isRequired: true,
     },
-    last_name: {
+    name: {
       placeholder: 'Enter your name',
-      label: 'Last Name',
+      label: 'Full Name',
       order: 2,
       isRequired: true,
     },

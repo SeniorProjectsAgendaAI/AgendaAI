@@ -238,7 +238,7 @@ const HighPriorityDash: React.FC = () => {
         {loading ? (
           <p className="loadingText">Loading...</p>
         ) : items.length === 0 ? (
-          <p className="emptyText">No high priority tasks in the next 3 days</p>
+          <p className="emptyText">No high priority tasks in the next 7 days</p>
         ) : (
           <div className="dashItems">
             {items.map((item) => (
