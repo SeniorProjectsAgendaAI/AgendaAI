@@ -4,6 +4,11 @@ import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
 import BackButton from "../BackButton";
 import { useRef, useEffect } from "react";
+import {
+  findEventConflicts,
+  formatConflictMessage,
+  PENDING_APPROVAL_STATUS,
+} from "../../utils/eventConflicts";
 //currently there is no mcp integration with task creations all manual because the database doesnt currently support tasks
 //task making by alex, editing +deletion by bini
 //basically making a task its own object ish
@@ -91,6 +96,7 @@ const EVENT_STATUSES = [
   "ongoing",
   "completed",
   "canceled",
+  PENDING_APPROVAL_STATUS,
 ] as const;
 const EVENT_RECURRENCES = ["none", "daily", "weekly", "monthly"] as const;
 const PATTERN_OPTIONS = [
@@ -174,6 +180,26 @@ const formatDateTimeLabel = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
+};
+
+const mapApiEvent = (
+  event: ApiEvent,
+  fallbackColor = DEFAULT_EVENT_COLOR,
+): EventItem => {
+  const parsedStyles = parseColorAndPattern(event.color, fallbackColor);
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description ?? "",
+    startAt: formatDateTimeLocal(event.start_at),
+    endAt: formatDateTimeLocal(event.end_at),
+    color: parsedStyles.color,
+    pattern: parsedStyles.pattern,
+    location: event.location ?? "",
+    status: event.status ?? "scheduled",
+    allDay: Boolean(event.all_day),
+    recurrence: event.recurrence ?? "none",
+  };
 };
 
 type RangeFilter = "today" | "week" | "month" | "all";
@@ -379,22 +405,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           };
         });
 
-        const mappedEvents = eventsRes.data.map((event) => {
-          const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
-          return {
-            id: event.id,
-            title: event.title,
-            description: event.description ?? "",
-            startAt: formatDateTimeLocal(event.start_at),
-            endAt: formatDateTimeLocal(event.end_at),
-            color: parsedStyles.color,
-            pattern: parsedStyles.pattern,
-            location: event.location ?? "",
-            status: event.status ?? "scheduled",
-            allDay: Boolean(event.all_day),
-            recurrence: event.recurrence ?? "none",
-          };
-        });
+        const mappedEvents = eventsRes.data.map((event) => mapApiEvent(event));
 
         setTasks(mappedTasks);
         setEvents(mappedEvents);
@@ -545,6 +556,15 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
       return;
     }
 
+    const conflicts = findEventConflicts(events, newEventStartAt, newEventEndAt);
+    const hasConflicts = conflicts.length > 0;
+    if (hasConflicts) {
+      const approved = window.confirm(
+        `This event conflicts with:\n\n${formatConflictMessage(conflicts)}\n\nIt will be saved as pending approval and will not appear on the calendar until approved.`,
+      );
+      if (!approved) return;
+    }
+
     try {
       const res = await api.post<ApiEvent>("/events", {
         title: newEventTitle.trim(),
@@ -553,28 +573,16 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         end_at: newEventEndAt,
         color: encodeColorAndPattern(newEventColor, newEventPattern), // Pack it here
         location: newEventLocation.trim() || null,
-        status: newEventStatus,
+        status: hasConflicts ? PENDING_APPROVAL_STATUS : newEventStatus,
         all_day: newEventAllDay,
         recurrence: newEventRecurrence,
       });
 
-      const parsedResStyles = parseColorAndPattern(res.data.color, newEventColor);
-      setEvents((prev) => [
-        ...prev,
-        {
-          id: res.data.id,
-          title: res.data.title,
-          description: res.data.description ?? "",
-          startAt: formatDateTimeLocal(res.data.start_at),
-          endAt: formatDateTimeLocal(res.data.end_at),
-          color: parsedResStyles.color,
-          pattern: parsedResStyles.pattern,
-          location: res.data.location ?? "",
-          status: res.data.status ?? "scheduled",
-          allDay: Boolean(res.data.all_day),
-          recurrence: res.data.recurrence ?? "none",
-        },
-      ]);
+      const createdEvent = mapApiEvent(res.data, newEventColor);
+      setEvents((prev) => [...prev, createdEvent]);
+      if (createdEvent.status === PENDING_APPROVAL_STATUS) {
+        alert("Event saved as pending approval. It will not show on the calendar until approved.");
+      }
       triggerRefresh();
     } catch (err) {
       console.error("Failed to create event", err);
@@ -634,6 +642,23 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
       return;
     }
 
+    const conflicts = findEventConflicts(
+      events,
+      editEventStartAt,
+      editEventEndAt,
+      eventId,
+    );
+    const hasConflicts = conflicts.length > 0;
+    const nextStatus = hasConflicts
+      ? PENDING_APPROVAL_STATUS
+      : editEventStatus;
+    if (hasConflicts) {
+      const approved = window.confirm(
+        `This update conflicts with:\n\n${formatConflictMessage(conflicts)}\n\nThe event will move to pending approval and will not appear on the calendar until approved.`,
+      );
+      if (!approved) return;
+    }
+
     try {
       const res = await api.put<ApiEvent>(`/events/${eventId}`, {
         title: editEventTitle.trim(),
@@ -642,7 +667,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
         end_at: editEventEndAt,
         color: encodeColorAndPattern(editEventColor, editEventPattern), // Pack it here
         location: editEventLocation.trim() || null,
-        status: editEventStatus,
+        status: nextStatus,
         all_day: editEventAllDay,
         recurrence: editEventRecurrence,
       });
@@ -650,24 +675,14 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
       setEvents((prev) =>
         prev.map((event) => {
           if (event.id === eventId) {
-            const parsedResStyles = parseColorAndPattern(res.data.color, editEventColor);
-            return {
-              ...event,
-              title: res.data.title,
-              description: res.data.description ?? "",
-              startAt: formatDateTimeLocal(res.data.start_at),
-              endAt: formatDateTimeLocal(res.data.end_at),
-              color: parsedResStyles.color,
-              pattern: parsedResStyles.pattern,
-              location: res.data.location ?? "",
-              status: res.data.status ?? "scheduled",
-              allDay: Boolean(res.data.all_day),
-              recurrence: res.data.recurrence ?? "none",
-            };
+            return mapApiEvent(res.data, editEventColor);
           }
           return event;
         }),
       );
+      if ((res.data.status ?? "scheduled") === PENDING_APPROVAL_STATUS) {
+        alert("Event moved to pending approval. It will not show on the calendar until approved.");
+      }
       setEditingEventId(null);
       triggerRefresh();
     } catch (err) {
@@ -684,6 +699,36 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     } catch (err) {
       console.error("Failed to delete event", err);
       alert("Failed to delete event.");
+    }
+  };
+
+  const approveEvent = async (event: EventItem) => {
+    const conflicts = findEventConflicts(
+      events,
+      event.startAt,
+      event.endAt,
+      event.id,
+    );
+    if (conflicts.length > 0) {
+      const approved = window.confirm(
+        `Approving this event will show it on the calendar even though it conflicts with:\n\n${formatConflictMessage(conflicts)}`,
+      );
+      if (!approved) return;
+    }
+
+    try {
+      const res = await api.put<ApiEvent>(`/events/${event.id}`, {
+        status: "scheduled",
+      });
+      setEvents((prev) =>
+        prev.map((item) =>
+          item.id === event.id ? mapApiEvent(res.data, event.color) : item,
+        ),
+      );
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to approve event", err);
+      alert("Failed to approve event.");
     }
   };
 
@@ -883,10 +928,20 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                   {group.date ? formatDateHeader(group.date) : "No date"}
                 </div>
                 <ul className="dateGroupList">
-                  {group.items.map((event) => (
+                  {group.items.map((event) => {
+                    const eventConflicts =
+                      event.status === PENDING_APPROVAL_STATUS
+                        ? findEventConflicts(
+                            events,
+                            event.startAt,
+                            event.endAt,
+                            event.id,
+                          )
+                        : [];
+                    return (
               <li
                 key={event.id}
-                className="taskItem"
+                className={`taskItem ${event.status === PENDING_APPROVAL_STATUS ? "pendingApprovalItem" : ""}`}
               >
                 <div className="taskItemPattern" style={getPatternStyle(event.color, event.pattern)} />
                 {editingEventId === event.id ? (
@@ -975,7 +1030,7 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                         className="taskTag"
                         style={{ backgroundColor: event.color }}
                       >
-                        Event
+                        {event.status === PENDING_APPROVAL_STATUS ? "Pending" : "Event"}
                       </span>
                       <span className="timeBadge">
                         {event.allDay
@@ -999,6 +1054,19 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                     <br />
                     Recurrence: {event.recurrence}
                     <br />
+                    {event.status === PENDING_APPROVAL_STATUS && (
+                      <div className="conflictNotice">
+                        <strong>Needs approval before calendar display.</strong>
+                        {eventConflicts.length > 0 && (
+                          <span>
+                            Conflicts with: {eventConflicts.map((conflict) => conflict.title).join(", ")}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {event.status === PENDING_APPROVAL_STATUS && (
+                      <button onClick={() => approveEvent(event)}>Approve</button>
+                    )}
                     <button onClick={() => startEditEvent(event)}>Edit</button>
                     <button onClick={() => deleteEvent(event.id)}>
                       Delete
@@ -1006,7 +1074,8 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                   </div>
                 )}
               </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             ))}

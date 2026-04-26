@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
 import "./monthview.css";
 //made by james, connected to backend by james
 
@@ -16,6 +17,7 @@ interface ApiEvent {
   id: number;
   title: string;
   start_at: string;
+  status?: string | null;
 }
 
 interface CalendarItem {
@@ -72,21 +74,23 @@ const MonthView = () => {
           };
         });
 
-        const eventItems: CalendarItem[] = eventsRes.data.map((event) => {
-          const start = new Date(event.start_at);
-          const y = start.getFullYear();
-          const m = String(start.getMonth() + 1).padStart(2, "0");
-          const d = String(start.getDate()).padStart(2, "0");
-          const hh = String(start.getHours()).padStart(2, "0");
-          const mm = String(start.getMinutes()).padStart(2, "0");
-          return {
-            id: event.id,
-            type: "event",
-            title: event.title,
-            date: `${y}-${m}-${d}`,
-            time: `${hh}:${mm}`,
-          };
-        });
+        const eventItems: CalendarItem[] = eventsRes.data
+          .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+          .map((event) => {
+            const start = new Date(event.start_at);
+            const y = start.getFullYear();
+            const m = String(start.getMonth() + 1).padStart(2, "0");
+            const d = String(start.getDate()).padStart(2, "0");
+            const hh = String(start.getHours()).padStart(2, "0");
+            const mm = String(start.getMinutes()).padStart(2, "0");
+            return {
+              id: event.id,
+              type: "event",
+              title: event.title,
+              date: `${y}-${m}-${d}`,
+              time: `${hh}:${mm}`,
+            };
+          });
 
         setItems([...taskItems, ...eventItems]);
       } catch (err) {

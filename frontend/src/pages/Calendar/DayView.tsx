@@ -14,6 +14,7 @@ import BackButton from "../../components/BackButton";
 import api from "../../services/api";
 import TaskPanel from "../../components/TaskPanel/TaskPanel";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { PENDING_APPROVAL_STATUS } from "../../utils/eventConflicts";
 interface DayViewProps {
   hideBackButton?: boolean;
 }
@@ -177,7 +178,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
 
   const loadEvents = async () => {
     const res = await api.get<ApiEvent[]>("/events");
-    const mapped = res.data.map((event) => {
+    const mapped = res.data.filter((event) => event.status !== PENDING_APPROVAL_STATUS).map((event) => {
       const start = new Date(event.start_at);
       const end = new Date(event.end_at);
 
@@ -388,7 +389,7 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
       const startDateTime = `${event.date}T${editEventStartTime}:00`;
       const endDateTime = `${event.date}T${editEventEndTime}:00`;
 
-      await api.put(`/events/${eventId}`, {
+      const response = await api.put<ApiEvent>(`/events/${eventId}`, {
         title: editEventTitle,
         description: editEventDescription,
         start_at: startDateTime,
@@ -396,6 +397,13 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
         location: editEventLocation,
         color: editEventColor,
       });
+
+      if (response.data.status === PENDING_APPROVAL_STATUS) {
+        setEvents((prev) => prev.filter((e) => e.id !== eventId));
+        setEditingEventId(null);
+        alert("Event moved to pending approval because it conflicts with another event. Approve it from the task panel before it appears on the calendar.");
+        return;
+      }
 
       setEvents((prev) =>
         prev.map((e) =>
