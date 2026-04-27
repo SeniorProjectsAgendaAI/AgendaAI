@@ -18,6 +18,7 @@ import Login from "./pages/Login/Login";
 import CalendarContainer from "./pages/CalendarContain/calendarcontain";
 import ProfileContainer from "./pages/ProfileContainer/profilecontainer";
 import AiContain from "./pages/AiContain/aicontain";
+import ProfileButton from "./components/ProfileButton/ProfileButton";
 
 import { TaskEventProvider } from "./contexts/TaskEventContext";
 import "./styles/App.css";
@@ -40,6 +41,8 @@ const AppContent = () => {
 
   return (
     <TaskEventProvider>
+      {/* Shows the user's profile shortcut in the top-right of every page. */}
+      <ProfileButton />
       <Routes>
         <Route path='/' element={<Navigate to='/dashboard' replace />} />
         <Route path='/home' element={<Home signOut={signOut} user={user} />} />

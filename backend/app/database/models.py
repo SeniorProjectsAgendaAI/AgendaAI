@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Time,
     Text,
@@ -52,6 +53,9 @@ class User(Base):
     hashed_password = Column(String, nullable=True)
     cognito_sub = Column(String, unique=True, index=True, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    profile_picture_data = Column(LargeBinary, nullable=True)
+    profile_picture_content_type = Column(String, nullable=True)
+    profile_picture_updated_at = Column(DateTime, nullable=True)
 
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
