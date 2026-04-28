@@ -68,16 +68,40 @@ const formatDisplayTime = (time: string) => {
 const MonthView = () => {
   const navigate = useNavigate();
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSyncTimeRef = useRef<number>(0);
+  const SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between syncs
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const syncGoogleCalendar = async () => {
+    try {
+      const response = await api.post("/events/sync/google-calendar", {});
+      console.log("Google Calendar sync initiated:", response.data);
+    } catch (err) {
+      console.debug("Google Calendar sync not available:", err);
+    }
+  };
+
+  const syncCanvas = async () => {
+    try {
+      const response = await api.post("/events/sync/canvas", {});
+      console.log("Canvas sync initiated:", response.data);
+    } catch (err) {
+      console.debug("Canvas sync not available:", err);
+    }
+  };
 
   const loadAll = async () => {
     setLoading(true);
     try {
+      await Promise.all([syncGoogleCalendar(), syncCanvas()]);
+
       const [tasksRes, eventsRes] = await Promise.all([
         api.get<ApiTask[]>("/tasks"),
         api.get<ApiEvent[]>("/events"),
@@ -139,19 +163,58 @@ const MonthView = () => {
       clearInterval(autoRefreshTimerRef.current);
     }
 
-    // Set new auto-refresh timer for 60 seconds
-    autoRefreshTimerRef.current = setInterval(() => {
-      loadAll();
-    }, 60000); // 60 seconds
+    // Set new auto-refresh timer for 60 seconds, but respect cooldown
+    autoRefreshTimerRef.current = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+      // Only sync if cooldown has passed
+      if (timeSinceLastSync >= SYNC_COOLDOWN_MS) {
+        lastSyncTimeRef.current = now;
+        await loadAll();
+      }
+    }, 60000); // Check every 60 seconds
   };
 
   // Handle manual refresh - calls loadAll and resets the auto-refresh timer
   const handleManualRefresh = async () => {
+    const now = Date.now();
+    const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+    if (timeSinceLastSync < SYNC_COOLDOWN_MS) {
+      const remainingMs = SYNC_COOLDOWN_MS - timeSinceLastSync;
+      const remainingSecs = Math.ceil(remainingMs / 1000);
+      setCooldownSeconds(remainingSecs);
+
+      // Start countdown timer
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+      cooldownTimerRef.current = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            if (cooldownTimerRef.current) {
+              clearInterval(cooldownTimerRef.current);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return;
+    }
+
+    setCooldownSeconds(0);
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+    }
+    lastSyncTimeRef.current = now;
     await loadAll();
-    setupAutoRefresh(); // Reset the auto-refresh timer
+    setupAutoRefresh();
   };
 
   useEffect(() => {
+    lastSyncTimeRef.current = Date.now();
     loadAll();
     setupAutoRefresh();
 
@@ -220,7 +283,16 @@ const MonthView = () => {
           <button onClick={goToPreviousMonth}>← Previous</button>
           <button onClick={goToCurrentMonth}>This Month</button>
           <button onClick={goToNextMonth}>Next →</button>
-          <button onClick={handleManualRefresh}>Refresh</button>
+          <button
+            onClick={handleManualRefresh}
+            disabled={cooldownSeconds > 0}
+            style={{
+              opacity: cooldownSeconds > 0 ? 0.6 : 1,
+              cursor: cooldownSeconds > 0 ? "not-allowed" : "pointer",
+            }}
+          >
+            {cooldownSeconds > 0 ? `Refresh (${cooldownSeconds}s)` : "Refresh"}
+          </button>
         </div>
       </div>
 

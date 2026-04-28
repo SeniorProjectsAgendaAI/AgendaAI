@@ -123,6 +123,8 @@ const parseTimeToMinutes = (timeStr?: string) => {
 const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   const dayViewContentRef = useRef<HTMLDivElement | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSyncTimeRef = useRef<number>(0);
+  const SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between syncs
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,6 +142,8 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => new Date());
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editTaskName, setEditTaskName] = useState("");
@@ -247,7 +251,6 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     try {
       const response = await api.post("/events/sync/google-calendar", {});
       console.log("Google Calendar sync initiated:", response.data);
-      await loadEvents();
     } catch (err) {
       console.debug("Google Calendar sync not available:", err);
     }
@@ -257,7 +260,6 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
     try {
       const response = await api.post("/events/sync/canvas", {});
       console.log("Canvas sync initiated:", response.data);
-      await loadEvents();
     } catch (err) {
       console.debug("Canvas sync not available:", err);
     }
@@ -266,12 +268,10 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   const loadAll = async () => {
     try {
       setLoading(true);
-      await Promise.all([
-        loadTasks(),
-        loadEvents(),
-        syncGoogleCalendar(),
-        syncCanvas(),
-      ]);
+      // First, sync with Google Calendar and Canvas
+      await Promise.all([syncGoogleCalendar(), syncCanvas()]);
+      // Then, load tasks and events from the database
+      await Promise.all([loadTasks(), loadEvents()]);
     } catch (err) {
       console.error("Failed to load tasks/events", err);
     } finally {
@@ -280,28 +280,63 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   };
 
   const setupAutoRefresh = () => {
-   
     if (autoRefreshTimerRef.current) {
       clearInterval(autoRefreshTimerRef.current);
     }
-    
-   
-    autoRefreshTimerRef.current = setInterval(() => {
-      loadAll();
-    }, 60000); // 60 seconds
+
+    autoRefreshTimerRef.current = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+      // Only sync if cooldown has passed
+      if (timeSinceLastSync >= SYNC_COOLDOWN_MS) {
+        lastSyncTimeRef.current = now;
+        await loadAll();
+      }
+    }, 60000); // Check every 60 seconds
   };
 
-  
   const handleManualRefresh = async () => {
+    const now = Date.now();
+    const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+    if (timeSinceLastSync < SYNC_COOLDOWN_MS) {
+      const remainingMs = SYNC_COOLDOWN_MS - timeSinceLastSync;
+      const remainingSecs = Math.ceil(remainingMs / 1000);
+      setCooldownSeconds(remainingSecs);
+
+      // Start countdown timer
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+      cooldownTimerRef.current = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            if (cooldownTimerRef.current) {
+              clearInterval(cooldownTimerRef.current);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return;
+    }
+
+    setCooldownSeconds(0);
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+    }
+    lastSyncTimeRef.current = now;
     await loadAll();
-    setupAutoRefresh(); 
+    setupAutoRefresh();
   };
 
   useEffect(() => {
+    lastSyncTimeRef.current = Date.now();
     loadAll();
     setupAutoRefresh();
-    
-    
+
     return () => {
       if (autoRefreshTimerRef.current) {
         clearInterval(autoRefreshTimerRef.current);
@@ -518,7 +553,18 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
               <button onClick={goToPreviousDay}>← Previous</button>
               <button onClick={goToToday}>Today</button>
               <button onClick={goToNextDay}>Next →</button>
-              <button onClick={handleManualRefresh}>Refresh</button>
+              <button
+                onClick={handleManualRefresh}
+                disabled={cooldownSeconds > 0}
+                style={{
+                  opacity: cooldownSeconds > 0 ? 0.6 : 1,
+                  cursor: cooldownSeconds > 0 ? "not-allowed" : "pointer",
+                }}
+              >
+                {cooldownSeconds > 0
+                  ? `Refresh (${cooldownSeconds}s)`
+                  : "Refresh"}
+              </button>
             </div>
           </div>
         </div>

@@ -150,6 +150,8 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   const { refreshKey, triggerRefresh } = useTaskEvents();
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSyncTimeRef = useRef<number>(0);
+  const SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between syncs
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
   const [items, setItems] = useState<WeekItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +165,8 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskDueTime, setTaskDueTime] = useState("");
   const [taskStatus, setTaskStatus] = useState("todo");
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [eventTitle, setEventTitle] = useState("");
   const [eventDescription, setEventDescription] = useState("");
@@ -215,70 +219,94 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    const [tasksResult, eventsResult] = await Promise.allSettled([
-      api.get<ApiTask[]>("/tasks"),
-      api.get<ApiEvent[]>("/events"),
-    ]);
+    try {
+      await Promise.all([
+        (async () => {
+          try {
+            const response = await api.post("/events/sync/google-calendar", {});
+            console.log("Google Calendar sync initiated:", response.data);
+          } catch (err) {
+            console.debug("Google Calendar sync not available:", err);
+          }
+        })(),
+        (async () => {
+          try {
+            const response = await api.post("/events/sync/canvas", {});
+            console.log("Canvas sync initiated:", response.data);
+          } catch (err) {
+            console.debug("Canvas sync not available:", err);
+          }
+        })(),
+      ]);
 
-    const mappedTasks: WeekItem[] =
-      tasksResult.status === "fulfilled"
-        ? tasksResult.value.data.map((task) => {
-            const legacy = parseLegacyDescription(task.description);
-            const parsedStyles = parseColorAndPattern(
-              task.color,
-              DEFAULT_TASK_COLOR,
-            );
-            const date = task.due_date ?? legacy.date;
-            const time = task.due_time?.slice(0, 5) ?? legacy.time;
-            return {
-              id: task.id,
-              type: "task" as const,
-              name: task.title,
-              date,
-              time,
-              priority: task.priority ?? legacy.priority,
-              completed: task.completed,
-              color: parsedStyles.color,
-              pattern: parsedStyles.pattern,
-            };
-          })
-        : (() => {
-            console.error("Failed to load tasks", tasksResult.reason);
-            return [];
-          })();
+      const [tasksResult, eventsResult] = await Promise.allSettled([
+        api.get<ApiTask[]>("/tasks"),
+        api.get<ApiEvent[]>("/events"),
+      ]);
 
-    const mappedEvents: WeekItem[] =
-      eventsResult.status === "fulfilled"
-        ? eventsResult.value.data
-            .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-            .map((event) => {
-              const start = new Date(event.start_at);
-              const end = new Date(event.end_at);
+      const mappedTasks: WeekItem[] =
+        tasksResult.status === "fulfilled"
+          ? tasksResult.value.data.map((task) => {
+              const legacy = parseLegacyDescription(task.description);
               const parsedStyles = parseColorAndPattern(
-                event.color,
-                DEFAULT_EVENT_COLOR,
+                task.color,
+                DEFAULT_TASK_COLOR,
               );
+              const date = task.due_date ?? legacy.date;
+              const time = task.due_time?.slice(0, 5) ?? legacy.time;
               return {
-                id: event.id,
-                type: "event" as const,
-                name: event.title,
-                date: formatDateKey(start),
-                time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
-                endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
-                priority: 0,
-                completed: false,
+                id: task.id,
+                type: "task" as const,
+                name: task.title,
+                date,
+                time,
+                priority: task.priority ?? legacy.priority,
+                completed: task.completed,
                 color: parsedStyles.color,
                 pattern: parsedStyles.pattern,
-                status: event.status,
               };
             })
-        : (() => {
-            console.error("Failed to load events", eventsResult.reason);
-            return [];
-          })();
+          : (() => {
+              console.error("Failed to load tasks", tasksResult.reason);
+              return [];
+            })();
 
-    setItems([...mappedTasks, ...mappedEvents]);
-    setLoading(false);
+      const mappedEvents: WeekItem[] =
+        eventsResult.status === "fulfilled"
+          ? eventsResult.value.data
+              .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+              .map((event) => {
+                const start = new Date(event.start_at);
+                const end = new Date(event.end_at);
+                const parsedStyles = parseColorAndPattern(
+                  event.color,
+                  DEFAULT_EVENT_COLOR,
+                );
+                return {
+                  id: event.id,
+                  type: "event" as const,
+                  name: event.title,
+                  date: formatDateKey(start),
+                  time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
+                  endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
+                  priority: 0,
+                  completed: false,
+                  color: parsedStyles.color,
+                  pattern: parsedStyles.pattern,
+                  status: event.status,
+                };
+              })
+          : (() => {
+              console.error("Failed to load events", eventsResult.reason);
+              return [];
+            })();
+
+      setItems([...mappedTasks, ...mappedEvents]);
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load tasks/events", err);
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -292,19 +320,58 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
       clearInterval(autoRefreshTimerRef.current);
     }
 
-    // Set new auto-refresh timer for 60 seconds
-    autoRefreshTimerRef.current = setInterval(() => {
-      loadAll();
-    }, 60000); // 60 seconds
+    // Set new auto-refresh timer for 60 seconds, but respect cooldown
+    autoRefreshTimerRef.current = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+      // Only sync if cooldown has passed
+      if (timeSinceLastSync >= SYNC_COOLDOWN_MS) {
+        lastSyncTimeRef.current = now;
+        await loadAll();
+      }
+    }, 60000); // Check every 60 seconds
   };
 
   // Handle manual refresh - calls loadAll and resets the auto-refresh timer
   const handleManualRefresh = async () => {
+    const now = Date.now();
+    const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+    if (timeSinceLastSync < SYNC_COOLDOWN_MS) {
+      const remainingMs = SYNC_COOLDOWN_MS - timeSinceLastSync;
+      const remainingSecs = Math.ceil(remainingMs / 1000);
+      setCooldownSeconds(remainingSecs);
+
+      // Start countdown timer
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+      cooldownTimerRef.current = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            if (cooldownTimerRef.current) {
+              clearInterval(cooldownTimerRef.current);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return;
+    }
+
+    setCooldownSeconds(0);
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+    }
+    lastSyncTimeRef.current = now;
     await loadAll();
     setupAutoRefresh(); // Reset the auto-refresh timer
   };
 
   useEffect(() => {
+    lastSyncTimeRef.current = Date.now();
     setupAutoRefresh();
 
     // Cleanup on unmount
@@ -516,7 +583,18 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 <button onClick={goToPreviousWeek}>← Previous</button>
                 <button onClick={goToCurrentWeek}>This Week</button>
                 <button onClick={goToNextWeek}>Next →</button>
-                <button onClick={handleManualRefresh}>Refresh</button>
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={cooldownSeconds > 0}
+                  style={{
+                    opacity: cooldownSeconds > 0 ? 0.6 : 1,
+                    cursor: cooldownSeconds > 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {cooldownSeconds > 0
+                    ? `Refresh (${cooldownSeconds}s)`
+                    : "Refresh"}
+                </button>
               </div>
             </div>
           </div>
