@@ -21,6 +21,8 @@ import AiContain from "./pages/AiContain/aicontain";
 import ProfileButton from "./components/ProfileButton/ProfileButton";
 
 import { TaskEventProvider } from "./contexts/TaskEventContext";
+import { CreateModalProvider } from "./contexts/CreateModalContext";
+import CreateModal from "./components/CreateModal/CreateModal";
 import "./styles/App.css";
 
 
@@ -41,8 +43,9 @@ const AppContent = () => {
 
   return (
     <TaskEventProvider>
-      {/* Shows the user's profile shortcut in the top-right of every page. */}
+      <CreateModalProvider>
       <ProfileButton />
+      <CreateModal />
       <Routes>
         <Route path='/' element={<Navigate to='/dashboard' replace />} />
         <Route path='/home' element={<Home signOut={signOut} user={user} />} />
@@ -58,6 +61,7 @@ const AppContent = () => {
         <Route path='/calendarcontainer' element={<CalendarContainer />}/>
         <Route path='/profilecontainer' element={<ProfileContainer />}/>
       </Routes>
+      </CreateModalProvider>
     </TaskEventProvider>
   );
 };

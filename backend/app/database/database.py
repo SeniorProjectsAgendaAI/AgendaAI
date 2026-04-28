@@ -144,3 +144,7 @@ def _migrate_events_table_for_metadata() -> None:
             conn.execute(text("ALTER TABLE events ADD COLUMN location VARCHAR NULL"))
         if "status" not in columns:
             conn.execute(text("ALTER TABLE events ADD COLUMN status VARCHAR NOT NULL DEFAULT 'scheduled'"))
+        if "source" not in columns:
+            conn.execute(text("ALTER TABLE events ADD COLUMN source VARCHAR(50) NOT NULL DEFAULT 'manual'"))
+        if "external_event_id" not in columns:
+            conn.execute(text("ALTER TABLE events ADD COLUMN external_event_id VARCHAR(255) NULL"))

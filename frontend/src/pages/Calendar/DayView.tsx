@@ -266,17 +266,17 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   };
 
   const loadAll = async () => {
-    try {
-      setLoading(true);
-      // First, sync with Google Calendar and Canvas
-      await Promise.all([syncGoogleCalendar(), syncCanvas()]);
-      // Then, load tasks and events from the database
-      await Promise.all([loadTasks(), loadEvents()]);
-    } catch (err) {
-      console.error("Failed to load tasks/events", err);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const results = await Promise.allSettled([
+      loadTasks(),
+      loadEvents(),
+      syncGoogleCalendar(),
+      syncCanvas(),
+    ]);
+    for (const r of results) {
+      if (r.status === "rejected") console.error("Failed to load tasks/events", r.reason);
     }
+    setLoading(false);
   };
 
   const setupAutoRefresh = () => {

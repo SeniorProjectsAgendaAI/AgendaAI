@@ -37,18 +37,22 @@ app = FastAPI()
 scheduler = None
 
 # -------- CORS CONFIG --------
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://main.d2i3jqbsdy4snq.amplifyapp.com",
-    "https://dev.d2i3jqbsdy4snq.amplifyapp.com",
-    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com",
-]
+default_origins = (
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "https://main.d2i3jqbsdy4snq.amplifyapp.com,"
+    "https://dev.d2i3jqbsdy4snq.amplifyapp.com,"
+    "https://creating-dockerfile.d2i3jqbsdy4snq.amplifyapp.com"
+)
+
+allowed_origins_str = os.getenv("ALLOWED_FRONTEND_URLS", default_origins)
+
+origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"^http://localhost:3000$|^https://[a-zA-Z0-9-]+\.[a-zA-Z0-9]+\.amplifyapp\.com$",
+    allow_origin_regex=r"^http://localhost:3000$|^https://[a-zA-Z0-9-]+\.d2i3jqbsdy4snq\.amplifyapp\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,4 +1,6 @@
 import React from "react";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FaCheck } from "react-icons/fa";
 import "./taskpanel.css";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
@@ -308,21 +310,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(
     null,
   );
-  const [showCreateMenu, setShowCreateMenu] = React.useState(false);
-  const createMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        createMenuRef.current &&
-        !createMenuRef.current.contains(e.target as Node)
-      ) {
-        setShowCreateMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [events, setEvents] = React.useState<EventItem[]>([]);
@@ -381,13 +368,13 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
 
   React.useEffect(() => {
     const loadAll = async () => {
-      try {
-        const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks"),
-          api.get<ApiEvent[]>("/events"),
-        ]);
+      const [tasksResult, eventsResult] = await Promise.allSettled([
+        api.get<ApiTask[]>("/tasks"),
+        api.get<ApiEvent[]>("/events"),
+      ]);
 
-        const mappedTasks = tasksRes.data.map((task) => {
+      if (tasksResult.status === "fulfilled") {
+        const mappedTasks = tasksResult.value.data.map((task) => {
           const legacy = parseLegacyDescription(task.description);
           const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
@@ -404,13 +391,16 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
             completed: task.completed,
           };
         });
-
-        const mappedEvents = eventsRes.data.map((event) => mapApiEvent(event));
-
         setTasks(mappedTasks);
+      } else {
+        console.error("Failed to load tasks", tasksResult.reason);
+      }
+
+      if (eventsResult.status === "fulfilled") {
+        const mappedEvents = eventsResult.value.data.map((event) => mapApiEvent(event));
         setEvents(mappedEvents);
-      } catch (err) {
-        console.error("Failed to load tasks/events", err);
+      } else {
+        console.error("Failed to load events", eventsResult.reason);
       }
     };
 
@@ -470,6 +460,18 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setNewTaskPriority(1);
     setNewTaskStatus("todo");
     setActiveForm(null);
+  };
+
+  const toggleComplete = async (taskId: number, completed: boolean) => {
+    try {
+      await api.put(`/tasks/${taskId}`, { completed });
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, completed } : t)),
+      );
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
   };
 
   const deleteTask = async (taskId: number) => {
@@ -904,11 +906,19 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                       Priority: {task.priority}
                       <br />
                       Status: {task.status}
-                      <br />
-                      <button onClick={() => startEditTask(task)}>Edit</button>
-                      <button onClick={() => deleteTask(task.id)}>
-                        Delete
-                      </button>
+                      <div className="itemActions">
+                        {!task.completed && (
+                          <button className="itemIconBtn complete" onClick={() => toggleComplete(task.id, true)} title="Complete">
+                            <FaCheck />
+                          </button>
+                        )}
+                        <button className="itemIconBtn edit" onClick={() => startEditTask(task)} title="Edit">
+                          <FiEdit2 />
+                        </button>
+                        <button className="itemIconBtn delete" onClick={() => deleteTask(task.id)} title="Delete">
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>
@@ -1075,10 +1085,14 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                     {event.status === PENDING_APPROVAL_STATUS && (
                       <button onClick={() => approveEvent(event)}>Approve</button>
                     )}
-                    <button onClick={() => startEditEvent(event)}>Edit</button>
-                    <button onClick={() => deleteEvent(event.id)}>
-                      Delete
-                    </button>
+                    <div className="itemActions">
+                      <button className="itemIconBtn edit" onClick={() => startEditEvent(event)} title="Edit">
+                        <FiEdit2 />
+                      </button>
+                      <button className="itemIconBtn delete" onClick={() => deleteEvent(event.id)} title="Delete">
+                        <FiTrash2 />
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>
@@ -1090,36 +1104,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           </div>
         )}
 
-        <div className="panelActions">
-          <div className="createNewWrapper" ref={createMenuRef}>
-            <button
-              className="addTask"
-              onClick={() => setShowCreateMenu((prev) => !prev)}
-            >
-              + Create New ▾
-            </button>
-            {showCreateMenu && (
-              <div className="createNewMenu">
-                <button
-                  onClick={() => {
-                    setActiveForm("task");
-                    setShowCreateMenu(false);
-                  }}
-                >
-                  Task
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveForm("event");
-                    setShowCreateMenu(false);
-                  }}
-                >
-                  Event
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
 
         {activeForm === "task" && (
           <div className="popup">
