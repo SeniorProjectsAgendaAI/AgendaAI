@@ -148,6 +148,19 @@
   border-left: 1px solid var(--border-color);
 }
 
+.weekDayHeaderCell:hover {
+  background-color: var(--hover-bg); 
+}
+
+.weekDayHeaderCell.weekDayToday {
+  background: rgba(79, 109, 224, 0.08);
+}
+
+/* Add these back */
+.weekDayHeaderCell.weekDayToday:hover {
+  background: rgba(79, 109, 224, 0.12);
+}
+
 .weekDayHeaderCell.weekDayToday {
   background: rgba(79, 109, 224, 0.08);
 }
