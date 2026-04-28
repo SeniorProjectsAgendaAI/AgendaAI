@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
 import {
@@ -137,6 +138,7 @@ const buildLocalDateTime = (dateKey: string, time: string) => `${dateKey}T${time
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
+  const navigate = useNavigate();
   const { refreshKey, triggerRefresh } = useTaskEvents();
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
@@ -201,57 +203,56 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    try {
-      const [tasksRes, eventsRes] = await Promise.all([
-        api.get<ApiTask[]>("/tasks"),
-        api.get<ApiEvent[]>("/events"),
-      ]);
+    const [tasksResult, eventsResult] = await Promise.allSettled([
+      api.get<ApiTask[]>("/tasks"),
+      api.get<ApiEvent[]>("/events"),
+    ]);
 
-      const mappedTasks: WeekItem[] = tasksRes.data.map((task) => {
-        const legacy = parseLegacyDescription(task.description);
-        const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
-        const date = task.due_date ?? legacy.date;
-        const time = task.due_time?.slice(0, 5) ?? legacy.time;
-        return {
-          id: task.id,
-          type: "task",
-          name: task.title,
-          date,
-          time,
-          priority: task.priority ?? legacy.priority,
-          completed: task.completed,
-          color: parsedStyles.color,
-          pattern: parsedStyles.pattern,
-        };
-      });
-
-      const mappedEvents: WeekItem[] = eventsRes.data
-        .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-        .map((event) => {
-          const start = new Date(event.start_at);
-          const end = new Date(event.end_at);
-          const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+    const mappedTasks: WeekItem[] = tasksResult.status === "fulfilled"
+      ? tasksResult.value.data.map((task) => {
+          const legacy = parseLegacyDescription(task.description);
+          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
+          const date = task.due_date ?? legacy.date;
+          const time = task.due_time?.slice(0, 5) ?? legacy.time;
           return {
-            id: event.id,
-            type: "event",
-            name: event.title,
-            date: formatDateKey(start),
-            time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
-            endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
-            priority: 0,
-            completed: false,
+            id: task.id,
+            type: "task" as const,
+            name: task.title,
+            date,
+            time,
+            priority: task.priority ?? legacy.priority,
+            completed: task.completed,
             color: parsedStyles.color,
             pattern: parsedStyles.pattern,
-            status: event.status,
           };
-        });
+        })
+      : (() => { console.error("Failed to load tasks", tasksResult.reason); return []; })();
 
-      setItems([...mappedTasks, ...mappedEvents]);
-    } catch (err) {
-      console.error("Failed to load tasks/events", err);
-    } finally {
-      setLoading(false);
-    }
+    const mappedEvents: WeekItem[] = eventsResult.status === "fulfilled"
+      ? eventsResult.value.data
+          .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+          .map((event) => {
+            const start = new Date(event.start_at);
+            const end = new Date(event.end_at);
+            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+            return {
+              id: event.id,
+              type: "event" as const,
+              name: event.title,
+              date: formatDateKey(start),
+              time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
+              endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
+              priority: 0,
+              completed: false,
+              color: parsedStyles.color,
+              pattern: parsedStyles.pattern,
+              status: event.status,
+            };
+          })
+      : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
+
+    setItems([...mappedTasks, ...mappedEvents]);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -285,6 +286,10 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
   const goToCurrentWeek = () => {
     setWeekStart(getStartOfWeek(new Date()));
+  };
+
+  const handleDayClick = (dateKey: string) => {
+    navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'week' } });
   };
 
   const closeCreationUI = () => {
@@ -455,7 +460,12 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 const key = formatDateKey(day);
                 const isToday = key === todayKey;
                 return (
-                  <div key={key} className={`weekDayHeaderCell ${isToday ? "weekDayToday" : ""}`}>
+                  <div 
+                    key={key} 
+                    className={`weekDayHeaderCell ${isToday ? "weekDayToday" : ""}`}
+                    onClick={() => handleDayClick(key)}
+                    title="Click to view day"
+                  >
                     <span className="weekDayName">{day.toLocaleDateString("en-US", { weekday: "short" })}</span>
                     <span className={`weekDayNumber ${isToday ? "todayBadge" : ""}`}>{day.getDate()}</span>
                   </div>
