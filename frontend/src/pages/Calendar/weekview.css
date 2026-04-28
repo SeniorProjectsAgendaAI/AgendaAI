@@ -146,6 +146,12 @@
   gap: 4px;
   padding: 8px 6px;
   border-left: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.weekDayHeaderCell:hover {
+  background-color: var(--hover-bg); 
 }
 
 .weekDayHeaderCell:hover {
@@ -163,6 +169,10 @@
 
 .weekDayHeaderCell.weekDayToday {
   background: rgba(79, 109, 224, 0.08);
+}
+
+.weekDayHeaderCell.weekDayToday:hover {
+  background: rgba(79, 109, 224, 0.12);
 }
 
 .weekDayName {

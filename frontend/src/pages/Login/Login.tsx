@@ -59,7 +59,7 @@ const components = {
       return (
         <RadixFlex direction="column" p="4" pt="0" gap="3">
           <RadixFlex justify="end">
-            <Button fontWeight='normal' onClick={toForgotPassword} size='small' variation='link' color='#888'>
+            <Button fontWeight='normal' onClick={toForgotPassword} size='small' variation='link' color='#3d3d3d'>
               Forgot Password?
             </Button>
           </RadixFlex>
