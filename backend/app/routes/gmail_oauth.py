@@ -136,6 +136,7 @@ async def callback(
 
         userinfo = userinfo_response.json()
         provider_user_id = userinfo.get("id")
+        provider_email = userinfo.get("email")
 
         #Store or update tokens in database
         existing = (
@@ -153,6 +154,7 @@ async def callback(
             existing.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
             existing.scopes = ",".join(GMAIL_SCOPES)
             existing.provider_user_id = provider_user_id
+            existing.provider_email = provider_email
         else:
             new_account = ConnectedAccount(
                 user_id=user_id,
@@ -162,6 +164,7 @@ async def callback(
                 expires_at=datetime.utcnow() + timedelta(seconds=expires_in),
                 scopes=",".join(GMAIL_SCOPES),
                 provider_user_id=provider_user_id,
+                provider_email=provider_email,
             )
             db.add(new_account)
 
@@ -169,7 +172,7 @@ async def callback(
         print(f"[Gmail OAuth] Successfully stored Gmail connection for user {user_id}")
 
         #redirect to frontend with success
-        return RedirectResponse(url=f"{FRONTEND_URL}/aisidebar?gmail_connected=true")
+        return RedirectResponse(url=f"{FRONTEND_URL}/profilecontainer?gmail_connected=true")
     except Exception as e:
         print(f"[Gmail OAuth] Error in callback: {str(e)}")
         import traceback
@@ -192,7 +195,10 @@ async def status(
         .first()
     )
 
-    return {"connected": account is not None}
+    return {
+        "connected": account is not None,
+        "email": account.provider_email if account else None,
+    }
 
 
 @router.delete("/disconnect")

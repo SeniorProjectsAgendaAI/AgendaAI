@@ -2,7 +2,7 @@
 //AI Sidebar Component for interacting with AI assistant
 //Reference: https://coreui.io/react/docs/templates/admin-dashboard/
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { BsStars } from "react-icons/bs";
@@ -52,10 +52,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const { triggerRefresh } = useTaskEvents();
   const [internalIsOpen, setInternalIsOpen] = useState(true);
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
-  const [searchParams] = useSearchParams();
-
-  // NEW STATE: Tracks if the connections panel is expanded
-  const [showConnections, setShowConnections] = useState(false);
 
   const handleToggle = () => {
     if (onToggle) {
@@ -76,11 +72,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const [inputMessage, setInputMessage] = useState("");
   const [inputMode, setInputMode] = useState<VoiceInputMode>("dictate");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] =
-    useState(false);
-  const [isGmailConnected, setIsGmailConnected] = useState(false);
-  const [isCanvasConnected, setIsCanvasConnected] = useState(false);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [isDictating, setIsDictating] = useState(false);
   const [dictationError, setDictationError] = useState("");
   const [voiceLevels, setVoiceLevels] = useState(DEFAULT_VOICE_LEVELS);
@@ -114,23 +105,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
     inputModeRef.current = nextMode;
     setInputMode(nextMode);
   }, []);
-
-  useEffect(() => {
-    checkGoogleCalendarConnection();
-    checkGmailConnection();
-    checkCanvasConnection();
-
-    // Handle OAuth callback
-    if (searchParams.get("google_calendar_connected") === "true") {
-      checkGoogleCalendarConnection();
-    }
-    if (searchParams.get("gmail_connected") === "true") {
-      checkGmailConnection();
-    }
-    if (searchParams.get("canvas_connected") === "true") {
-      checkCanvasConnection();
-    }
-  }, [searchParams]);
 
   const stopMicVisualizer = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -403,157 +377,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
     }
   };
 
-  const checkGoogleCalendarConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/google-calendar/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGoogleCalendarConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Google Calendar connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleConnectGoogleCalendar = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/google-calendar/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Google Calendar connection:", error);
-    }
-  };
-
-  const handleDisconnectGoogleCalendar = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/google-calendar/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGoogleCalendarConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Google Calendar:", error);
-    }
-  };
-
-  const checkGmailConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/gmail/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGmailConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Gmail connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleConnectGmail = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/gmail/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Gmail connection:", error);
-    }
-  };
-
-  const handleDisconnectGmail = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/gmail/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGmailConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Gmail:", error);
-    }
-  };
-
-  const checkCanvasConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/canvas/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsCanvasConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Canvas connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleConnectCanvas = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/canvas/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Redirect to Canvas login page
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Canvas connection:", error);
-    }
-  };
-
-  const handleDisconnectCanvas = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/canvas/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsCanvasConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Canvas:", error);
-    }
-  };
-
   const handleVoiceModeAction = (mode: VoiceInputMode) => {
     // Reuse the same mic pipeline but change what happens when the user finishes speaking.
     if (isLoading) return;
@@ -608,23 +431,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
           </Link>
         )}
         
-        {/*Title is now a clickable toggle button */}
-        <h3 
-          onClick={() => setShowConnections(!showConnections)}
-          style={{ 
-            cursor: "pointer", 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "8px",
-            userSelect: "none"
-          }}
-          title="Toggle Connected Services"
-        >
-          AI Assistant
-          <span style={{ fontSize: "0.7em", opacity: 0.6 }}>
-            {showConnections ? "▲" : "▼"}
-          </span>
-        </h3>
+        <h3>AI Assistant</h3>
 
         {!fullScreen && (
           <button className="toggle-btn" onClick={handleToggle}>
@@ -635,67 +442,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
       {(isOpen || fullScreen) && (
         <>
-          {/* MODIFIED: Connections show based on the toggle state, regardless of screen size */}
-          {showConnections && (
-            <div className="connections-section">
-              <h4>Connected Services</h4>
-              <div className="connection-item">
-                <span>Google Calendar</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGoogleCalendarConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGoogleCalendar}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    className="connect-btn"
-                    onClick={handleConnectGoogleCalendar}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Gmail</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGmailConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGmail}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectGmail}>
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Canvas</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isCanvasConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectCanvas}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectCanvas}>
-                    Connect
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
           <div className="messages-container">
             {messages.map((msg) => (
               <div

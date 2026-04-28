@@ -153,8 +153,9 @@ async def callback(
             )
 
         provider_user_id = str(userinfo.get("id"))
+        provider_email = userinfo.get("name")
         print(
-            f"[Canvas OAuth] User ID: {provider_user_id}, User name: {userinfo.get('name')}"
+            f"[Canvas OAuth] User ID: {provider_user_id}, User name: {provider_email}"
         )
 
         #Calculate token expiry
@@ -177,6 +178,7 @@ async def callback(
             existing.refresh_token = refresh_token
             existing.expires_at = expires_at
             existing.provider_user_id = provider_user_id
+            existing.provider_email = provider_email
         else:
             new_account = ConnectedAccount(
                 user_id=user_id,
@@ -185,6 +187,7 @@ async def callback(
                 refresh_token=refresh_token,
                 expires_at=expires_at,
                 provider_user_id=provider_user_id,
+                provider_email=provider_email,
             )
             db.add(new_account)
 
@@ -194,7 +197,7 @@ async def callback(
         )
 
         #Redirect to frontend with success
-        return RedirectResponse(url=f"{FRONTEND_URL}/aisidebar?canvas_connected=true")
+        return RedirectResponse(url=f"{FRONTEND_URL}/profilecontainer?canvas_connected=true")
     except Exception as e:
         print(f"[Canvas OAuth] Error in callback: {str(e)}")
         import traceback
@@ -217,7 +220,10 @@ async def status(
         .first()
     )
 
-    return {"connected": account is not None}
+    return {
+        "connected": account is not None,
+        "email": account.provider_email if account else None,
+    }
 
 
 @router.delete("/disconnect")

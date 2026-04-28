@@ -55,6 +55,7 @@ def init_db():
     _migrate_users_table_for_profile_picture()
     _migrate_tasks_table_for_metadata()
     _migrate_events_table_for_metadata()
+    _migrate_connected_accounts_for_email()
 
 # This function adds new columns to the users table for Cognito integration, such as cognito_sub and created_at. It also makes the existing hashed_password column nullable since we won't be using it for Cognito users. 
 def _migrate_users_table_for_cognito() -> None:
@@ -148,3 +149,13 @@ def _migrate_events_table_for_metadata() -> None:
             conn.execute(text("ALTER TABLE events ADD COLUMN source VARCHAR(50) NOT NULL DEFAULT 'manual'"))
         if "external_event_id" not in columns:
             conn.execute(text("ALTER TABLE events ADD COLUMN external_event_id VARCHAR(255) NULL"))
+
+def _migrate_connected_accounts_for_email() -> None:
+    inspector = inspect(engine)
+    table_names = inspector.get_table_names()
+    if "connected_accounts" not in table_names:
+        return
+    columns = {c["name"]: c for c in inspector.get_columns("connected_accounts")}
+    with engine.begin() as conn:
+        if "provider_email" not in columns:
+            conn.execute(text("ALTER TABLE connected_accounts ADD COLUMN provider_email VARCHAR NULL"))

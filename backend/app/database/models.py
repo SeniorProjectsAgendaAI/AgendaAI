@@ -76,6 +76,7 @@ class ConnectedAccount(Base):
     expires_at = Column(DateTime, nullable=True)
     scopes = Column(String, nullable=True)
     provider_user_id = Column(String, nullable=True)
+    provider_email = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import "./profile.css";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { deleteUser, fetchUserAttributes, updateUserAttribute, updatePassword } from 'aws-amplify/auth'; 
+import { deleteUser, fetchUserAttributes, updateUserAttribute, updatePassword } from 'aws-amplify/auth';
 import { useTheme } from "../../contexts/ThemeContext";
 import { PROFILE_PICTURE_UPDATED_EVENT } from "../../components/ProfileButton/ProfileButton";
 import api from "../../services/api";
@@ -37,6 +38,12 @@ const Profile: React.FC = () => {
     const [passwordStatus, setPasswordStatus] = useState<{ message: string, type: 'success' | 'error' | '' }>({ message: '', type: '' });
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [deleteStatus, setDeleteStatus] = useState<{ message: string, type: 'error' | '' }>({ message: '', type: '' });
+
+    const [searchParams] = useSearchParams();
+    const [isCheckingConnections, setIsCheckingConnections] = useState(true);
+    const [googleCalendar, setGoogleCalendar] = useState<{ connected: boolean; email?: string | null }>({ connected: false });
+    const [gmail, setGmail] = useState<{ connected: boolean; email?: string | null }>({ connected: false });
+    const [canvas, setCanvas] = useState<{ connected: boolean; email?: string | null }>({ connected: false });
 
     // Sets the preview image and cleans up the old browser object URL.
     const setProfileImageObjectUrl = (imageUrl: string | null) => {
@@ -100,6 +107,44 @@ const Profile: React.FC = () => {
             }
         };
     }, []);
+
+    useEffect(() => {
+        const checkConnections = async () => {
+            setIsCheckingConnections(true);
+            const results = await Promise.allSettled([
+                api.get("/oauth/google-calendar/status", { params: { t: Date.now() } }),
+                api.get("/oauth/gmail/status", { params: { t: Date.now() } }),
+                api.get("/oauth/canvas/status", { params: { t: Date.now() } }),
+            ]);
+            if (results[0].status === "fulfilled") setGoogleCalendar(results[0].value.data);
+            if (results[1].status === "fulfilled") setGmail(results[1].value.data);
+            if (results[2].status === "fulfilled") setCanvas(results[2].value.data);
+            setIsCheckingConnections(false);
+        };
+        checkConnections();
+    }, [searchParams]);
+
+    const handleConnect = async (provider: string) => {
+        try {
+            const response = await api.get(`/oauth/${provider}/authorize`, { params: { t: Date.now() } });
+            if (response.data.authorization_url) {
+                window.location.href = response.data.authorization_url;
+            }
+        } catch (error) {
+            console.error(`Failed to connect ${provider}:`, error);
+        }
+    };
+
+    const handleDisconnect = async (provider: string) => {
+        try {
+            await api.delete(`/oauth/${provider}/disconnect`, { params: { t: Date.now() } });
+            if (provider === "google-calendar") setGoogleCalendar({ connected: false });
+            else if (provider === "gmail") setGmail({ connected: false });
+            else if (provider === "canvas") setCanvas({ connected: false });
+        } catch (error) {
+            console.error(`Failed to disconnect ${provider}:`, error);
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -378,6 +423,49 @@ const Profile: React.FC = () => {
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className="connections-section">
+                <h3 className="connections-title">Connected Services</h3>
+                {isCheckingConnections ? (
+                    <p className="connections-loading">Checking connections...</p>
+                ) : (
+                    <div className="connections-list">
+                        {[
+                            { key: "google-calendar", label: "Google Calendar", icon: "📅", state: googleCalendar },
+                            { key: "gmail", label: "Gmail", icon: "✉️", state: gmail },
+                            { key: "canvas", label: "Canvas LMS", icon: "📚", state: canvas },
+                        ].map((service) => (
+                            <div key={service.key} className={`connection-card ${service.state.connected ? "connected" : ""}`}>
+                                <div className="connection-card-info">
+                                    <span className="connection-icon">{service.icon}</span>
+                                    <div className="connection-details">
+                                        <span className="connection-name">{service.label}</span>
+                                        {service.state.connected ? (
+                                            <span className="connection-account">
+                                                {service.state.email || "Connected"}
+                                            </span>
+                                        ) : (
+                                            <span className="connection-account disconnected">Not connected</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="connection-card-action">
+                                    <span className={`connection-dot ${service.state.connected ? "active" : ""}`} />
+                                    {service.state.connected ? (
+                                        <button className="connection-btn disconnect" onClick={() => handleDisconnect(service.key)}>
+                                            Disconnect
+                                        </button>
+                                    ) : (
+                                        <button className="connection-btn connect" onClick={() => handleConnect(service.key)}>
+                                            Connect
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="action-buttons">

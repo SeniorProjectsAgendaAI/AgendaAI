@@ -1,13 +1,13 @@
 .profile {
-    color: var(--text-color); 
+    color: var(--text-color);
     display: flex;
-    align-items: flex-start; /* Aligns everything to the left */
+    align-items: flex-start;
     text-align: left;
-    flex-direction: column; 
-    gap: 20px; 
+    flex-direction: column;
+    gap: 20px;
     padding: 20px;
     width: 100%;
-    max-width: 400px; 
+    max-width: 500px;
 }
 
 .profile-greeting {
@@ -210,4 +210,123 @@
 .upload-btn:hover {
     background-color: var(--text-color);
     color: var(--bg-color);
+}
+
+.connections-section {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.connections-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 12px;
+}
+
+.connections-loading {
+    font-size: 0.9rem;
+    color: var(--text-muted, #888);
+}
+
+.connections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.connection-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 10px;
+    background: transparent;
+    transition: border-color 0.2s ease;
+}
+
+.connection-card.connected {
+    border-color: #4caf50;
+}
+
+.connection-card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.connection-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.connection-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.connection-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.connection-account {
+    font-size: 0.8rem;
+    color: #4caf50;
+    font-weight: 500;
+}
+
+.connection-account.disconnected {
+    color: var(--text-muted, #888);
+}
+
+.connection-card-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connection-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted, #888);
+    opacity: 0.4;
+}
+
+.connection-dot.active {
+    background: #4caf50;
+    opacity: 1;
+}
+
+.connection-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.connection-btn.connect {
+    background: var(--primary-accent, #4f6de0);
+    color: #fff;
+    border-color: var(--primary-accent, #4f6de0);
+}
+
+.connection-btn.connect:hover {
+    opacity: 0.85;
+}
+
+.connection-btn.disconnect {
+    background: transparent;
+    color: #d32f2f;
+    border-color: #d32f2f;
+}
+
+.connection-btn.disconnect:hover {
+    background: #d32f2f;
+    color: #fff;
 }
