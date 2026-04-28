@@ -308,21 +308,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
   const [activeForm, setActiveForm] = React.useState<"task" | "event" | null>(
     null,
   );
-  const [showCreateMenu, setShowCreateMenu] = React.useState(false);
-  const createMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        createMenuRef.current &&
-        !createMenuRef.current.contains(e.target as Node)
-      ) {
-        setShowCreateMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [events, setEvents] = React.useState<EventItem[]>([]);
@@ -381,13 +366,13 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
 
   React.useEffect(() => {
     const loadAll = async () => {
-      try {
-        const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks"),
-          api.get<ApiEvent[]>("/events"),
-        ]);
+      const [tasksResult, eventsResult] = await Promise.allSettled([
+        api.get<ApiTask[]>("/tasks"),
+        api.get<ApiEvent[]>("/events"),
+      ]);
 
-        const mappedTasks = tasksRes.data.map((task) => {
+      if (tasksResult.status === "fulfilled") {
+        const mappedTasks = tasksResult.value.data.map((task) => {
           const legacy = parseLegacyDescription(task.description);
           const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
@@ -404,13 +389,16 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
             completed: task.completed,
           };
         });
-
-        const mappedEvents = eventsRes.data.map((event) => mapApiEvent(event));
-
         setTasks(mappedTasks);
+      } else {
+        console.error("Failed to load tasks", tasksResult.reason);
+      }
+
+      if (eventsResult.status === "fulfilled") {
+        const mappedEvents = eventsResult.value.data.map((event) => mapApiEvent(event));
         setEvents(mappedEvents);
-      } catch (err) {
-        console.error("Failed to load tasks/events", err);
+      } else {
+        console.error("Failed to load events", eventsResult.reason);
       }
     };
 
@@ -1090,36 +1078,6 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
           </div>
         )}
 
-        <div className="panelActions">
-          <div className="createNewWrapper" ref={createMenuRef}>
-            <button
-              className="addTask"
-              onClick={() => setShowCreateMenu((prev) => !prev)}
-            >
-              + Create New ▾
-            </button>
-            {showCreateMenu && (
-              <div className="createNewMenu">
-                <button
-                  onClick={() => {
-                    setActiveForm("task");
-                    setShowCreateMenu(false);
-                  }}
-                >
-                  Task
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveForm("event");
-                    setShowCreateMenu(false);
-                  }}
-                >
-                  Event
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
 
         {activeForm === "task" && (
           <div className="popup">

@@ -77,53 +77,52 @@ const MonthView = () => {
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      try {
-        const [tasksRes, eventsRes] = await Promise.all([
-          api.get<ApiTask[]>("/tasks"),
-          api.get<ApiEvent[]>("/events"),
-        ]);
+      const [tasksResult, eventsResult] = await Promise.allSettled([
+        api.get<ApiTask[]>("/tasks"),
+        api.get<ApiEvent[]>("/events"),
+      ]);
 
-        const taskItems: CalendarItem[] = tasksRes.data.map((task) => {
-          const legacy = parseLegacyDescription(task.description);
-          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
-          return {
-            id: task.id,
-            type: "task",
-            title: task.title,
-            date: task.due_date ?? legacy.date,
-            time: task.due_time?.slice(0, 5) ?? legacy.time,
-            color: parsedStyles.color,
-            pattern: parsedStyles.pattern,
-          };
-        });
-
-        const eventItems: CalendarItem[] = eventsRes.data
-          .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-          .map((event) => {
-            const start = new Date(event.start_at);
-            const y = start.getFullYear();
-            const m = String(start.getMonth() + 1).padStart(2, "0");
-            const d = String(start.getDate()).padStart(2, "0");
-            const hh = String(start.getHours()).padStart(2, "0");
-            const mm = String(start.getMinutes()).padStart(2, "0");
-            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+      const taskItems: CalendarItem[] = tasksResult.status === "fulfilled"
+        ? tasksResult.value.data.map((task) => {
+            const legacy = parseLegacyDescription(task.description);
+            const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
             return {
-              id: event.id,
-              type: "event",
-              title: event.title,
-              date: `${y}-${m}-${d}`,
-              time: `${hh}:${mm}`,
+              id: task.id,
+              type: "task",
+              title: task.title,
+              date: task.due_date ?? legacy.date,
+              time: task.due_time?.slice(0, 5) ?? legacy.time,
               color: parsedStyles.color,
               pattern: parsedStyles.pattern,
             };
-          });
+          })
+        : (() => { console.error("Failed to load tasks", tasksResult.reason); return []; })();
 
-        setItems([...taskItems, ...eventItems]);
-      } catch (err) {
-        console.error("Failed to load tasks/events", err);
-      } finally {
-        setLoading(false);
-      }
+      const eventItems: CalendarItem[] = eventsResult.status === "fulfilled"
+        ? eventsResult.value.data
+            .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+            .map((event) => {
+              const start = new Date(event.start_at);
+              const y = start.getFullYear();
+              const m = String(start.getMonth() + 1).padStart(2, "0");
+              const d = String(start.getDate()).padStart(2, "0");
+              const hh = String(start.getHours()).padStart(2, "0");
+              const mm = String(start.getMinutes()).padStart(2, "0");
+              const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+              return {
+                id: event.id,
+                type: "event",
+                title: event.title,
+                date: `${y}-${m}-${d}`,
+                time: `${hh}:${mm}`,
+                color: parsedStyles.color,
+                pattern: parsedStyles.pattern,
+              };
+            })
+        : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
+
+      setItems([...taskItems, ...eventItems]);
+      setLoading(false);
     };
 
     loadAll();

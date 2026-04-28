@@ -724,7 +724,11 @@ const AISidebar: React.FC<AISidebarProps> = ({
             {isLoading && (
               <div className="message ai">
                 <div className="message-content">
-                  <p>Thinking...</p>
+                  <div className="thinking-dots">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                  </div>
                 </div>
               </div>
             )}

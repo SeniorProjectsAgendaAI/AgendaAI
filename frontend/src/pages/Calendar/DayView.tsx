@@ -253,19 +253,17 @@ const DayView: React.FC<DayViewProps> = ({ hideBackButton = false }) => {
   };
 
   const loadAll = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadTasks(),
-        loadEvents(),
-        syncGoogleCalendar(),
-        syncCanvas(),
-      ]);
-    } catch (err) {
-      console.error("Failed to load tasks/events", err);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const results = await Promise.allSettled([
+      loadTasks(),
+      loadEvents(),
+      syncGoogleCalendar(),
+      syncCanvas(),
+    ]);
+    for (const r of results) {
+      if (r.status === "rejected") console.error("Failed to load tasks/events", r.reason);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
