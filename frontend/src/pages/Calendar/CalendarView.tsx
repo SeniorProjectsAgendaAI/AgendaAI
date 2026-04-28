@@ -35,7 +35,7 @@ const CalendarView = () => {
                     </button>
                 </div>
                 <div className="calendarViewDisplay">
-                    {/* Removed the extra <div> wrappers here so flexbox works */}
+
                     {calendarView === "month" && <MonthView />}
                     {calendarView === "week" && <WeekCalendar />}
                     {calendarView === "day" && <DayView hideBackButton={true} />}
