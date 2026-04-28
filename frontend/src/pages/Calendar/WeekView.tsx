@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
@@ -7,12 +13,12 @@ import {
   formatConflictMessage,
   PENDING_APPROVAL_STATUS,
 } from "../../utils/eventConflicts";
-import { 
-  parseColorAndPattern, 
-  getPatternStyle, 
-  encodeColorAndPattern, 
-  DEFAULT_EVENT_COLOR, 
-  DEFAULT_TASK_COLOR 
+import {
+  parseColorAndPattern,
+  getPatternStyle,
+  encodeColorAndPattern,
+  DEFAULT_EVENT_COLOR,
+  DEFAULT_TASK_COLOR,
 } from "../../utils/styleUtils";
 import "./weekview.css";
 
@@ -74,7 +80,7 @@ const PATTERN_OPTIONS = [
   { value: "diagonal-right", label: "Diagonal Stripes (/)" },
   { value: "diagonal-left", label: "Diagonal Stripes (\\)" },
   { value: "vertical", label: "Vertical Lines" },
-  { value: "horizontal", label: "Horizontal Lines" }
+  { value: "horizontal", label: "Horizontal Lines" },
 ];
 
 const parseLegacyDescription = (desc?: string | null) => {
@@ -133,14 +139,17 @@ const addMinutesToTime = (time: string, minutesToAdd: number) => {
   return formatMinutesToTime(total);
 };
 
-const buildLocalDateTime = (dateKey: string, time: string) => `${dateKey}T${time.length === 5 ? `${time}:00` : time}`;
+const buildLocalDateTime = (dateKey: string, time: string) =>
+  `${dateKey}T${time.length === 5 ? `${time}:00` : time}`;
 
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
 
 const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const { refreshKey, triggerRefresh } = useTaskEvents();
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
+  const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
   const [items, setItems] = useState<WeekItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +173,10 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   const [eventPattern, setEventPattern] = useState("solid");
   const [eventStatus, setEventStatus] = useState("scheduled");
 
-  const hours = useMemo(() => Array.from({ length: 24 }, (_, hour) => hour), []);
+  const hours = useMemo(
+    () => Array.from({ length: 24 }, (_, hour) => hour),
+    [],
+  );
 
   const days = useMemo(
     () =>
@@ -208,48 +220,62 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
       api.get<ApiEvent[]>("/events"),
     ]);
 
-    const mappedTasks: WeekItem[] = tasksResult.status === "fulfilled"
-      ? tasksResult.value.data.map((task) => {
-          const legacy = parseLegacyDescription(task.description);
-          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
-          const date = task.due_date ?? legacy.date;
-          const time = task.due_time?.slice(0, 5) ?? legacy.time;
-          return {
-            id: task.id,
-            type: "task" as const,
-            name: task.title,
-            date,
-            time,
-            priority: task.priority ?? legacy.priority,
-            completed: task.completed,
-            color: parsedStyles.color,
-            pattern: parsedStyles.pattern,
-          };
-        })
-      : (() => { console.error("Failed to load tasks", tasksResult.reason); return []; })();
-
-    const mappedEvents: WeekItem[] = eventsResult.status === "fulfilled"
-      ? eventsResult.value.data
-          .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-          .map((event) => {
-            const start = new Date(event.start_at);
-            const end = new Date(event.end_at);
-            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
+    const mappedTasks: WeekItem[] =
+      tasksResult.status === "fulfilled"
+        ? tasksResult.value.data.map((task) => {
+            const legacy = parseLegacyDescription(task.description);
+            const parsedStyles = parseColorAndPattern(
+              task.color,
+              DEFAULT_TASK_COLOR,
+            );
+            const date = task.due_date ?? legacy.date;
+            const time = task.due_time?.slice(0, 5) ?? legacy.time;
             return {
-              id: event.id,
-              type: "event" as const,
-              name: event.title,
-              date: formatDateKey(start),
-              time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
-              endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
-              priority: 0,
-              completed: false,
+              id: task.id,
+              type: "task" as const,
+              name: task.title,
+              date,
+              time,
+              priority: task.priority ?? legacy.priority,
+              completed: task.completed,
               color: parsedStyles.color,
               pattern: parsedStyles.pattern,
-              status: event.status,
             };
           })
-      : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
+        : (() => {
+            console.error("Failed to load tasks", tasksResult.reason);
+            return [];
+          })();
+
+    const mappedEvents: WeekItem[] =
+      eventsResult.status === "fulfilled"
+        ? eventsResult.value.data
+            .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+            .map((event) => {
+              const start = new Date(event.start_at);
+              const end = new Date(event.end_at);
+              const parsedStyles = parseColorAndPattern(
+                event.color,
+                DEFAULT_EVENT_COLOR,
+              );
+              return {
+                id: event.id,
+                type: "event" as const,
+                name: event.title,
+                date: formatDateKey(start),
+                time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`,
+                endTime: `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
+                priority: 0,
+                completed: false,
+                color: parsedStyles.color,
+                pattern: parsedStyles.pattern,
+                status: event.status,
+              };
+            })
+        : (() => {
+            console.error("Failed to load events", eventsResult.reason);
+            return [];
+          })();
 
     setItems([...mappedTasks, ...mappedEvents]);
     setLoading(false);
@@ -258,6 +284,36 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   useEffect(() => {
     loadAll();
   }, [loadAll, refreshKey]);
+
+  // Set up auto-refresh that resets on manual refresh
+  const setupAutoRefresh = () => {
+    // Clear existing timer if any
+    if (autoRefreshTimerRef.current) {
+      clearInterval(autoRefreshTimerRef.current);
+    }
+
+    // Set new auto-refresh timer for 60 seconds
+    autoRefreshTimerRef.current = setInterval(() => {
+      loadAll();
+    }, 60000); // 60 seconds
+  };
+
+  // Handle manual refresh - calls loadAll and resets the auto-refresh timer
+  const handleManualRefresh = async () => {
+    await loadAll();
+    setupAutoRefresh(); // Reset the auto-refresh timer
+  };
+
+  useEffect(() => {
+    setupAutoRefresh();
+
+    // Cleanup on unmount
+    return () => {
+      if (autoRefreshTimerRef.current) {
+        clearInterval(autoRefreshTimerRef.current);
+      }
+    };
+  }, [loadAll]);
 
   const itemsByDate = useMemo(() => {
     const grouped: Record<string, WeekItem[]> = {};
@@ -289,7 +345,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   };
 
   const handleDayClick = (dateKey: string) => {
-    navigate(`/dayview?date=${dateKey}`, { state: { fromView: 'week' } });
+    navigate(`/dayview?date=${dateKey}`, { state: { fromView: "week" } });
   };
 
   const closeCreationUI = () => {
@@ -311,7 +367,12 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
     setEventStatus("scheduled");
   };
 
-  const openCreateMenu = (dateKey: string, hour: number, x: number, y: number) => {
+  const openCreateMenu = (
+    dateKey: string,
+    hour: number,
+    x: number,
+    y: number,
+  ) => {
     setCreateSlot({ dateKey, hour, x, y });
     setCreateForm(null);
   };
@@ -327,7 +388,9 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
     if (!createSlot) return;
     const startTime = `${String(createSlot.hour).padStart(2, "0")}:00`;
     setEventStartAt(buildLocalDateTime(createSlot.dateKey, startTime));
-    setEventEndAt(buildLocalDateTime(createSlot.dateKey, addMinutesToTime(startTime, 60)));
+    setEventEndAt(
+      buildLocalDateTime(createSlot.dateKey, addMinutesToTime(startTime, 60)),
+    );
     setCreateForm("event");
   };
 
@@ -402,7 +465,9 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
       await loadAll();
       triggerRefresh();
       if (response.data.status === PENDING_APPROVAL_STATUS) {
-        alert("Event saved as pending approval. Approve it from the task panel before it appears on the calendar.");
+        alert(
+          "Event saved as pending approval. Approve it from the task panel before it appears on the calendar.",
+        );
       }
       closeCreationUI();
     } catch (err) {
@@ -418,18 +483,30 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
   };
 
   const hourHeight = HOUR_HEIGHT;
-  const calendarWidthStyle = embedded ? { height: "100%" } : { minHeight: "100vh" };
+  const calendarWidthStyle = embedded
+    ? { height: "100%" }
+    : { minHeight: "100vh" };
   const calendarShellStyle = embedded ? undefined : { minHeight: "0" };
 
   return (
-    <div className={`weekViewContainer ${embedded ? "embedded" : "standalone"}`} style={calendarWidthStyle}>
-      <div className={`weekViewContent ${embedded ? "embedded" : "standalone"}`}>
+    <div
+      className={`weekViewContainer ${embedded ? "embedded" : "standalone"}`}
+      style={calendarWidthStyle}
+    >
+      <div
+        className={`weekViewContent ${embedded ? "embedded" : "standalone"}`}
+      >
         <div className="weekViewHeader">
           <div className="weekHeaderTitleRow">
             <h2>Week View</h2>
             <div className="headerControls">
               <div className="weekRange">
-                {weekStart.toLocaleDateString("en-US", { month: "long", day: "numeric" })} – {weekEnd.toLocaleDateString("en-US", {
+                {weekStart.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+                –{" "}
+                {weekEnd.toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -439,6 +516,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 <button onClick={goToPreviousWeek}>← Previous</button>
                 <button onClick={goToCurrentWeek}>This Week</button>
                 <button onClick={goToNextWeek}>Next →</button>
+                <button onClick={handleManualRefresh}>Refresh</button>
               </div>
             </div>
           </div>
@@ -447,7 +525,11 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
         {loading ? (
           <p className="weekLoading">Loading tasks…</p>
         ) : (
-          <div className="weekCalendarShell" style={calendarShellStyle} ref={calendarShellRef}>
+          <div
+            className="weekCalendarShell"
+            style={calendarShellStyle}
+            ref={calendarShellRef}
+          >
             <div
               className="weekCalendar"
               style={{
@@ -460,14 +542,20 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 const key = formatDateKey(day);
                 const isToday = key === todayKey;
                 return (
-                  <div 
-                    key={key} 
+                  <div
+                    key={key}
                     className={`weekDayHeaderCell ${isToday ? "weekDayToday" : ""}`}
                     onClick={() => handleDayClick(key)}
                     title="Click to view day"
                   >
-                    <span className="weekDayName">{day.toLocaleDateString("en-US", { weekday: "short" })}</span>
-                    <span className={`weekDayNumber ${isToday ? "todayBadge" : ""}`}>{day.getDate()}</span>
+                    <span className="weekDayName">
+                      {day.toLocaleDateString("en-US", { weekday: "short" })}
+                    </span>
+                    <span
+                      className={`weekDayNumber ${isToday ? "todayBadge" : ""}`}
+                    >
+                      {day.getDate()}
+                    </span>
                   </div>
                 );
               })}
@@ -475,7 +563,9 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
               <div className="weekTimeColumn">
                 {hours.map((hour) => (
                   <div key={hour} className="weekTimeSlot">
-                    <span>{formatDisplayTime(`${String(hour).padStart(2, "0")}:00`)}</span>
+                    <span>
+                      {formatDisplayTime(`${String(hour).padStart(2, "0")}:00`)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -485,7 +575,10 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 const isToday = key === todayKey;
                 const dayItems = itemsByDate[key] || [];
                 return (
-                  <div key={key} className={`weekDayColumn ${isToday ? "weekDayToday" : ""}`}>
+                  <div
+                    key={key}
+                    className={`weekDayColumn ${isToday ? "weekDayToday" : ""}`}
+                  >
                     <div className="weekHourSlots">
                       {hours.map((hour) => (
                         <button
@@ -515,17 +608,27 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                     )}
                     <div className="weekEventLayer">
                       {dayItems.map((item) => {
-                        const top = (parseTimeToMinutes(item.time) / 60) * hourHeight;
+                        const top =
+                          (parseTimeToMinutes(item.time) / 60) * hourHeight;
                         // Calculate duration strictly for events bc tasks are too small otherwise (minimum 30 mins visual size)
-                        const durationMinutes = item.type === "event"
-                          ? Math.max(30, parseTimeToMinutes(item.endTime) - parseTimeToMinutes(item.time))
-                          : 0;
+                        const durationMinutes =
+                          item.type === "event"
+                            ? Math.max(
+                                30,
+                                parseTimeToMinutes(item.endTime) -
+                                  parseTimeToMinutes(item.time),
+                              )
+                            : 0;
 
                         // Events scale exactly to their duration tasks just autosize
-                        const height = item.type === "event" 
-                          ? Math.max(36, (durationMinutes / 60) * hourHeight - 6)
-                          : "auto";
-                        
+                        const height =
+                          item.type === "event"
+                            ? Math.max(
+                                36,
+                                (durationMinutes / 60) * hourHeight - 6,
+                              )
+                            : "auto";
+
                         return (
                           <button
                             key={`${item.type}-${item.id}`}
@@ -534,16 +637,28 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                             style={{ top, height }}
                             onClick={(event) => event.stopPropagation()}
                           >
-                            <div className="taskItemPattern" style={getPatternStyle(item.color, item.pattern)} />
+                            <div
+                              className="taskItemPattern"
+                              style={getPatternStyle(item.color, item.pattern)}
+                            />
                             <span className="weekEventTime">
-                              {item.time 
-                                ? (item.type === "event" && item.endTime 
-                                    ? `${formatDisplayTime(item.time)} - ${formatDisplayTime(item.endTime)}` 
-                                    : formatDisplayTime(item.time)) 
+                              {item.time
+                                ? item.type === "event" && item.endTime
+                                  ? `${formatDisplayTime(item.time)} - ${formatDisplayTime(item.endTime)}`
+                                  : formatDisplayTime(item.time)
                                 : "All day"}
                             </span>
-                            <span className="weekEventTitle">{item.type === "event" ? "📅 " : ""}{item.name}</span>
-                            {item.type === "task" && <span className={`weekPriorityTag ${priorityLabel(item.priority)}`}>Priority {item.priority}</span>}
+                            <span className="weekEventTitle">
+                              {item.type === "event" ? "📅 " : ""}
+                              {item.name}
+                            </span>
+                            {item.type === "task" && (
+                              <span
+                                className={`weekPriorityTag ${priorityLabel(item.priority)}`}
+                              >
+                                Priority {item.priority}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -562,8 +677,20 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
             className="weekCreateMenu"
             onClick={(event) => event.stopPropagation()}
             style={{
-              left: clamp(createSlot.x, 16, typeof window !== "undefined" ? window.innerWidth - 240 : createSlot.x),
-              top: clamp(createSlot.y, 16, typeof window !== "undefined" ? window.innerHeight - 140 : createSlot.y),
+              left: clamp(
+                createSlot.x,
+                16,
+                typeof window !== "undefined"
+                  ? window.innerWidth - 240
+                  : createSlot.x,
+              ),
+              top: clamp(
+                createSlot.y,
+                16,
+                typeof window !== "undefined"
+                  ? window.innerHeight - 140
+                  : createSlot.y,
+              ),
             }}
           >
             <div className="weekCreateMenuTitle">
@@ -573,7 +700,11 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                 day: "numeric",
               })}
             </div>
-            <div className="weekCreateMenuSubtitle">{formatDisplayTime(`${String(createSlot.hour).padStart(2, "0")}:00`)}</div>
+            <div className="weekCreateMenuSubtitle">
+              {formatDisplayTime(
+                `${String(createSlot.hour).padStart(2, "0")}:00`,
+              )}
+            </div>
             <button onClick={startTaskCreation}>Create task</button>
             <button onClick={startEventCreation}>Create event</button>
           </div>
@@ -582,34 +713,65 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
       {createSlot && createForm === "task" && (
         <div className="weekCreateOverlay" onClick={closeCreationUI}>
-          <div className="weekCreateModal" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="weekCreateModal"
+            onClick={(event) => event.stopPropagation()}
+          >
             <h3>Create Task</h3>
             <label>
               Title
-              <input type="text" value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder="Task title" />
+              <input
+                type="text"
+                value={taskTitle}
+                onChange={(event) => setTaskTitle(event.target.value)}
+                placeholder="Task title"
+              />
             </label>
             <label>
               Description
-              <textarea value={taskDescription} onChange={(event) => setTaskDescription(event.target.value)} placeholder="Task details" />
+              <textarea
+                value={taskDescription}
+                onChange={(event) => setTaskDescription(event.target.value)}
+                placeholder="Task details"
+              />
             </label>
             <div className="weekFormRow">
               <label>
                 Date
-                <input type="date" value={taskDueDate} onChange={(event) => setTaskDueDate(event.target.value)} />
+                <input
+                  type="date"
+                  value={taskDueDate}
+                  onChange={(event) => setTaskDueDate(event.target.value)}
+                />
               </label>
               <label>
                 Time
-                <input type="time" value={taskDueTime} onChange={(event) => setTaskDueTime(event.target.value)} />
+                <input
+                  type="time"
+                  value={taskDueTime}
+                  onChange={(event) => setTaskDueTime(event.target.value)}
+                />
               </label>
             </div>
             <div className="weekFormRow">
               <label>
                 Priority
-                <input type="number" min={1} max={10} value={taskPriority} onChange={(event) => setTaskPriority(Number(event.target.value))} />
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={taskPriority}
+                  onChange={(event) =>
+                    setTaskPriority(Number(event.target.value))
+                  }
+                />
               </label>
               <label>
                 Status
-                <select value={taskStatus} onChange={(event) => setTaskStatus(event.target.value)}>
+                <select
+                  value={taskStatus}
+                  onChange={(event) => setTaskStatus(event.target.value)}
+                >
                   <option value="todo">Todo</option>
                   <option value="in_progress">In Progress</option>
                   <option value="done">Done</option>
@@ -618,7 +780,9 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
             </div>
             <div className="weekFormActions">
               <button onClick={createTask}>Save task</button>
-              <button className="secondary" onClick={closeCreationUI}>Cancel</button>
+              <button className="secondary" onClick={closeCreationUI}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -626,38 +790,74 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
 
       {createSlot && createForm === "event" && (
         <div className="weekCreateOverlay" onClick={closeCreationUI}>
-          <div className="weekCreateModal" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="weekCreateModal"
+            onClick={(event) => event.stopPropagation()}
+          >
             <h3>Create Event</h3>
             <label>
               Title
-              <input type="text" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} placeholder="Event title" />
+              <input
+                type="text"
+                value={eventTitle}
+                onChange={(event) => setEventTitle(event.target.value)}
+                placeholder="Event title"
+              />
             </label>
             <label>
               Description
-              <textarea value={eventDescription} onChange={(event) => setEventDescription(event.target.value)} placeholder="Event details" />
+              <textarea
+                value={eventDescription}
+                onChange={(event) => setEventDescription(event.target.value)}
+                placeholder="Event details"
+              />
             </label>
             <div className="weekFormRow">
               <label>
                 Start
-                <input type="datetime-local" value={eventStartAt} onChange={(event) => setEventStartAt(event.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={eventStartAt}
+                  onChange={(event) => setEventStartAt(event.target.value)}
+                />
               </label>
               <label>
                 End
-                <input type="datetime-local" value={eventEndAt} onChange={(event) => setEventEndAt(event.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={eventEndAt}
+                  onChange={(event) => setEventEndAt(event.target.value)}
+                />
               </label>
             </div>
             <div className="weekFormRow">
               <label>
                 Location
-                <input type="text" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} placeholder="Optional location" />
+                <input
+                  type="text"
+                  value={eventLocation}
+                  onChange={(event) => setEventLocation(event.target.value)}
+                  placeholder="Optional location"
+                />
               </label>
               <label>
                 Color & Pattern
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="color" value={eventColor} onChange={(event) => setEventColor(event.target.value)} style={{height: '38px', width: '50px'}} />
-                  <select value={eventPattern} onChange={(event) => setEventPattern(event.target.value)} style={{flex: 1}}>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    type="color"
+                    value={eventColor}
+                    onChange={(event) => setEventColor(event.target.value)}
+                    style={{ height: "38px", width: "50px" }}
+                  />
+                  <select
+                    value={eventPattern}
+                    onChange={(event) => setEventPattern(event.target.value)}
+                    style={{ flex: 1 }}
+                  >
                     {PATTERN_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -665,7 +865,10 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
             </div>
             <label>
               Status
-              <select value={eventStatus} onChange={(event) => setEventStatus(event.target.value)}>
+              <select
+                value={eventStatus}
+                onChange={(event) => setEventStatus(event.target.value)}
+              >
                 <option value="scheduled">Scheduled</option>
                 <option value="ongoing">Ongoing</option>
                 <option value="completed">Completed</option>
@@ -674,7 +877,9 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
             </label>
             <div className="weekFormActions">
               <button onClick={createEvent}>Save event</button>
-              <button className="secondary" onClick={closeCreationUI}>Cancel</button>
+              <button className="secondary" onClick={closeCreationUI}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
