@@ -5,7 +5,7 @@ import MonthView from "./MonthView";
 import WeekCalendar from "./WeekView";
 import DayView from "./DayView";
 import BackButton from "../../components/BackButton";
-
+//alex, container to switch views 
 const CalendarView = () => {
     const location = useLocation();
 
