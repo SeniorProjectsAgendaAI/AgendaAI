@@ -35,7 +35,7 @@ const Sidebar = () => {
     
         <button className="navigationItemlogout" onClick={signOut}>
           <FiLogOut className="navigationIcon" />
-           Sign Out
+            Sign Out
         </button>
     </div>
     );

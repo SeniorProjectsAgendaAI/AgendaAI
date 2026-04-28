@@ -15,26 +15,26 @@ interface ApiTask {
   completed: boolean;
 }
 
-interface ApiEvent {
-  id: number;
-  title: string;
-  start_at: string;
-  end_at: string;
-}
-
 interface DashItem {
   id: string;
-  type: "task" | "event";
+  type: "task";
   title: string;
   dueDate: Date;
   priority?: number;
   completed?: boolean;
+  taskId?: number;
 }
 
 const HighPriorityDash: React.FC = () => {
-  const { refreshKey } = useTaskEvents();
+  const { refreshKey, triggerRefresh } = useTaskEvents();
   const [items, setItems] = useState<DashItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editPriority, setEditPriority] = useState(1);
+  const [allTasks, setAllTasks] = useState<ApiTask[]>([]);
 
   useEffect(() => {
     loadHighPriorityItems();
@@ -43,45 +43,30 @@ const HighPriorityDash: React.FC = () => {
   const loadHighPriorityItems = async () => {
     try {
       setLoading(true);
-      const [tasksRes, eventsRes] = await Promise.all([
-        api.get<ApiTask[]>("/tasks"),
-        api.get<ApiEvent[]>("/events"),
-      ]);
+      const tasksRes = await api.get<ApiTask[]>("/tasks");
 
       console.log("All tasks from API:", tasksRes.data);
-      console.log("All events from API:", eventsRes.data);
+
+      setAllTasks(tasksRes.data);
 
       const now = new Date();
       const threeDaysFromNow = new Date(now);
-      threeDaysFromNow.setDate(now.getDate());
+      threeDaysFromNow.setDate(now.getDate() + 6);
       threeDaysFromNow.setHours(23, 59, 59, 999);
-
-      console.log("Now:", now);
-      console.log("Three days from now:", threeDaysFromNow);
 
       //Filter high priority tasks
       const highPriorityTasks: DashItem[] = tasksRes.data
         .filter((task) => {
-          console.log(`Task: ${task.title}`);
-          console.log(`  Priority: ${task.priority}`);
-          console.log(`  Completed: ${task.completed}`);
-          console.log(`  Due Date: ${task.due_date}`);
-          console.log(`  Due Time: ${task.due_time}`);
-
           if (task.completed) {
-            console.log(`  -> Filtered out: completed`);
             return false;
           }
           if (!task.priority || task.priority < 3) {
-            console.log(`  -> Filtered out: priority too low or missing`);
             return false;
           }
           if (!task.due_date) {
-            console.log(`  -> Filtered out: no due date`);
             return false;
           }
 
-          
           const timeStr = task.due_time || "00:00:00";
           const formattedTime =
             timeStr.includes(":") && timeStr.split(":").length === 2
@@ -89,12 +74,6 @@ const HighPriorityDash: React.FC = () => {
               : timeStr;
 
           const dueDateTime = new Date(`${task.due_date}T${formattedTime}`);
-          console.log(`  Due DateTime parsed: ${dueDateTime}`);
-          console.log(
-            `  Is before threshold: ${dueDateTime <= threeDaysFromNow}`,
-          );
-
-        
           return dueDateTime <= threeDaysFromNow;
         })
         .map((task) => {
@@ -111,60 +90,21 @@ const HighPriorityDash: React.FC = () => {
             dueDate: new Date(`${task.due_date}T${formattedTime}`),
             priority: task.priority || 1,
             completed: task.completed,
+            taskId: task.id,
           };
         });
 
       console.log("High priority tasks after filtering:", highPriorityTasks);
 
-      //Filter upcoming events
-      const upcomingEvents: DashItem[] = eventsRes.data
-        .filter((event) => {
-          console.log(`Event: ${event.title}`);
-          console.log(`  Start: ${event.start_at}`);
-          const eventStart = new Date(event.start_at);
-          console.log(`  Start parsed: ${eventStart}`);
-          console.log(`  Is after now: ${eventStart >= now}`);
-          console.log(`  Is before threshold: ${eventStart <= threeDaysFromNow}`);
-          return eventStart >= now && eventStart <= threeDaysFromNow;
-        })
-        .map((event) => ({
-          id: `event-${event.id}`,
-          type: "event" as const,
-          title: event.title,
-          dueDate: new Date(event.start_at),
-        }));
+      //Sort by priority (descending) then by due date
+      const sorted = highPriorityTasks.sort((a, b) => {
+        if ((a.priority ?? 0) !== (b.priority ?? 0)) {
+          return (b.priority ?? 0) - (a.priority ?? 0);
+        }
+        return a.dueDate.getTime() - b.dueDate.getTime();
+      });
 
-      console.log("Upcoming events after filtering:", upcomingEvents);
-      const combined = [...highPriorityTasks, ...upcomingEvents].sort(
-        (a, b) => {
-
-          if (a.priority && b.priority) {
-            if (a.priority !== b.priority) {
-              return b.priority - a.priority; 
-            }
-          }
-
-          if (
-            a.priority &&
-            a.priority >= 3 &&
-            (!b.priority || b.priority < 3)
-          ) {
-            return -1;
-          }
-          if (
-            b.priority &&
-            b.priority >= 3 &&
-            (!a.priority || a.priority < 3)
-          ) {
-            return 1;
-          }
-
-          return a.dueDate.getTime() - b.dueDate.getTime();
-        },
-      );
-
-      //top 5
-      setItems(combined.slice(0, 5));
+      setItems(sorted);
     } catch (err) {
       console.error("Failed to load high priority items", err);
     } finally {
@@ -218,25 +158,92 @@ const HighPriorityDash: React.FC = () => {
     return "#666";
   };
 
+  const completeTask = async (taskId: number) => {
+    try {
+      await api.put(`/tasks/${taskId}`, { completed: true });
+      setItems((prev) =>
+        prev.filter(
+          (item) => !(item.type === "task" && item.taskId === taskId),
+        ),
+      );
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to complete task", err);
+      alert("Failed to complete task.");
+    }
+  };
+
+  const deleteTask = async (taskId: number) => {
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setItems((prev) =>
+        prev.filter(
+          (item) => !(item.type === "task" && item.taskId === taskId),
+        ),
+      );
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to delete task", err);
+      alert("Failed to delete task.");
+    }
+  };
+
+  const startEditTask = (taskId: number) => {
+    const task = allTasks.find((t) => t.id === taskId);
+    if (task) {
+      setEditingTaskId(taskId);
+      setEditTitle(task.title);
+      setEditDate(task.due_date || "");
+      setEditTime(task.due_time?.slice(0, 5) || "");
+      setEditPriority(task.priority || 1);
+    }
+  };
+
+  const saveEditTask = async () => {
+    if (!editTitle.trim() || !editDate || !editTime) {
+      alert("Title, date, and time are required.");
+      return;
+    }
+
+    try {
+      await api.put(`/tasks/${editingTaskId}`, {
+        title: editTitle.trim(),
+        due_date: editDate,
+        due_time: editTime,
+        priority: editPriority,
+      });
+      setEditingTaskId(null);
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to update task", err);
+      alert("Failed to update task.");
+    }
+  };
+
+  const cancelEditTask = () => {
+    setEditingTaskId(null);
+    setEditTitle("");
+    setEditDate("");
+    setEditTime("");
+    setEditPriority(1);
+  };
+
   return (
     <div className="highPriorityDash">
       <div className="dashHeader">
         <span className="starIcon"></span>
-        <h3>High Priority Tasks / Coming up</h3>
+        <h3>High Priority Tasks</h3>
       </div>
       <div className="dashContent">
         {loading ? (
           <p className="loadingText">Loading...</p>
         ) : items.length === 0 ? (
-          <p className="emptyText">No high priority items in the next 3 days</p>
+          <p className="emptyText">No high priority tasks in the next 7 days</p>
         ) : (
           <div className="dashItems">
             {items.map((item) => (
               <div key={item.id} className="dashItem">
                 <div className="dashItemHeader">
-                  <span className="dashItemIcon">
-                    {item.type === "task" ? "" : ""}
-                  </span>
                   <span className="dashItemTitle">{item.title}</span>
                 </div>
                 <div className="dashItemFooter">
@@ -254,11 +261,88 @@ const HighPriorityDash: React.FC = () => {
                     </span>
                   )}
                 </div>
+                {item.taskId && (
+                  <div className="dashItemActions">
+                    <button
+                      className="dashActionBtn dashActionComplete"
+                      onClick={() => completeTask(item.taskId!)}
+                      title="Mark as complete"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="dashActionBtn dashActionEdit"
+                      onClick={() => startEditTask(item.taskId!)}
+                      title="Edit task"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="dashActionBtn dashActionDelete"
+                      onClick={() => deleteTask(item.taskId!)}
+                      title="Delete task"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {editingTaskId !== null && (
+        <div className="editTaskModal">
+          <div className="editTaskOverlay" onClick={cancelEditTask} />
+          <div className="editTaskForm">
+            <h4>Edit Task</h4>
+            <div className="editFormGroup">
+              <label>Title</label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Task title"
+              />
+            </div>
+            <div className="editFormGroup">
+              <label>Date</label>
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="editFormGroup">
+              <label>Time</label>
+              <input
+                type="time"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
+              />
+            </div>
+            <div className="editFormGroup">
+              <label>Priority</label>
+              <input
+                type="number"
+                value={editPriority}
+                onChange={(e) => setEditPriority(Number(e.target.value))}
+                min={1}
+                max={10}
+              />
+            </div>
+            <div className="editFormActions">
+              <button className="editSaveBtn" onClick={saveEditTask}>
+                Save
+              </button>
+              <button className="editCancelBtn" onClick={cancelEditTask}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,10 +1,12 @@
 //Biniam Gashaw
 //AI Sidebar Component for interacting with AI assistant
 //Reference: https://coreui.io/react/docs/templates/admin-dashboard/
-import React, { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { BsStars } from "react-icons/bs";
+import { FiMic, FiSend } from "react-icons/fi";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
 import "./aisidebar.css";
@@ -34,6 +36,13 @@ interface AISidebarProps {
   onAgentResponse?: () => void;
 }
 
+//voice 
+type VoiceInputMode = "dictate" | "voice";
+
+const DEFAULT_VOICE_LEVELS = Array.from({ length: 14 }, () => 0.12);
+const AUTO_SEND_SILENCE_MS = 1200;
+const MIN_AUTO_SEND_LENGTH = 2;
+
 const AISidebar: React.FC<AISidebarProps> = ({
   isOpen: propIsOpen,
   onToggle,
@@ -43,10 +52,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
   const { triggerRefresh } = useTaskEvents();
   const [internalIsOpen, setInternalIsOpen] = useState(true);
   const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
-  const [searchParams] = useSearchParams();
-
-  // NEW STATE: Tracks if the connections panel is expanded
-  const [showConnections, setShowConnections] = useState(false);
 
   const handleToggle = () => {
     if (onToggle) {
@@ -65,29 +70,302 @@ const AISidebar: React.FC<AISidebarProps> = ({
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const [inputMode, setInputMode] = useState<VoiceInputMode>("dictate");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] =
-    useState(false);
-  const [isGmailConnected, setIsGmailConnected] = useState(false);
-  const [isCanvasConnected, setIsCanvasConnected] = useState(false);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [isDictating, setIsDictating] = useState(false);
+  const [dictationError, setDictationError] = useState("");
+  const [voiceLevels, setVoiceLevels] = useState(DEFAULT_VOICE_LEVELS);
+
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const silenceTimeoutRef = useRef<number | null>(null);
+  const dictationActiveRef = useRef(false);
+  const baseTranscriptRef = useRef("");
+  const inputModeRef = useRef<VoiceInputMode>("dictate");
+  const inputMessageRef = useRef("");
+
+  const syncInputMessage = useCallback((nextMessage: string) => {
+    // Keep the React state and mutable ref in sync for speech callbacks.
+    inputMessageRef.current = nextMessage;
+    setInputMessage(nextMessage);
+  }, []);
+
+  const clearSilenceTimeout = useCallback(() => {
+    // Cancel any pending auto-send timer before restarting voice capture.
+    if (silenceTimeoutRef.current !== null) {
+      window.clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+  }, []);
+
+  const setVoiceInputMode = useCallback((nextMode: VoiceInputMode) => {
+    // Track the selected mic behavior in both state and refs for async handlers.
+    inputModeRef.current = nextMode;
+    setInputMode(nextMode);
+  }, []);
+
+  const stopMicVisualizer = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(() => undefined);
+    }
+    audioContextRef.current = null;
+    setVoiceLevels(DEFAULT_VOICE_LEVELS);
+  }, []);
+
+  const stopDictation = useCallback(() => {
+    clearSilenceTimeout();
+    dictationActiveRef.current = false;
+    setIsDictating(false);
+
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.onerror = null;
+      recognitionRef.current.onresult = null;
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        recognitionRef.current.abort();
+      }
+      recognitionRef.current = null;
+    }
+
+    stopMicVisualizer();
+  }, [clearSilenceTimeout, stopMicVisualizer]);
 
   useEffect(() => {
-    checkGoogleCalendarConnection();
-    checkGmailConnection();
-    checkCanvasConnection();
+    return () => {
+      stopDictation();
+    };
+  }, [stopDictation]);
 
-    // Handle OAuth callback
-    if (searchParams.get("google_calendar_connected") === "true") {
-      checkGoogleCalendarConnection();
+  useEffect(() => {
+    inputModeRef.current = inputMode;
+  }, [inputMode]);
+
+  const handleSendMessage = useCallback(
+    async (messageOverride?: string) => {
+      // Send either the live transcript or the typed message through the existing chat API.
+      const messageToSend = (messageOverride ?? inputMessageRef.current).trim();
+      if (!messageToSend || isLoading) return;
+      if (dictationActiveRef.current) {
+        stopDictation();
+      }
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text: messageToSend,
+        isUser: true,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      syncInputMessage("");
+      setIsLoading(true);
+
+      try {
+        const token = await getAuthToken();
+        if (!token) {
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            text: "Please log in to use the AI assistant.",
+            isUser: false,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+          setIsLoading(false);
+          return;
+        }
+
+        const agentUrl =
+          process.env.REACT_APP_AGENT_URL || "http://localhost:8001";
+        const response = await axios.post(
+          `${agentUrl}/chat`,
+          { message: messageToSend },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.data.response,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+        triggerRefresh();
+        onAgentResponse?.();
+      } catch (error: any) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text:
+            error.response?.data?.detail ||
+            "AI assistant is temporarily unavailable. Please try again later.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, onAgentResponse, stopDictation, syncInputMessage, triggerRefresh],
+  );
+
+  const startMicVisualizer = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Microphone access is not available in this browser.");
     }
-    if (searchParams.get("gmail_connected") === "true") {
-      checkGmailConnection();
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const AudioContextConstructor =
+      window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextConstructor();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.78;
+    source.connect(analyser);
+
+    mediaStreamRef.current = stream;
+    audioContextRef.current = audioContext;
+
+    const updateVoiceLevels = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const barCount = DEFAULT_VOICE_LEVELS.length;
+      const bucketSize = Math.max(1, Math.floor(dataArray.length / barCount));
+      const time = performance.now() / 180;
+      const nextLevels = Array.from({ length: barCount }, (_, index) => {
+        const start = index * bucketSize;
+        const end = Math.min(start + bucketSize, dataArray.length);
+        let total = 0;
+        for (let i = start; i < end; i += 1) {
+          total += dataArray[i];
+        }
+        const average = total / Math.max(1, end - start);
+        const idleWave = 0.18 + Math.sin(time + index * 0.7) * 0.08;
+        const voiceBoost = average / 125;
+        return Math.max(0.12, Math.min(1, idleWave + voiceBoost));
+      });
+
+      setVoiceLevels(nextLevels);
+      animationFrameRef.current =
+        window.requestAnimationFrame(updateVoiceLevels);
+    };
+
+    updateVoiceLevels();
+  }, []);
+
+  const startDictation = useCallback(async (mode?: VoiceInputMode) => {
+    // Start browser speech recognition and branch to dictate or auto-send voice behavior.
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const activeMode = mode ?? inputModeRef.current;
+
+    if (!SpeechRecognitionConstructor) {
+      setDictationError("Voice dictation works best in Google Chrome.");
+      return;
     }
-    if (searchParams.get("canvas_connected") === "true") {
-      checkCanvasConnection();
+
+    setDictationError("");
+    clearSilenceTimeout();
+    baseTranscriptRef.current = inputMessageRef.current.trim()
+      ? `${inputMessageRef.current.trim()} `
+      : "";
+
+    try {
+      await startMicVisualizer();
+
+      const recognition = new SpeechRecognitionConstructor();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        dictationActiveRef.current = true;
+        setIsDictating(true);
+      };
+
+      recognition.onresult = (event) => {
+        clearSilenceTimeout();
+        let finalTranscript = "";
+        let interimTranscript = "";
+
+        for (let i = 0; i < event.results.length; i += 1) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += `${transcript.trim()} `;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        const nextTranscript =
+          `${baseTranscriptRef.current}${finalTranscript}${interimTranscript}`.trimStart();
+        syncInputMessage(nextTranscript);
+
+        if (
+          activeMode === "voice" &&
+          finalTranscript.trim() &&
+          nextTranscript.trim().length >= MIN_AUTO_SEND_LENGTH
+        ) {
+          silenceTimeoutRef.current = window.setTimeout(() => {
+            const transcriptToSend = inputMessageRef.current.trim();
+            if (transcriptToSend.length < MIN_AUTO_SEND_LENGTH || isLoading) {
+              return;
+            }
+            stopDictation();
+            void handleSendMessage(transcriptToSend);
+          }, AUTO_SEND_SILENCE_MS);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (
+          event.error === "not-allowed" ||
+          event.error === "service-not-allowed"
+        ) {
+          setDictationError("Microphone permission is blocked for this site.");
+        } else if (event.error !== "no-speech") {
+          setDictationError("Dictation stopped. Please try again.");
+        }
+        stopDictation();
+      };
+
+      recognition.onend = () => {
+        if (!dictationActiveRef.current) return;
+        try {
+          recognition.start();
+        } catch {
+          stopDictation();
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (error) {
+      console.error("Failed to start dictation", error);
+      setDictationError("Could not access the microphone.");
+      stopDictation();
     }
-  }, [searchParams]);
+  }, [
+    clearSilenceTimeout,
+    handleSendMessage,
+    isLoading,
+    startMicVisualizer,
+    stopDictation,
+    syncInputMessage,
+  ]);
 
   const getAuthToken = async (): Promise<string | null> => {
     try {
@@ -99,216 +377,40 @@ const AISidebar: React.FC<AISidebarProps> = ({
     }
   };
 
-  const checkGoogleCalendarConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
+  const handleVoiceModeAction = (mode: VoiceInputMode) => {
+    // Reuse the same mic pipeline but change what happens when the user finishes speaking.
+    if (isLoading) return;
+
+    const wasDictating = dictationActiveRef.current;
+    const previousMode = inputModeRef.current;
+    setVoiceInputMode(mode);
+
+    if (wasDictating) {
+      const transcriptToSend = inputMessageRef.current.trim();
+      stopDictation();
+
+      if (previousMode === mode && mode === "voice") {
+        if (transcriptToSend.length >= MIN_AUTO_SEND_LENGTH) {
+          void handleSendMessage(transcriptToSend);
+        }
         return;
       }
-      const response = await api.get("/oauth/google-calendar/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGoogleCalendarConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Google Calendar connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
+
+      if (previousMode !== mode) {
+        window.setTimeout(() => {
+          void startDictation(mode);
+        }, 0);
+      }
+      return;
     }
+
+    void startDictation(mode);
   };
 
-  const handleConnectGoogleCalendar = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/google-calendar/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Google Calendar connection:", error);
-    }
-  };
-
-  const handleDisconnectGoogleCalendar = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/google-calendar/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGoogleCalendarConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Google Calendar:", error);
-    }
-  };
-
-  const checkGmailConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/gmail/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGmailConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Gmail connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleConnectGmail = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/gmail/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Gmail connection:", error);
-    }
-  };
-
-  const handleDisconnectGmail = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/gmail/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsGmailConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Gmail:", error);
-    }
-  };
-
-  const checkCanvasConnection = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/canvas/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsCanvasConnected(response.data.connected);
-    } catch (error) {
-      console.error("Failed to check Canvas connection:", error);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  };
-
-  const handleConnectCanvas = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      const response = await api.get("/oauth/canvas/authorize", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Redirect to Canvas login page
-      window.location.href = response.data.authorization_url;
-    } catch (error) {
-      console.error("Failed to initiate Canvas connection:", error);
-    }
-  };
-
-  const handleDisconnectCanvas = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-      await api.delete("/oauth/canvas/disconnect", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setIsCanvasConnected(false);
-    } catch (error) {
-      console.error("Failed to disconnect Canvas:", error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputMessage,
-      isUser: true,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = inputMessage;
-    setInputMessage("");
-    setIsLoading(true);
-
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: "Please log in to use the AI assistant.",
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-        setIsLoading(false);
-        return;
-      }
-
-      const agentUrl =
-        process.env.REACT_APP_AGENT_URL || "http://localhost:8001";
-      const response = await axios.post(
-        `${agentUrl}/chat`,
-        { message: currentInput },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.data.response,
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      triggerRefresh();
-      onAgentResponse?.();
-    } catch (error: any) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text:
-          error.response?.data?.detail ||
-          "AI assistant is temporarily unavailable. Please try again later.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleEndVoiceMode = () => {
+    // Stop listening and return the composer to dictate mode without sending.
+    stopDictation();
+    setVoiceInputMode("dictate");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -329,23 +431,7 @@ const AISidebar: React.FC<AISidebarProps> = ({
           </Link>
         )}
         
-        {/*Title is now a clickable toggle button */}
-        <h3 
-          onClick={() => setShowConnections(!showConnections)}
-          style={{ 
-            cursor: "pointer", 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "8px",
-            userSelect: "none"
-          }}
-          title="Toggle Connected Services"
-        >
-          AI Assistant
-          <span style={{ fontSize: "0.7em", opacity: 0.6 }}>
-            {showConnections ? "▲" : "▼"}
-          </span>
-        </h3>
+        <h3>AI Assistant</h3>
 
         {!fullScreen && (
           <button className="toggle-btn" onClick={handleToggle}>
@@ -356,67 +442,6 @@ const AISidebar: React.FC<AISidebarProps> = ({
 
       {(isOpen || fullScreen) && (
         <>
-          {/* MODIFIED: Connections show based on the toggle state, regardless of screen size */}
-          {showConnections && (
-            <div className="connections-section">
-              <h4>Connected Services</h4>
-              <div className="connection-item">
-                <span>Google Calendar</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGoogleCalendarConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGoogleCalendar}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    className="connect-btn"
-                    onClick={handleConnectGoogleCalendar}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Gmail</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isGmailConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectGmail}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectGmail}>
-                    Connect
-                  </button>
-                )}
-              </div>
-              <div className="connection-item">
-                <span>Canvas</span>
-                {isCheckingConnection ? (
-                  <span className="connection-status">Loading...</span>
-                ) : isCanvasConnected ? (
-                  <button
-                    className="disconnect-btn"
-                    onClick={handleDisconnectCanvas}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button className="connect-btn" onClick={handleConnectCanvas}>
-                    Connect
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
           <div className="messages-container">
             {messages.map((msg) => (
               <div
@@ -445,26 +470,113 @@ const AISidebar: React.FC<AISidebarProps> = ({
             {isLoading && (
               <div className="message ai">
                 <div className="message-content">
-                  <p>Thinking...</p>
+                  <div className="thinking-dots">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           <div className="input-container">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask about Canvas, Gmail, or Calendar..."
-              rows={2}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-            >
-              {isLoading ? "Sending..." : "Send"}
-            </button>
+            <div className="dictation-input-area">
+              <div className="composer-shell">
+                <textarea
+                  value={inputMessage}
+                  onChange={(e) => syncInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={
+                    inputMode === "voice"
+                      ? "Speak your question or type here..."
+                      : "Dictate into the box or type here..."
+                  }
+                  rows={2}
+                />
+                {isDictating && (
+                  <div className="voice-visualizer" aria-label="Listening">
+                    <div className="voice-bars" aria-hidden="true">
+                      {voiceLevels.map((level, index) => (
+                        <span
+                          key={index}
+                          className="voice-bar"
+                          style={{ height: `${Math.round(5 + level * 26)}px` }}
+                        />
+                      ))}
+                    </div>
+                    <span className="voice-status">
+                      {inputMode === "voice"
+                        ? "Listening for your question..."
+                        : "Dictating into the message box..."}
+                    </span>
+                  </div>
+                )}
+                <div className="composer-footer">
+                  <div className="voice-mode-group">
+                    <button
+                      type="button"
+                      className={`mode-icon-btn inline ${inputMode === "dictate" ? "active" : ""} ${isDictating && inputMode === "dictate" ? "recording" : ""}`}
+                      onClick={() => handleVoiceModeAction("dictate")}
+                      disabled={isLoading}
+                      aria-pressed={inputMode === "dictate"}
+                      title={
+                        isDictating && inputMode === "dictate"
+                          ? "Stop dictation"
+                          : "Dictate mode"
+                      }
+                    >
+                      <FiMic />
+                    </button>
+                    <button
+                      type="button"
+                      className={`mode-icon-btn inline ${inputMode === "voice" ? "active" : ""} ${isDictating && inputMode === "voice" ? "recording" : ""}`}
+                      onClick={() => handleVoiceModeAction("voice")}
+                      disabled={isLoading}
+                      aria-pressed={inputMode === "voice"}
+                      title={
+                        isDictating && inputMode === "voice"
+                          ? "Stop and send voice message"
+                          : "Voice mode"
+                      }
+                    >
+                      <BsStars />
+                    </button>
+                    <span className="voice-mode-caption">
+                      {inputMode === "voice"
+                        ? "Voice sends automatically when you pause."
+                        : "Dictate fills the box so you can edit first."}
+                    </span>
+                  </div>
+                  <button
+                    className={`send-btn ${inputMode === "voice" ? "end-btn" : ""}`}
+                    onClick={
+                      inputMode === "voice"
+                        ? handleEndVoiceMode
+                        : () => void handleSendMessage()
+                    }
+                    disabled={
+                      inputMode === "voice"
+                        ? isLoading
+                        : !inputMessage.trim() || isLoading
+                    }
+                    title={inputMode === "voice" ? "End voice mode" : "Send message"}
+                  >
+                    {inputMode === "voice" ? (
+                      <span>End</span>
+                    ) : (
+                      <>
+                        <FiSend />
+                        <span>{isLoading ? "Sending..." : "Send"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              {dictationError && (
+                <div className="dictation-error">{dictationError}</div>
+              )}
+            </div>
           </div>
         </>
       )}

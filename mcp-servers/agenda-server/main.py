@@ -542,7 +542,7 @@ async def call_tool(name: str, arguments: dict):
 
                 upcoming_days = arguments.get("upcoming_days")
                 if upcoming_days:
-                    now = datetime.utcnow()
+                    now = datetime.now()
                     cutoff = now + timedelta(days=int(upcoming_days))
                     query = query.filter(Event.start_at <= cutoff, Event.end_at >= now)
 

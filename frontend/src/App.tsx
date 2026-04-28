@@ -1,7 +1,7 @@
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 
@@ -18,8 +18,11 @@ import Login from "./pages/Login/Login";
 import CalendarContainer from "./pages/CalendarContain/calendarcontain";
 import ProfileContainer from "./pages/ProfileContainer/profilecontainer";
 import AiContain from "./pages/AiContain/aicontain";
+import ProfileButton from "./components/ProfileButton/ProfileButton";
 
 import { TaskEventProvider } from "./contexts/TaskEventContext";
+import { CreateModalProvider } from "./contexts/CreateModalContext";
+import CreateModal from "./components/CreateModal/CreateModal";
 import "./styles/App.css";
 
 
@@ -40,8 +43,12 @@ const AppContent = () => {
 
   return (
     <TaskEventProvider>
+      <CreateModalProvider>
+      <ProfileButton />
+      <CreateModal />
       <Routes>
-        <Route path='/' element={<Home signOut={signOut} user={user} />} />
+        <Route path='/' element={<Navigate to='/dashboard' replace />} />
+        <Route path='/home' element={<Home signOut={signOut} user={user} />} />
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/taskpanel' element={<TaskPanel />} />
         <Route path='/calendarview' element={<CalendarView />} />
@@ -54,6 +61,7 @@ const AppContent = () => {
         <Route path='/calendarcontainer' element={<CalendarContainer />}/>
         <Route path='/profilecontainer' element={<ProfileContainer />}/>
       </Routes>
+      </CreateModalProvider>
     </TaskEventProvider>
   );
 };

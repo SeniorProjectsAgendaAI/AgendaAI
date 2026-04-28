@@ -52,8 +52,10 @@ def init_db():
     print("Initializing database tables...")
     Base.metadata.create_all(bind=engine)
     _migrate_users_table_for_cognito()
+    _migrate_users_table_for_profile_picture()
     _migrate_tasks_table_for_metadata()
     _migrate_events_table_for_metadata()
+    _migrate_connected_accounts_for_email()
 
 # This function adds new columns to the users table for Cognito integration, such as cognito_sub and created_at. It also makes the existing hashed_password column nullable since we won't be using it for Cognito users. 
 def _migrate_users_table_for_cognito() -> None:
@@ -78,6 +80,31 @@ def _migrate_users_table_for_cognito() -> None:
         conn.execute(
             text("CREATE INDEX IF NOT EXISTS ix_users_cognito_sub ON users (cognito_sub)")
         )
+
+
+def _migrate_users_table_for_profile_picture() -> None:
+    # Adds profile picture columns to existing user tables.
+    inspector = inspect(engine)
+    table_names = inspector.get_table_names()
+    if "users" not in table_names:
+        return
+
+    columns = {column["name"]: column for column in inspector.get_columns("users")}
+    binary_type = "BLOB" if engine.dialect.name == "sqlite" else "BYTEA"
+    with engine.begin() as conn:
+        if "profile_picture_data" not in columns:
+            conn.execute(
+                text(f"ALTER TABLE users ADD COLUMN profile_picture_data {binary_type} NULL")
+            )
+        if "profile_picture_content_type" not in columns:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN profile_picture_content_type VARCHAR NULL")
+            )
+        if "profile_picture_updated_at" not in columns:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN profile_picture_updated_at TIMESTAMP NULL")
+            )
+
 
 # These functions add new columns to the tasks and events tables for metadata like tags, colors, priorities, statuses, due dates/times, etc. They check if the columns already exist before trying to add them, so they can be safely run on an existing database without causing errors. This allows us to evolve the database schema over time as we add new features that require additional metadata on tasks and events.
 def _migrate_tasks_table_for_metadata() -> None:
@@ -118,3 +145,17 @@ def _migrate_events_table_for_metadata() -> None:
             conn.execute(text("ALTER TABLE events ADD COLUMN location VARCHAR NULL"))
         if "status" not in columns:
             conn.execute(text("ALTER TABLE events ADD COLUMN status VARCHAR NOT NULL DEFAULT 'scheduled'"))
+        if "source" not in columns:
+            conn.execute(text("ALTER TABLE events ADD COLUMN source VARCHAR(50) NOT NULL DEFAULT 'manual'"))
+        if "external_event_id" not in columns:
+            conn.execute(text("ALTER TABLE events ADD COLUMN external_event_id VARCHAR(255) NULL"))
+
+def _migrate_connected_accounts_for_email() -> None:
+    inspector = inspect(engine)
+    table_names = inspector.get_table_names()
+    if "connected_accounts" not in table_names:
+        return
+    columns = {c["name"]: c for c in inspector.get_columns("connected_accounts")}
+    with engine.begin() as conn:
+        if "provider_email" not in columns:
+            conn.execute(text("ALTER TABLE connected_accounts ADD COLUMN provider_email VARCHAR NULL"))

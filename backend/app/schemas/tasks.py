@@ -48,4 +48,4 @@ class TaskResponse(BaseModel):
 
     class Config:
         # Lets Pydantic read data directly from SQLAlchemy models.
-        orm_mode = True
+        from_attributes = True

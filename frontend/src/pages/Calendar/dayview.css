@@ -31,8 +31,8 @@
 
 .headerControls {
   display: flex;
-  justify-content: space-between; 
-  align-items: center; 
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
 }
 
@@ -102,11 +102,15 @@
 .eventItem {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--primary-accent);
-  padding: 15px;
+  padding: 15px 15px 15px 20px;
   border-radius: 4px;
   transition: transform 0.2s;
   color: var(--text-color);
+
+  /* CSS FIXES */
+  border-left: none !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .eventItem:hover {
@@ -204,11 +208,15 @@
 .taskItem {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-left: 4px solid #4caf50;
-  padding: 12px 15px;
+  padding: 12px 15px 12px 20px;
   border-radius: 4px;
   transition: transform 0.2s;
   color: var(--text-color);
+
+  /* CSS FIXES */
+  border-left: none !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .taskItem:hover {
@@ -217,7 +225,6 @@
 }
 
 .taskItem.completed {
-  border-left-color: #9e9e9e;
   opacity: 0.7;
   text-decoration: line-through;
 }
@@ -316,7 +323,7 @@
 }
 
 .timeSlot {
-  height: 60px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -366,38 +373,81 @@
   letter-spacing: 0.02em;
 }
 
+/* Hour Block is now purely for drawing grid lines */
 .hourBlock {
-  height: 60px;
+  height: 100px;
   border-bottom: 1px solid var(--border-color);
   position: relative;
+}
+
+/* Container to float events over the grid */
+.dayEventLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Events & Tasks use Absolute Positioning */
+.eventBlock,
+.taskBlock {
+  position: absolute;
+  left: 10px;
+  right: 15px;
+  max-width: none;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-color);
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 5px;
-  align-items: flex-start;
-  overflow: visible;
+  flex-direction: column;
+
+  /* Force */
+  border-left: none !important;
 }
 
 .eventBlock {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--primary-accent);
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 13px;
-  flex: 0 0 auto;
-  max-width: 250px;
-  margin-bottom: 5px;
-  color: var(--text-color);
+  padding: 10px 10px 10px 16px;
 }
 
-.eventBlockTitle {
+.taskBlock {
+  padding: 6px 8px 6px 14px;
+  width: 250px;
+}
+
+.taskBlock.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.taskItemPattern {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+}
+
+.eventBlockTitle,
+.taskBlockTitle {
   font-weight: 600;
-  color: var(--primary-accent);
   margin-bottom: 4px;
 }
 
-.eventBlockTime {
+.eventBlockTitle {
+  color: var(--primary-accent);
+}
+
+.taskBlockTitle {
+  color: #ff9800;
+}
+
+.eventBlockTime,
+.taskBlockTime {
   color: var(--text-muted);
   font-size: 11px;
   margin-bottom: 4px;
@@ -418,39 +468,8 @@
   font-style: italic;
   margin-top: 4px;
   line-height: 1.3;
-  max-height: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.taskBlock {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid #ff9800;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  flex: 0 0 auto;
-  max-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  color: var(--text-color);
-}
-
-.taskBlock.completed {
-  opacity: 0.6;
-  text-decoration: line-through;
-}
-
-.taskBlockTitle {
-  font-weight: 600;
-  color: #ff9800;
-}
-
-.taskBlockTime {
-  color: var(--text-muted);
-  font-size: 10px;
 }
 
 .taskBlockPriority {

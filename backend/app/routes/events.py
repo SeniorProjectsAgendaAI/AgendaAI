@@ -3,6 +3,7 @@
 import asyncio
 import os
 from datetime import datetime, timedelta
+from typing import Optional
 
 from app.database import models
 from app.database.session import get_db
@@ -18,12 +19,36 @@ load_dotenv()
 
 router = APIRouter(prefix="/events", tags=["Events"])
 # Valid status values allowed for events.
-ALLOWED_EVENT_STATUSES = {"scheduled", "ongoing", "completed", "canceled"}
+ALLOWED_EVENT_STATUSES = {
+    "scheduled",
+    "ongoing",
+    "completed",
+    "canceled",
+    "pending_approval",
+}
 # Valid recurrence options allowed for repeating events.
 ALLOWED_EVENT_RECURRENCE = {"none", "daily", "weekly", "monthly"}
 
 
 _last_sync_times = {} 
+
+
+def _has_event_conflict(
+    db: Session,
+    user_id: int,
+    start_at: datetime,
+    end_at: datetime,
+    exclude_event_id: Optional[int] = None,
+) -> bool:
+    query = db.query(models.Event).filter(
+        models.Event.user_id == user_id,
+        models.Event.status.notin_(["canceled", "pending_approval"]),
+        models.Event.start_at < end_at,
+        models.Event.end_at > start_at,
+    )
+    if exclude_event_id is not None:
+        query = query.filter(models.Event.id != exclude_event_id)
+    return db.query(query.exists()).scalar()
 
 
 # Creates a new event for the currently logged-in user.
@@ -43,6 +68,13 @@ def create_event(
     if event.recurrence and event.recurrence not in ALLOWED_EVENT_RECURRENCE:
         raise HTTPException(status_code=400, detail="Invalid event recurrence")
 
+    status = event.status or "scheduled"
+    if (
+        status != "pending_approval"
+        and _has_event_conflict(db, user.id, event.start_at, event.end_at)
+    ):
+        status = "pending_approval"
+
     new_event = models.Event(
         title=event.title,
         description=event.description,
@@ -52,7 +84,7 @@ def create_event(
         recurrence=event.recurrence or "none",
         color=event.color,
         location=event.location,
-        status=event.status or "scheduled",
+        status=status,
         user_id=user.id,
     )
     db.add(new_event)
@@ -116,6 +148,13 @@ def update_event(
         if updates.recurrence not in ALLOWED_EVENT_RECURRENCE:
             raise HTTPException(status_code=400, detail="Invalid event recurrence")
         event.recurrence = updates.recurrence
+
+    if (
+        event.status != "pending_approval"
+        and (updates.start_at is not None or updates.end_at is not None)
+        and _has_event_conflict(db, user.id, event.start_at, event.end_at, event.id)
+    ):
+        event.status = "pending_approval"
 
     db.commit()
     db.refresh(event)

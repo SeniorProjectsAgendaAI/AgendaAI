@@ -31,6 +31,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 GOOGLE_CALENDAR_SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
     "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/userinfo.email",
 ]
 
 #In-memory state storage (for future implementation)
@@ -141,6 +142,7 @@ async def google_calendar_oauth_callback(
 
     #Get user info to store provider_user_id
     google_user_id = None
+    google_email = None
     try:
         async with httpx.AsyncClient() as client:
             user_info_response = await client.get(
@@ -150,6 +152,7 @@ async def google_calendar_oauth_callback(
             if user_info_response.status_code == 200:
                 user_info = user_info_response.json()
                 google_user_id = user_info.get("id")
+                google_email = user_info.get("email")
     except:
         pass
 
@@ -169,6 +172,7 @@ async def google_calendar_oauth_callback(
         existing_account.expires_at = expires_at
         existing_account.scopes = scope
         existing_account.provider_user_id = google_user_id
+        existing_account.provider_email = google_email
         existing_account.updated_at = datetime.utcnow()
     else:
         new_account = ConnectedAccount(
@@ -179,14 +183,14 @@ async def google_calendar_oauth_callback(
             expires_at=expires_at,
             scopes=scope,
             provider_user_id=google_user_id,
+            provider_email=google_email,
         )
         db.add(new_account)
 
     db.commit()
 
-    #Redirect back to frontend AI sidebar
     return RedirectResponse(
-        url=f"{FRONTEND_URL}/aisidebar?google_calendar_connected=true"
+        url=f"{FRONTEND_URL}/profilecontainer?google_calendar_connected=true"
     )
 
 
@@ -207,7 +211,10 @@ async def google_calendar_oauth_status(
         .first()
     )
 
-    return {"connected": account is not None}
+    return {
+        "connected": account is not None,
+        "email": account.provider_email if account else None,
+    }
 
 
 @router.delete("/disconnect")

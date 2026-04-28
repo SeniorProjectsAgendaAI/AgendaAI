@@ -1,50 +1,332 @@
-.profile 
-{
-    color: var(--text-color); /* <-- CHANGED FROM white TO DYNAMIC VARIABLE */
+.profile {
+    color: var(--text-color);
     display: flex;
-    justify-content: center; 
-    align-items: center; 
-    flex-direction: column; 
-    gap: 15px; /* Added a gap so the buttons and text don't touch */
+    align-items: flex-start;
+    text-align: left;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 500px;
 }
 
-img 
-{
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-}
-
-.themeToggleBtn 
-{
-    padding: 10px 20px;
-    background-color: var(--primary-accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.profile-greeting {
+    font-size: 2.5rem;
     font-weight: bold;
-    transition: background-color 0.2s ease;
+    margin: 0;
 }
 
-.themeToggleBtn:hover 
-{
-    opacity: 0.9;
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
 }
 
-.logoutBtn 
-{
-    padding: 10px 20px;
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 10px;
+    background-color: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-accent);
+}
+
+.password-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.password-input-container input {
+    flex: 1; 
+}
+
+.show-password-btn {
+    padding: 10px 15px;
     background-color: transparent;
     color: var(--text-color);
     border: 1px solid var(--text-color);
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.9rem;
 }
 
-.logoutBtn:hover 
-{
+.show-password-btn:hover {
     background-color: var(--text-color);
     color: var(--bg-color);
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Ensures buttons stick to the left */
+    gap: 15px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.themeToggleBtn, .logoutBtn, .deleteAccountBtn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    width: max-content;
+}
+
+.themeToggleBtn {
+    background-color: var(--primary-accent);
+    color: #ffffff;
+    border: none;
+}
+
+.themeToggleBtn:hover {
+    opacity: 0.9;
+}
+
+.logoutBtn {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+}
+
+.logoutBtn:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.deleteAccountBtn {
+    background-color: transparent;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+.deleteAccountBtn:hover:not(:disabled) {
+    background-color: #d32f2f;
+    color: #ffffff;
+}
+
+.deleteAccountBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.deleteAccountStatus {
+    color: #d32f2f;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    max-width: 100%;
+}
+
+/*PFP*/
+.profile-picture-section {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.profile-picture-wrapper {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden; /* This forces the square image into a circle */
+    border: 4px solid var(--text-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    transition: border-color 0.2s ease;
+}
+
+.profile-picture-wrapper:hover {
+    border-color: var(--primary-accent);
+}
+
+.profile-picture {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image fills the circle without stretching */
+}
+
+.profile-picture-placeholder {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+.profile-picture-status {
+    align-self: center;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    text-align: center;
+    max-width: 220px;
+}
+
+.profile-picture-status.success {
+    color: #4caf50;
+}
+
+.profile-picture-status.error {
+    color: #d32f2f;
+}
+
+.upload-btn {
+    padding: 8px 15px;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.upload-btn:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.connections-section {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.connections-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 12px;
+}
+
+.connections-loading {
+    font-size: 0.9rem;
+    color: var(--text-muted, #888);
+}
+
+.connections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.connection-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 10px;
+    background: transparent;
+    transition: border-color 0.2s ease;
+}
+
+.connection-card.connected {
+    border-color: #4caf50;
+}
+
+.connection-card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.connection-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.connection-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.connection-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.connection-account {
+    font-size: 0.8rem;
+    color: #4caf50;
+    font-weight: 500;
+}
+
+.connection-account.disconnected {
+    color: var(--text-muted, #888);
+}
+
+.connection-card-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connection-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted, #888);
+    opacity: 0.4;
+}
+
+.connection-dot.active {
+    background: #4caf50;
+    opacity: 1;
+}
+
+.connection-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.connection-btn.connect {
+    background: var(--primary-accent, #4f6de0);
+    color: #fff;
+    border-color: var(--primary-accent, #4f6de0);
+}
+
+.connection-btn.connect:hover {
+    opacity: 0.85;
+}
+
+.connection-btn.disconnect {
+    background: transparent;
+    color: #d32f2f;
+    border-color: #d32f2f;
+}
+
+.connection-btn.disconnect:hover {
+    background: #d32f2f;
+    color: #fff;
 }

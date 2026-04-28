@@ -48,7 +48,7 @@ Referenced official Amplify docs for custom styling: https://docs.amplify.aws/ui
   --amplify-components-fieldcontrol-border-radius: 9999px;
   --amplify-components-button-border-radius: 9999px;
   --amplify-components-fieldcontrol-background-color: #f4f4f5;
-  --amplify-components-fieldcontrol-focus-border-color: #888888;
+  --amplify-components-fieldcontrol-focus-border-color: #3d3d3d;
 
   --amplify-components-authenticator-router-box-shadow: none;
   --amplify-components-authenticator-router-border-width: 0;
@@ -60,10 +60,10 @@ Referenced official Amplify docs for custom styling: https://docs.amplify.aws/ui
   --amplify-components-button-primary-color: #ffffff; 
   
   /* input fields */
-  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px #888888; 
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px #3d3d3d; 
   
   /* links (forgot password...) */
-  --amplify-components-button-link-color: #888888; 
+  --amplify-components-button-link-color: #3d3d3d; 
   --amplify-components-button-link-hover-color: #111111;
   --amplify-components-button-link-focus-color: #111111; 
   --amplify-components-button-link-active-color: #000000;
@@ -72,13 +72,13 @@ Referenced official Amplify docs for custom styling: https://docs.amplify.aws/ui
   /* changing default buttons (social providers and eye icon) */
   --amplify-components-button-hover-background-color: #f2f2f2;
   --amplify-components-button-hover-color: #111111;
-  --amplify-components-button-focus-background-color: 0 0 0 2px #888888;
+  --amplify-components-button-focus-background-color: 0 0 0 2px #3d3d3d;
   --amplify-components-button-active-background-color: #e5e5e5;
   --amplify-components-button-active-color: #000000;
 
   /* tabs (sign in | create account) */
   --amplify-components-tabs-item-active-border-color: #000000;
-  --amplify-components-tabs-item-color: #888888;
+  --amplify-components-tabs-item-color: #3d3d3d;
   --amplify-components-tabs-item-active-color: #000000;
   --amplify-components-tabs-item-hover-color: #111111;
 
@@ -118,3 +118,4 @@ Referenced official Amplify docs for custom styling: https://docs.amplify.aws/ui
     width: 95%;
   }
 }
+
