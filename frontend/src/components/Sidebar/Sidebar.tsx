@@ -28,10 +28,10 @@ const Sidebar = () => {
             <FaRegCalendarAlt className='navigationIcon' />    
             Calendars
         </NavLink>
-        <NavLink to="/profilecontainer" className="navigationItem">
+        {/* <NavLink to="/profilecontainer" className="navigationItem">
             <FaUser className='navigationIcon' />
             Profile
-        </NavLink>
+        </NavLink> */}
     
         <button className="navigationItemlogout" onClick={signOut}>
           <FiLogOut className="navigationIcon" />
