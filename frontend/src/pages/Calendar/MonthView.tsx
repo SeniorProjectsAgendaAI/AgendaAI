@@ -101,131 +101,77 @@ const MonthView = () => {
     setLoading(true);
     try {
       await Promise.all([syncGoogleCalendar(), syncCanvas()]);
+    } catch (err) {
+      console.debug("Sync failed, continuing with local data:", err);
+    }
 
-      const [tasksRes, eventsRes] = await Promise.all([
-  useEffect(() => {
-    const loadAll = async () => {
-      setLoading(true);
-      const [tasksResult, eventsResult] = await Promise.allSettled([
-        api.get<ApiTask[]>("/tasks"),
-        api.get<ApiEvent[]>("/events"),
-      ]);
+    const [tasksResult, eventsResult] = await Promise.allSettled([
+      api.get<ApiTask[]>("/tasks"),
+      api.get<ApiEvent[]>("/events"),
+    ]);
 
-      const taskItems: CalendarItem[] = tasksRes.data.map((task) => {
-        const legacy = parseLegacyDescription(task.description);
-        const parsedStyles = parseColorAndPattern(
-          task.color,
-          DEFAULT_TASK_COLOR,
-        );
-        return {
-          id: task.id,
-          type: "task",
-          title: task.title,
-          date: task.due_date ?? legacy.date,
-          time: task.due_time?.slice(0, 5) ?? legacy.time,
-          color: parsedStyles.color,
-          pattern: parsedStyles.pattern,
-        };
-      });
-
-      const eventItems: CalendarItem[] = eventsRes.data
-        .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-        .map((event) => {
-          const start = new Date(event.start_at);
-          const y = start.getFullYear();
-          const m = String(start.getMonth() + 1).padStart(2, "0");
-          const d = String(start.getDate()).padStart(2, "0");
-          const hh = String(start.getHours()).padStart(2, "0");
-          const mm = String(start.getMinutes()).padStart(2, "0");
-          const parsedStyles = parseColorAndPattern(
-            event.color,
-            DEFAULT_EVENT_COLOR,
-          );
+    const taskItems: CalendarItem[] = tasksResult.status === "fulfilled"
+      ? tasksResult.value.data.map((task) => {
+          const legacy = parseLegacyDescription(task.description);
+          const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
           return {
-            id: event.id,
-            type: "event",
-            title: event.title,
-            date: `${y}-${m}-${d}`,
-            time: `${hh}:${mm}`,
+            id: task.id,
+            type: "task",
+            title: task.title,
+            date: task.due_date ?? legacy.date,
+            time: task.due_time?.slice(0, 5) ?? legacy.time,
             color: parsedStyles.color,
             pattern: parsedStyles.pattern,
           };
-        });
+        })
+      : (() => { console.error("Failed to load tasks", tasksResult.reason); return []; })();
 
-      setItems([...taskItems, ...eventItems]);
-    } catch (err) {
-      console.error("Failed to load tasks/events", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Set up auto-refresh that resets on manual refresh
-  const setupAutoRefresh = () => {
-    // Clear existing timer if any
-    if (autoRefreshTimerRef.current) {
-      clearInterval(autoRefreshTimerRef.current);
-    }
-
-    // Set new auto-refresh timer for 60 seconds, but respect cooldown
-    autoRefreshTimerRef.current = setInterval(async () => {
-      const now = Date.now();
-      const timeSinceLastSync = now - lastSyncTimeRef.current;
-
-      // Only sync if cooldown has passed
-      if (timeSinceLastSync >= SYNC_COOLDOWN_MS) {
-        lastSyncTimeRef.current = now;
-        await loadAll();
-      }
-    }, 60000); // Check every 60 seconds
-  };
-
-  // Handle manual refresh - calls loadAll and resets the auto-refresh timer
-  const handleManualRefresh = async () => {
-    const now = Date.now();
-    const timeSinceLastSync = now - lastSyncTimeRef.current;
-      const taskItems: CalendarItem[] = tasksResult.status === "fulfilled"
-        ? tasksResult.value.data.map((task) => {
-            const legacy = parseLegacyDescription(task.description);
-            const parsedStyles = parseColorAndPattern(task.color, DEFAULT_TASK_COLOR);
+    const eventItems: CalendarItem[] = eventsResult.status === "fulfilled"
+      ? eventsResult.value.data
+          .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
+          .map((event) => {
+            const start = new Date(event.start_at);
+            const y = start.getFullYear();
+            const m = String(start.getMonth() + 1).padStart(2, "0");
+            const d = String(start.getDate()).padStart(2, "0");
+            const hh = String(start.getHours()).padStart(2, "0");
+            const mm = String(start.getMinutes()).padStart(2, "0");
+            const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
             return {
-              id: task.id,
-              type: "task",
-              title: task.title,
-              date: task.due_date ?? legacy.date,
-              time: task.due_time?.slice(0, 5) ?? legacy.time,
+              id: event.id,
+              type: "event",
+              title: event.title,
+              date: `${y}-${m}-${d}`,
+              time: `${hh}:${mm}`,
               color: parsedStyles.color,
               pattern: parsedStyles.pattern,
             };
           })
-        : (() => { console.error("Failed to load tasks", tasksResult.reason); return []; })();
+      : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
 
-      const eventItems: CalendarItem[] = eventsResult.status === "fulfilled"
-        ? eventsResult.value.data
-            .filter((event) => event.status !== PENDING_APPROVAL_STATUS)
-            .map((event) => {
-              const start = new Date(event.start_at);
-              const y = start.getFullYear();
-              const m = String(start.getMonth() + 1).padStart(2, "0");
-              const d = String(start.getDate()).padStart(2, "0");
-              const hh = String(start.getHours()).padStart(2, "0");
-              const mm = String(start.getMinutes()).padStart(2, "0");
-              const parsedStyles = parseColorAndPattern(event.color, DEFAULT_EVENT_COLOR);
-              return {
-                id: event.id,
-                type: "event",
-                title: event.title,
-                date: `${y}-${m}-${d}`,
-                time: `${hh}:${mm}`,
-                color: parsedStyles.color,
-                pattern: parsedStyles.pattern,
-              };
-            })
-        : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
+    setItems([...taskItems, ...eventItems]);
+    setLoading(false);
+  };
 
-      setItems([...taskItems, ...eventItems]);
-      setLoading(false);
-    };
+  const setupAutoRefresh = () => {
+    if (autoRefreshTimerRef.current) {
+      clearInterval(autoRefreshTimerRef.current);
+    }
+
+    autoRefreshTimerRef.current = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastSync = now - lastSyncTimeRef.current;
+
+      if (timeSinceLastSync >= SYNC_COOLDOWN_MS) {
+        lastSyncTimeRef.current = now;
+        await loadAll();
+      }
+    }, 60000);
+  };
+
+  const handleManualRefresh = async () => {
+    const now = Date.now();
+    const timeSinceLastSync = now - lastSyncTimeRef.current;
 
     if (timeSinceLastSync < SYNC_COOLDOWN_MS) {
       const remainingMs = SYNC_COOLDOWN_MS - timeSinceLastSync;

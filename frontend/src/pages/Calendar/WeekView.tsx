@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { FaCheck } from "react-icons/fa";
 import api from "../../services/api";
