@@ -1,4 +1,6 @@
 import React from "react";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FaCheck } from "react-icons/fa";
 import "./taskpanel.css";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
@@ -460,6 +462,18 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
     setActiveForm(null);
   };
 
+  const toggleComplete = async (taskId: number, completed: boolean) => {
+    try {
+      await api.put(`/tasks/${taskId}`, { completed });
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, completed } : t)),
+      );
+      triggerRefresh();
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
+  };
+
   const deleteTask = async (taskId: number) => {
     try {
       await api.delete(`/tasks/${taskId}`);
@@ -892,11 +906,19 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                       Priority: {task.priority}
                       <br />
                       Status: {task.status}
-                      <br />
-                      <button onClick={() => startEditTask(task)}>Edit</button>
-                      <button onClick={() => deleteTask(task.id)}>
-                        Delete
-                      </button>
+                      <div className="itemActions">
+                        {!task.completed && (
+                          <button className="itemIconBtn complete" onClick={() => toggleComplete(task.id, true)} title="Complete">
+                            <FaCheck />
+                          </button>
+                        )}
+                        <button className="itemIconBtn edit" onClick={() => startEditTask(task)} title="Edit">
+                          <FiEdit2 />
+                        </button>
+                        <button className="itemIconBtn delete" onClick={() => deleteTask(task.id)} title="Delete">
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>
@@ -1063,10 +1085,14 @@ const TaskPanel: React.FC<TaskPanelProps> = ({ hideBackButton = false }) => {
                     {event.status === PENDING_APPROVAL_STATUS && (
                       <button onClick={() => approveEvent(event)}>Approve</button>
                     )}
-                    <button onClick={() => startEditEvent(event)}>Edit</button>
-                    <button onClick={() => deleteEvent(event.id)}>
-                      Delete
-                    </button>
+                    <div className="itemActions">
+                      <button className="itemIconBtn edit" onClick={() => startEditEvent(event)} title="Edit">
+                        <FiEdit2 />
+                      </button>
+                      <button className="itemIconBtn delete" onClick={() => deleteEvent(event.id)} title="Delete">
+                        <FiTrash2 />
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>

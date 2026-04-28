@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FaCheck } from "react-icons/fa";
 import api from "../../services/api";
 import { useTaskEvents } from "../../contexts/TaskEventContext";
 import {
@@ -6,12 +8,12 @@ import {
   formatConflictMessage,
   PENDING_APPROVAL_STATUS,
 } from "../../utils/eventConflicts";
-import { 
-  parseColorAndPattern, 
-  getPatternStyle, 
-  encodeColorAndPattern, 
-  DEFAULT_EVENT_COLOR, 
-  DEFAULT_TASK_COLOR 
+import {
+  parseColorAndPattern,
+  getPatternStyle,
+  encodeColorAndPattern,
+  DEFAULT_EVENT_COLOR,
+  DEFAULT_TASK_COLOR
 } from "../../utils/styleUtils";
 import "./weekview.css";
 
@@ -57,6 +59,7 @@ interface WeekItem {
   color: string;
   pattern: string;
   status?: string | null;
+  location?: string;
 }
 
 interface CreateSlot {
@@ -245,6 +248,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
               color: parsedStyles.color,
               pattern: parsedStyles.pattern,
               status: event.status,
+              location: event.location ?? "",
             };
           })
       : (() => { console.error("Failed to load events", eventsResult.reason); return []; })();
@@ -411,6 +415,109 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
     return "low";
   };
 
+  const [selectedItem, setSelectedItem] = useState<WeekItem | null>(null);
+  const [detailMode, setDetailMode] = useState<"view" | "edit">("view");
+
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editEndTime, setEditEndTime] = useState("");
+  const [editPriority, setEditPriority] = useState(1);
+  const [editStatus, setEditStatus] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editColor, setEditColor] = useState(DEFAULT_EVENT_COLOR);
+  const [editPattern, setEditPattern] = useState("solid");
+
+  const openDetail = (item: WeekItem) => {
+    setSelectedItem(item);
+    setDetailMode("view");
+  };
+
+  const closeDetail = () => {
+    setSelectedItem(null);
+    setDetailMode("view");
+  };
+
+  const startEdit = () => {
+    if (!selectedItem) return;
+    setEditTitle(selectedItem.name);
+    setEditDescription("");
+    setEditDate(selectedItem.date);
+    setEditTime(selectedItem.time);
+    setEditEndTime(selectedItem.endTime ?? "");
+    setEditPriority(selectedItem.priority);
+    setEditStatus(selectedItem.status ?? (selectedItem.type === "task" ? "todo" : "scheduled"));
+    setEditLocation(selectedItem.location ?? "");
+    setEditColor(selectedItem.color);
+    setEditPattern(selectedItem.pattern);
+    setDetailMode("edit");
+  };
+
+  const saveDetail = async () => {
+    if (!selectedItem) return;
+    try {
+      if (selectedItem.type === "task") {
+        await api.put(`/tasks/${selectedItem.id}`, {
+          title: editTitle.trim(),
+          priority: editPriority,
+          status: editStatus,
+          due_date: editDate,
+          due_time: editTime,
+        });
+      } else {
+        const startAt = buildLocalDateTime(editDate, editTime);
+        const endAt = buildLocalDateTime(editDate, editEndTime);
+        if (new Date(endAt) <= new Date(startAt)) {
+          alert("End time must be after start time.");
+          return;
+        }
+        await api.put(`/events/${selectedItem.id}`, {
+          title: editTitle.trim(),
+          start_at: startAt,
+          end_at: endAt,
+          status: editStatus,
+          color: encodeColorAndPattern(editColor, editPattern),
+          location: editLocation.trim() || null,
+        });
+      }
+      await loadAll();
+      triggerRefresh();
+      closeDetail();
+    } catch (err) {
+      console.error("Failed to update item", err);
+      alert("Failed to update.");
+    }
+  };
+
+  const deleteItem = async () => {
+    if (!selectedItem) return;
+    if (!window.confirm(`Delete "${selectedItem.name}"?`)) return;
+    try {
+      const endpoint = selectedItem.type === "task" ? "tasks" : "events";
+      await api.delete(`/${endpoint}/${selectedItem.id}`);
+      await loadAll();
+      triggerRefresh();
+      closeDetail();
+    } catch (err) {
+      console.error("Failed to delete item", err);
+      alert("Failed to delete.");
+    }
+  };
+
+  const completeTask = async () => {
+    if (!selectedItem || selectedItem.type !== "task") return;
+    try {
+      await api.put(`/tasks/${selectedItem.id}`, { completed: true });
+      await loadAll();
+      triggerRefresh();
+      closeDetail();
+    } catch (err) {
+      console.error("Failed to complete task", err);
+      alert("Failed to complete task.");
+    }
+  };
+
   const hourHeight = HOUR_HEIGHT;
   const calendarWidthStyle = embedded ? { height: "100%" } : { minHeight: "100vh" };
   const calendarShellStyle = embedded ? undefined : { minHeight: "0" };
@@ -521,7 +628,7 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
                             type="button"
                             className={`weekEventCard ${item.type} ${item.completed ? "taskCompleted" : ""}`}
                             style={{ top, height }}
-                            onClick={(event) => event.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); openDetail(item); }}
                           >
                             <div className="taskItemPattern" style={getPatternStyle(item.color, item.pattern)} />
                             <span className="weekEventTime">
@@ -665,6 +772,144 @@ const WeekView: React.FC<WeekViewProps> = ({ embedded = false }) => {
               <button onClick={createEvent}>Save event</button>
               <button className="secondary" onClick={closeCreationUI}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {selectedItem && (
+        <div className="weekCreateOverlay" onClick={closeDetail}>
+          <div className="weekCreateModal" onClick={(e) => e.stopPropagation()}>
+            {detailMode === "view" ? (
+              <>
+                <div className="weekDetailHeader">
+                  <h3>{selectedItem.name}</h3>
+                  <div className="weekDetailActions">
+                    {selectedItem.type === "task" && !selectedItem.completed && (
+                      <button className="weekDetailIconBtn complete" onClick={completeTask} title="Complete">
+                        <FaCheck />
+                      </button>
+                    )}
+                    <button className="weekDetailIconBtn edit" onClick={startEdit} title="Edit">
+                      <FiEdit2 />
+                    </button>
+                    <button className="weekDetailIconBtn delete" onClick={deleteItem} title="Delete">
+                      <FiTrash2 />
+                    </button>
+                  </div>
+                </div>
+                <div className="weekDetailBody">
+                  <div className="weekDetailRow">
+                    <span className="weekDetailLabel">Type</span>
+                    <span>{selectedItem.type === "task" ? "Task" : "Event"}</span>
+                  </div>
+                  <div className="weekDetailRow">
+                    <span className="weekDetailLabel">{selectedItem.type === "task" ? "Due" : "Time"}</span>
+                    <span>
+                      {selectedItem.date && new Date(selectedItem.date + "T00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                      {selectedItem.time && ` at ${formatDisplayTime(selectedItem.time)}`}
+                      {selectedItem.endTime && ` – ${formatDisplayTime(selectedItem.endTime)}`}
+                    </span>
+                  </div>
+                  {selectedItem.type === "task" && (
+                    <div className="weekDetailRow">
+                      <span className="weekDetailLabel">Priority</span>
+                      <span className={`weekPriorityTag ${priorityLabel(selectedItem.priority)}`}>
+                        {selectedItem.priority}
+                      </span>
+                    </div>
+                  )}
+                  {selectedItem.type === "event" && selectedItem.location && (
+                    <div className="weekDetailRow">
+                      <span className="weekDetailLabel">Location</span>
+                      <span>{selectedItem.location}</span>
+                    </div>
+                  )}
+                  <div className="weekDetailRow">
+                    <span className="weekDetailLabel">Status</span>
+                    <span>{selectedItem.completed ? "Completed" : (selectedItem.status ?? (selectedItem.type === "task" ? "todo" : "scheduled"))}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Edit {selectedItem.type === "task" ? "Task" : "Event"}</h3>
+                <label>
+                  Title
+                  <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                </label>
+                {selectedItem.type === "task" ? (
+                  <>
+                    <div className="weekFormRow">
+                      <label>
+                        Date
+                        <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+                      </label>
+                      <label>
+                        Time
+                        <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
+                      </label>
+                    </div>
+                    <div className="weekFormRow">
+                      <label>
+                        Priority
+                        <input type="number" min={1} max={10} value={editPriority} onChange={(e) => setEditPriority(Number(e.target.value))} />
+                      </label>
+                      <label>
+                        Status
+                        <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                          <option value="todo">Todo</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="done">Done</option>
+                        </select>
+                      </label>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="weekFormRow">
+                      <label>
+                        Start
+                        <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
+                      </label>
+                      <label>
+                        End
+                        <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)} />
+                      </label>
+                    </div>
+                    <div className="weekFormRow">
+                      <label>
+                        Location
+                        <input type="text" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} placeholder="Location" />
+                      </label>
+                      <label>
+                        Color & Pattern
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <input type="color" value={editColor} onChange={(e) => setEditColor(e.target.value)} style={{ height: "38px", width: "50px" }} />
+                          <select value={editPattern} onChange={(e) => setEditPattern(e.target.value)} style={{ flex: 1 }}>
+                            {PATTERN_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </label>
+                    </div>
+                    <label>
+                      Status
+                      <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="canceled">Canceled</option>
+                      </select>
+                    </label>
+                  </>
+                )}
+                <div className="weekFormActions">
+                  <button onClick={saveDetail}>Save</button>
+                  <button className="secondary" onClick={() => setDetailMode("view")}>Cancel</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
