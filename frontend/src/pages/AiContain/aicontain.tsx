@@ -4,7 +4,6 @@ import AISidebar from "../../components/AiSidebar/AiSidebar";
 import "../../styles/SharedLayout.css";
 
 // container maintained+made by alex to make website consistent
-// not currently functioning due to ai sidebar formatting options
 const AiContain = () => {
   return (
     <div className="app-wrapper">

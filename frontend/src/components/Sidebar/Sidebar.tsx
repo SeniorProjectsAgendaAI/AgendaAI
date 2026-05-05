@@ -11,6 +11,7 @@ import { FiLogOut } from "react-icons/fi";
 
 
 //sidebar maintained by alex
+//edited by james and ankush to match mockup
 const Sidebar = () => {
   const { signOut } = useAuthenticator();
   return (

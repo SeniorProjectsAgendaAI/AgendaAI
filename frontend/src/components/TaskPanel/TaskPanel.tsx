@@ -13,8 +13,11 @@ import {
 } from "../../utils/eventConflicts";
 //currently there is no mcp integration with task creations all manual because the database doesnt currently support tasks
 //task making by alex, editing +deletion by bini
+//james worked on majority of other fields and functionality
 //basically making a task its own object ish
-
+//pattern functionality by alex
+//this file has been edited by everyone multiple times to better match visual and functionality,
+//specifics are kind of lost
 interface Task {
   id: number;
   title: string;

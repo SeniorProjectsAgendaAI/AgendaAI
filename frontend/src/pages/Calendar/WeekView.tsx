@@ -1,3 +1,5 @@
+//base by ankush, day drilldown and pattern visual by alex, styling both,
+//autorefresh by ankush and bini
 import React, {
   useCallback,
   useEffect,
