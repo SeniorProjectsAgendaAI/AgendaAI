@@ -1,6 +1,9 @@
 //Biniam Gashaw
 //AI Sidebar Component for interacting with AI assistant
 //Reference: https://coreui.io/react/docs/templates/admin-dashboard/
+//Ankush: loading icon and connections reroute
+//Alex: hide connections, edit small version to adjust properly
+//james: voice modes/imput
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";

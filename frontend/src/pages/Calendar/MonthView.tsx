@@ -1,3 +1,4 @@
+// base by james, drill down connection and pattern visual integration by alex, styling both, 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";

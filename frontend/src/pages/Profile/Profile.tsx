@@ -1,3 +1,6 @@
+//profile by alex, connection integration by ankush
+///password reset, pfp, and name change by alex
+//profile image database connection and delete button connection by james
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./profile.css";
@@ -10,7 +13,7 @@ import api from "../../services/api";
 interface ProfileData {
     fullName?: string;
     email?: string;
-    // Removed the dummy password state completely
+
 }
 
 const Profile: React.FC = () => {

@@ -2,7 +2,7 @@ import React from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Profile from "../Profile/Profile";
 import "../../styles/SharedLayout.css";
-
+//alex technically, not much here
 const ProfileContainer = () => {
   return (
     <div className="app-wrapper">

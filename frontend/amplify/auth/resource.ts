@@ -2,7 +2,7 @@
 // CS425: Senior Projects
 
 // resource.ts: responsible for configuring authentication resources using AWS Amplify's backend framework.
-
+//name attribute by alex
 import { defineAuth, secret } from '@aws-amplify/backend';
 
 export const auth = defineAuth({
